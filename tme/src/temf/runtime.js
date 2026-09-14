@@ -1,7 +1,3 @@
-#!/usr/bin/env node
-
-'use strict';
-
 /**
  * TEMF — Time Engine Mini Fast Runtime
  * 
@@ -21,6 +17,21 @@ const TEMF = {
   _animationFrameId: null,
   _game: null
 };
+
+function _resize() {
+  if (!TEMF._canvas || !TEMF._context) {
+    return;
+  }
+
+  const dpr = window.devicePixelRatio || 1;
+  const width = TEMF._canvas.clientWidth * dpr;
+  const height = TEMF._canvas.clientHeight * dpr;
+
+  if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
+    TEMF._canvas.width = width;
+    TEMF._canvas.height = height;
+  }
+}
 
 async function initWebGPU() {
   if (!navigator.gpu) {
@@ -54,12 +65,12 @@ async function initWebGPU() {
     alphaMode: 'premultiplied'
   });
 
-  TEMF._resize();
+  _resize();
 }
 
 function resizeCanvas() {
   if (TEMF._canvas && TEMF._context) {
-    TEMF._resize();
+    _resize();
   }
 }
 
@@ -70,48 +81,6 @@ function createResizeObserver() {
     });
     observer.observe(document.body);
   }
-}
-
-function start(game, fps) {
-  if (TEMF._started) {
-    return;
-  }
-
-  TEMF._started = true;
-  TEMF._game = game;
-  TEMF._fps = fps || 60;
-  TEMF._step = 1 / TEMF._fps;
-  TEMF._accumulator = 0;
-  TEMF._lastTime = 0;
-
-  initWebGPU().then(() => {
-    createResizeObserver();
-    window.addEventListener('resize', resizeCanvas);
-    TEMF._lastTime = performance.now();
-    TEMF._gameLoop();
-  }).catch(err => {
-    console.error('TEMF initialization failed:', err.message);
-  });
-}
-
-function gameLoop() {
-  const now = performance.now();
-  const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
-  TEMF._lastTime = now;
-  TEMF._accumulator += elapsed;
-
-  while (TEMF._accumulator >= TEMF._step) {
-    if (TEMF._game && typeof TEMF._game.update === 'function') {
-      TEMF._game.update(TEMF._step);
-    }
-    TEMF._accumulator -= TEMF._step;
-  }
-
-  if (TEMF._game && typeof TEMF._game.draw === 'function') {
-    TEMF._draw();
-  }
-
-  TEMF._animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function _draw() {
@@ -137,19 +106,51 @@ function _draw() {
   TEMF._device.queue.submit([commandEncoder.finish()]);
 }
 
-function _resize() {
-  if (!TEMF._canvas || !TEMF._context) {
+function gameLoop() {
+  const now = performance.now();
+  const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
+  TEMF._lastTime = now;
+  TEMF._accumulator += elapsed;
+
+  while (TEMF._accumulator >= TEMF._step) {
+    if (TEMF._game && typeof TEMF._game.update === 'function') {
+      TEMF._game.update(TEMF._step);
+    }
+    TEMF._accumulator -= TEMF._step;
+  }
+
+  if (TEMF._game && typeof TEMF._game.draw === 'function') {
+    _draw();
+  }
+
+  TEMF._animationFrameId = requestAnimationFrame(gameLoop);
+}
+
+function start(game, fps) {
+  if (TEMF._started) {
     return;
   }
 
-  const dpr = window.devicePixelRatio || 1;
-  const width = TEMF._canvas.clientWidth * dpr;
-  const height = TEMF._canvas.clientHeight * dpr;
+  TEMF._started = true;
+  TEMF._game = game;
+  TEMF._fps = fps || 60;
+  TEMF._step = 1 / TEMF._fps;
+  TEMF._accumulator = 0;
+  TEMF._lastTime = 0;
 
-  if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
-    TEMF._canvas.width = width;
-    TEMF._canvas.height = height;
-  }
+  initWebGPU().then(() => {
+    createResizeObserver();
+    window.addEventListener('resize', resizeCanvas);
+    TEMF._lastTime = performance.now();
+    gameLoop();
+  }).catch(err => {
+    console.error('TEMF initialization failed:', err.message);
+  });
 }
 
-module.exports = TEMF;
+export { start, TEMF };
+
+if (typeof window !== 'undefined') {
+  window.start = start;
+  window.TEMF = TEMF;
+}
