@@ -1,0 +1,75 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const path = require('path');
+const fs = require('fs');
+
+const TME_ROOT = path.resolve(__dirname, '..', '..', '..');
+const BUILD_DIR = path.join(TME_ROOT, 'tme', 'src', 'build');
+const INIT_DIR = path.join(BUILD_DIR, 'init.js');
+const BUILD_FILE = path.join(BUILD_DIR, 'build.js');
+
+// For require(), use the correct path relative to this file
+const _BIN_DIR = __dirname;
+const _BUILD_DIR = path.join(_BIN_DIR, '..', 'src', 'build');
+const _INIT_DIR = path.join(_BUILD_DIR, 'init.js');
+const _BUILD_FILE = path.join(_BUILD_DIR, 'build.js');
+
+function showHelp() {
+  console.log('TME — Time Mini Engine');
+  console.log('');
+  console.log('Usage:');
+  console.log('  tme init [project-directory]   Initialize a new TME project');
+  console.log('  tme build [project-directory]  Build the project');
+  console.log('  tme --version                  Show version');
+  console.log('  tme --help                     Show help');
+}
+
+function showVersion() {
+  console.log('TME v0.1.0');
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+
+  if (args.length === 0) {
+    showHelp();
+    process.exit(1);
+  }
+
+  const command = args[0];
+
+  if (command === '--version') {
+    showVersion();
+    process.exit(0);
+  }
+
+  if (command === '--help' || command === '-h') {
+    showHelp();
+    process.exit(0);
+  }
+
+  if (command === 'init') {
+    const projectDir = args[1] || process.cwd();
+    const initModule = require(_INIT_DIR);
+    await initModule.initProject(projectDir);
+    process.exit(0);
+  }
+
+  if (command === 'build') {
+    const projectDir = args[1] || process.cwd();
+    const buildModule = require(_BUILD_FILE);
+    await buildModule.buildProject(projectDir);
+    process.exit(0);
+  }
+
+  console.error(`Unknown command: ${command}`);
+  showHelp();
+  process.exit(1);
+}
+
+main().catch(err => {
+  console.error(err.message || err);
+  process.exit(1);
+});
