@@ -1,0 +1,19 @@
+# Jump Game — TME Example
+# Simple jumping game
+
+player = { x: 100, y: 400, vy: 0 }
+
+function update(dt):
+  if input.keyboard.is_down("space"):
+    player.vy = -300
+
+  player.vy += 800 * dt
+  player.y += player.vy * dt
+
+  if player.y > 400:
+    player.y = 400
+    player.vy = 0
+
+function draw():
+  rect(0, 400, 800, 50, "brown")
+  image("player.png", player.x, player.y, 50, 50)

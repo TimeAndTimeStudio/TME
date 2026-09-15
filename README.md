@@ -63,6 +63,12 @@ project/
     └── style.css
 ```
 
+## Examples
+
+| Example | Description |
+|---------|-------------|
+| [Jump Game](examples/jump-game/) | Simple jumping game with keyboard control |
+
 ## Documentation
 
 | Resource | Link |

@@ -554,6 +554,41 @@ main {
   margin: 20px 0;
 }
 
+/* ===== Example Section ===== */
+.example-section {
+  padding: 60px 0;
+  background: var(--white);
+}
+
+.example-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.example-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.example-card .code-block {
+  background: var(--code-bg);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.example-card .btn {
+  display: inline-block;
+}
+
 /* ===== Footer ===== */
 footer {
   text-align: center;
