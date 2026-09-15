@@ -96,6 +96,22 @@ function _parseColor(color) {
     return [1, 1, 1, 1];
   }
   const hex = color.trim();
+  const colorMap = {
+    'black': [0, 0, 0],
+    'white': [1, 1, 1],
+    'red': [1, 0, 0],
+    'green': [0, 1, 0],
+    'blue': [0, 0, 1],
+    'yellow': [1, 1, 0],
+    'cyan': [0, 1, 1],
+    'magenta': [1, 0, 1],
+    'gray': [0.5, 0.5, 0.5],
+    'grey': [0.5, 0.5, 0.5],
+    'brown': [0.649, 0.165, 0.165],
+  };
+  if (colorMap[hex.toLowerCase()]) {
+    return [...colorMap[hex.toLowerCase()], 1];
+  }
   const m8 = hex.match(/^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
   if (m8) {
     return [
