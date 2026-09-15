@@ -41,6 +41,9 @@ const TEMF = {
   _mouseButtons: new Map(),
   _mouseClicks: new Map(),
   _mouseDragging: false,
+  _touchX: 0,
+  _touchY: 0,
+  _touchState: { down: false, tapped: false, dragging: false },
 };
 
 const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
@@ -655,6 +658,57 @@ function _getMouseState(btn) {
   return TEMF._mouseButtons.get(btn);
 }
 
+function _initTouch() {
+  if (typeof window === 'undefined') return;
+
+  const canvas = TEMF._canvas || document.getElementById('game');
+  if (!canvas) return;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') {
+      TEMF._touchX = e.offsetX;
+      TEMF._touchY = e.offsetY;
+      TEMF._touchState.down = true;
+      TEMF._touchState.tapped = false;
+      TEMF._touchState.dragging = false;
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') {
+      const prevX = TEMF._touchX;
+      const prevY = TEMF._touchY;
+      TEMF._touchX = e.offsetX;
+      TEMF._touchY = e.offsetY;
+      if (TEMF._touchState.down && (prevX !== TEMF._touchX || prevY !== TEMF._touchY)) {
+        TEMF._touchState.dragging = true;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'touch') {
+      TEMF._touchState.tapped = true;
+      TEMF._touchState.down = false;
+      TEMF._touchState.dragging = false;
+    }
+  });
+
+  canvas.addEventListener('pointercancel', (e) => {
+    if (e.pointerType === 'touch') {
+      TEMF._touchState.down = false;
+      TEMF._touchState.dragging = false;
+    }
+  });
+
+  canvas.addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'touch') {
+      TEMF._touchState.down = false;
+      TEMF._touchState.dragging = false;
+    }
+  });
+}
+
 function _getOrCreateImageBindGroup(texture) {
   if (!texture) return null;
 
@@ -850,6 +904,27 @@ const mouse = {
   },
 };
 
+const touch = {
+  get x() { return TEMF._touchX; },
+  get y() { return TEMF._touchY; },
+  tap() {
+    const tapped = TEMF._touchState.tapped;
+    TEMF._touchState.tapped = false;
+    return tapped;
+  },
+  down() {
+    return TEMF._touchState.down;
+  },
+  drag() {
+    const dragging = TEMF._touchState.dragging;
+    TEMF._touchState.dragging = false;
+    return dragging;
+  },
+  up() {
+    return !TEMF._touchState.down && TEMF._touchState.tapped;
+  },
+};
+
 function gameLoop() {
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
@@ -887,6 +962,7 @@ function start(game, fps) {
     window.addEventListener('resize', resizeCanvas);
     _initKeyboard();
     _initMouse();
+    _initTouch();
     TEMF._lastTime = performance.now();
     gameLoop();
   }).catch(err => {
@@ -894,7 +970,7 @@ function start(game, fps) {
   });
 }
 
-export { start, TEMF, mouse };
+export { start, TEMF, mouse, touch };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -903,4 +979,5 @@ if (typeof window !== 'undefined') {
   window.image = _image;
   window.key = { down: _keyDown };
   window.mouse = mouse;
+  window.touch = touch;
 }

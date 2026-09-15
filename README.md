@@ -9,7 +9,7 @@
 - WebGPU rendering only (no Canvas2D/WebGL fallback)
 - Rectangle (`rect()`) and image (`image()`) rendering
 - Texture caching for efficient image loading
-- Keyboard, mouse, and touch input
+- Keyboard, mouse, and touch input (tap, down, drag, up)
 - Fixed timestep game loop with `start()`, `fps`, `update(dt)`, and `draw`
 - Frame-rate independent movement (speed * dt)
 - Spiral of death prevention (elapsed time clamped to 0.25s)
