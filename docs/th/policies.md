@@ -20,31 +20,5 @@
 - แพ็กเกจ `dist/` ทำงานได้เอง
 - โหลดโมดูล JavaScript ท้องถิ่นโดยตรงในเบราว์เซอร์
 
-## ข้อจำกัด (MVP)
-
-### ยังไม่มีการพัฒนา
-- ไม่มี ECS, entity/component systems
-- ไม่มี scene หรือ camera management
-- ไม่มีฟิสิกส์หรือ collision detection
-- ไม่มี animation framework
-- ไม่มี tilemap support
-- ไม่มี text/font rendering
-- ไม่มี UI framework
-- ไม่มี shader graphs หรือ material systems
-- ไม่มี plugin architecture
-- ไม่มี dependency injection
-- ไม่มี global event bus
-
-### ข้อจำกัดการอินพุต
-- รองรับหน้าจอสัมผัสเพียงจุดเดียว
-- ไม่มีเกมแพด
-- ไม่มี gesture ขั้นสูง
-- พารามิเตอร์ปุ่มเมาส์รับเฉพาะ number (0, 1, 2)
-
-### ข้อจำกัดการเรนเดอร์
-- ใช้ WebGPU เท่านั้น (ไม่รองรับ Canvas2D หรือ WebGL)
-- ลำดับการวาดกำหนดความลึก (ไม่มี z-buffer)
-- วาดสี่เหลี่ยมได้สูงสุด 1024 รูปต่อเฟรม
-- วาดภาพได้สูงสุด 1024 รูปต่อเฟรม
 
 
