@@ -36,6 +36,11 @@ const TEMF = {
   _textureCache: new Map(),
   _imageElements: new Map(),
   _keyPressed: new Set(),
+  _mouseX: 0,
+  _mouseY: 0,
+  _mouseButtons: new Map(),
+  _mouseClicks: new Map(),
+  _mouseDragging: false,
 };
 
 const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
@@ -575,6 +580,81 @@ function _keyDown(key) {
   return TEMF._keyPressed.has(key);
 }
 
+function _initMouse() {
+  if (typeof window === 'undefined') return;
+
+  const canvas = TEMF._canvas || document.getElementById('game');
+  if (!canvas) return;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') {
+      TEMF._mouseX = e.offsetX;
+      TEMF._mouseY = e.offsetY;
+      const btn = e.button.toString();
+      if (!TEMF._mouseButtons.has(btn)) {
+        TEMF._mouseButtons.set(btn, { down: false, clicked: false, dragging: false });
+      }
+      const state = TEMF._mouseButtons.get(btn);
+      state.down = true;
+      state.clicked = false;
+      state.dragging = false;
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'mouse') {
+      const prevX = TEMF._mouseX;
+      const prevY = TEMF._mouseY;
+      TEMF._mouseX = e.offsetX;
+      TEMF._mouseY = e.offsetY;
+      const buttons = e.buttons;
+      for (const [btn, state] of TEMF._mouseButtons) {
+        const btnNum = parseInt(btn, 10);
+        if (btnNum >= 0 && btnNum <= 2 && (buttons & (1 << btnNum)) && state.down && (prevX !== TEMF._mouseX || prevY !== TEMF._mouseY)) {
+          state.dragging = true;
+        }
+      }
+    }
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    if (e.pointerType === 'mouse') {
+      const btn = e.button.toString();
+      const state = TEMF._mouseButtons.get(btn);
+      if (state) {
+        state.clicked = true;
+        state.down = false;
+        state.dragging = false;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointercancel', (e) => {
+    if (e.pointerType === 'mouse') {
+      for (const [btn, state] of TEMF._mouseButtons) {
+        state.down = false;
+        state.dragging = false;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'mouse') {
+      for (const [btn, state] of TEMF._mouseButtons) {
+        state.down = false;
+        state.dragging = false;
+      }
+    }
+  });
+}
+
+function _getMouseState(btn) {
+  if (!TEMF._mouseButtons.has(btn)) {
+    TEMF._mouseButtons.set(btn, { down: false, clicked: false, dragging: false });
+  }
+  return TEMF._mouseButtons.get(btn);
+}
+
 function _getOrCreateImageBindGroup(texture) {
   if (!texture) return null;
 
@@ -747,6 +827,29 @@ function _draw() {
   TEMF._drawList.length = 0;
 }
 
+const mouse = {
+  get x() { return TEMF._mouseX; },
+  get y() { return TEMF._mouseY; },
+  click(btn) {
+    const state = _getMouseState(btn || '0');
+    return state.clicked;
+  },
+  down(btn) {
+    const state = _getMouseState(btn || '0');
+    return state.down;
+  },
+  drag(btn) {
+    const state = _getMouseState(btn || '0');
+    const dragging = state.dragging;
+    state.dragging = false;
+    return dragging;
+  },
+  up(btn) {
+    const state = _getMouseState(btn || '0');
+    return !state.down && !state.clicked;
+  },
+};
+
 function gameLoop() {
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
@@ -783,6 +886,7 @@ function start(game, fps) {
     createResizeObserver();
     window.addEventListener('resize', resizeCanvas);
     _initKeyboard();
+    _initMouse();
     TEMF._lastTime = performance.now();
     gameLoop();
   }).catch(err => {
@@ -790,7 +894,7 @@ function start(game, fps) {
   });
 }
 
-export { start, TEMF };
+export { start, TEMF, mouse };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -798,4 +902,5 @@ if (typeof window !== 'undefined') {
   window.rect = _rect;
   window.image = _image;
   window.key = { down: _keyDown };
+  window.mouse = mouse;
 }
