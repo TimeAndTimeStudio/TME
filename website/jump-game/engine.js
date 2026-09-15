@@ -27,6 +27,7 @@ const TEMF = {
   _rectUniformBuffer: null,
   _rectVertexBuffer: null,
   _rectBindGroup: null,
+  _canvasSizeBuffer: null,
   _imagePipeline: null,
   _imageBindGroupLayout: null,
   _imageVertexBuffer: null,
@@ -265,6 +266,7 @@ function _createRenderer() {
   // Rectangle pipeline
   const rectShaderCode = `
     @group(0) @binding(0) var<uniform> rectData: array<vec4f, ${max * 3}>;
+    @group(0) @binding(1) var<uniform> canvasSize: vec2f;
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) color: vec4f,
@@ -303,7 +305,11 @@ function _createRenderer() {
       let sin_r = sin(rad);
       pos = vec2f(pos.x * cos_r - pos.y * sin_r, pos.x * sin_r + pos.y * cos_r);
       pos = pos + vec2f(cx, cy);
-      return VSOut(vec4f(pos, 0.0, 1.0), vec4f(r, g, b, a));
+      let clipPos = vec2f(
+        (pos.x / canvasSize.x) * 2.0 - 1.0,
+        1.0 - (pos.y / canvasSize.y) * 2.0
+      );
+      return VSOut(vec4f(clipPos, 0.0, 1.0), vec4f(r, g, b, a));
     }
     @fragment
     fn fs(input: VSOut) -> @location(0) vec4f {
@@ -343,7 +349,7 @@ function _createRenderer() {
     },
   });
 
-  const uniformBufferSize = max * 3 * 4 * 4; // max rects * 3 vec4f * 4 floats * 4 bytes
+  const uniformBufferSize = max * 3 * 4 * 4 + 8; // max rects * 3 vec4f * 4 floats * 4 bytes + canvasSize vec2f
   const uniformBuffer = device.createBuffer({
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -361,11 +367,20 @@ function _createRenderer() {
   device.queue.writeBuffer(vertexBuffer, 0, quadVerts);
 
   const rectBindGroupLayout = rectPipeline.getBindGroupLayout(0);
+  const canvasSizeBuffer = device.createBuffer({
+    size: 8,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  const rectBindGroupLayout = rectPipeline.getBindGroupLayout(0);
   const rectBindGroup = device.createBindGroup({
     layout: rectBindGroupLayout,
     entries: [{
       binding: 0,
       resource: { buffer: uniformBuffer },
+    }, {
+      binding: 1,
+      resource: { buffer: canvasSizeBuffer },
     }],
   });
 
@@ -374,6 +389,7 @@ function _createRenderer() {
   TEMF._rectUniformBuffer = uniformBuffer;
   TEMF._rectVertexBuffer = vertexBuffer;
   TEMF._rectBindGroup = rectBindGroup;
+  TEMF._canvasSizeBuffer = canvasSizeBuffer;
 
   // Image pipeline
   const imageShaderCode = `
@@ -1220,6 +1236,9 @@ function _drawRects(rects, rp) {
     0,
     rects.length * 3 * 16
   );
+
+  const canvasSizeData = new Float32Array([TEMF._canvas.width, TEMF._canvas.height]);
+  device.queue.writeBuffer(TEMF._canvasSizeBuffer, 0, canvasSizeData);
 
   rp.setPipeline(TEMF._rectPipeline);
   rp.setBindGroup(0, TEMF._rectBindGroup);
