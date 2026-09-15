@@ -102,9 +102,18 @@ test('phase13: BGM loop defaults to true', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  // BGM loop: loop !== false defaults to true
-  ok(runtimeContent.includes('loop !== false') || runtimeContent.includes('source.loop = loop || true'),
-    'BGM loop defaults to true');
+  // BGM loop: loop === false ? false : true
+  ok(runtimeContent.includes('loop === false'), 'BGM loop uses simplified boolean param');
+});
+
+test('phase13: mutedSfx and mutedBgm properties exist', () => {
+  const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
+  const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
+
+  ok(runtimeContent.includes('get mutedSfx()'), 'mutedSfx getter exists');
+  ok(runtimeContent.includes('set mutedSfx('), 'mutedSfx setter exists');
+  ok(runtimeContent.includes('get mutedBgm()'), 'mutedBgm getter exists');
+  ok(runtimeContent.includes('set mutedBgm('), 'mutedBgm setter exists');
 });
 
 test('phase13: BGM replaces previous BGM', () => {
@@ -360,7 +369,7 @@ test('phase13: audio API does not expose Web Audio objects', () => {
 
   // The public API (audio object) should not expose these
   const publicApiMethods = ['play', 'stop', 'pause', 'resume'];
-  const publicApiProps = ['volume', 'sfxVolume', 'bgmVolume', 'muted'];
+  const publicApiProps = ['volume', 'sfxVolume', 'bgmVolume', 'muted', 'mutedSfx', 'mutedBgm'];
 
   // Verify public API structure
   for (const method of publicApiMethods) {
