@@ -1444,8 +1444,6 @@ function start(button) {
     return;
   }
 
-  TEMF._started = true;
-
   const game = {};
   if (typeof update === 'function') game.update = update;
   if (typeof draw === 'function') game.draw = draw;
@@ -1458,6 +1456,7 @@ function start(button) {
 
   function initAndStart() {
     console.log('Starting game loop...');
+    TEMF._started = true;
     initWebGPU().then(() => {
       console.log('WebGPU initialized');
       createResizeObserver();
@@ -1479,9 +1478,7 @@ function start(button) {
       console.log('Adding click listener to button:', button);
       btn.addEventListener('click', () => {
         console.log('Button clicked!');
-        if (!TEMF._started) {
-          initAndStart();
-        }
+        initAndStart();
       });
       return;
     }
