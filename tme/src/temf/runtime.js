@@ -60,6 +60,8 @@ const TEMF = {
   _audioSfxVolume: 1,
   _audioBgmVolume: 1,
   _audioMuted: false,
+  _audioMutedSfx: false,
+  _audioMutedBgm: false,
 };
 
 const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
@@ -1006,21 +1008,29 @@ function _setMasterVolume(val) {
 function _setSfxVolume(val) {
   TEMF._audioSfxVolume = Math.max(0, Math.min(1, val));
   if (TEMF._sfxGain) {
-    TEMF._sfxGain.gain.value = TEMF._audioSfxVolume;
+    TEMF._sfxGain.gain.value = TEMF._audioMutedSfx ? 0 : TEMF._audioSfxVolume;
   }
 }
 
 function _setBgmVolume(val) {
   TEMF._audioBgmVolume = Math.max(0, Math.min(1, val));
   if (TEMF._bgmGain) {
-    TEMF._bgmGain.gain.value = TEMF._audioBgmVolume;
+    TEMF._bgmGain.gain.value = TEMF._audioMutedBgm ? 0 : TEMF._audioBgmVolume;
   }
 }
 
 function _setMuted(muted) {
   TEMF._audioMuted = !!muted;
+  TEMF._audioMutedSfx = muted;
+  TEMF._audioMutedBgm = muted;
   if (TEMF._masterGain) {
     TEMF._masterGain.gain.value = TEMF._audioMuted ? 0 : TEMF._audioVolume;
+  }
+  if (TEMF._sfxGain) {
+    TEMF._sfxGain.gain.value = TEMF._audioMutedSfx ? 0 : TEMF._audioSfxVolume;
+  }
+  if (TEMF._bgmGain) {
+    TEMF._bgmGain.gain.value = TEMF._audioMutedBgm ? 0 : TEMF._audioBgmVolume;
   }
 }
 
@@ -1047,7 +1057,7 @@ function _cleanupTextures() {
 }
 
 const audio = {
-  play(path, type, opts) {
+  play(path, type, loop) {
     if (!path || !type) return;
 
     if (type === 'sfx') {
@@ -1055,9 +1065,8 @@ const audio = {
       _playSfx(path);
     } else if (type === 'bgm') {
       if (!TEMF._audioContext) _initAudio();
-      const options = typeof opts === 'object' ? opts : {};
-      const loop = options.loop !== false;
-      _playBgm(path, loop);
+      const loopVal = (loop === false) ? false : true;
+      _playBgm(path, loopVal);
     }
   },
   stop(type) {
@@ -1099,6 +1108,24 @@ const audio = {
   },
   set muted(val) {
     _setMuted(val);
+  },
+  get mutedSfx() {
+    return TEMF._audioMutedSfx;
+  },
+  set mutedSfx(val) {
+    TEMF._audioMutedSfx = val;
+    if (TEMF._sfxGain) {
+      TEMF._sfxGain.gain.value = val ? 0 : TEMF._audioSfxVolume;
+    }
+  },
+  get mutedBgm() {
+    return TEMF._audioMutedBgm;
+  },
+  set mutedBgm(val) {
+    TEMF._audioMutedBgm = val;
+    if (TEMF._bgmGain) {
+      TEMF._bgmGain.gain.value = val ? 0 : TEMF._audioBgmVolume;
+    }
   },
 };
 
