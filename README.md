@@ -7,9 +7,12 @@
 ## Features
 
 - WebGPU rendering only (no Canvas2D/WebGL fallback)
-- Rectangle and image rendering
+- Rectangle (`rect()`) and image (`image()`) rendering
+- Texture caching for efficient image loading
 - Keyboard, mouse, and touch input
-- Fixed timestep game loop
+- Fixed timestep game loop with `start()`, `fps`, `update(dt)`, and `draw`
+- Frame-rate independent movement (speed * dt)
+- Spiral of death prevention (elapsed time clamped to 0.25s)
 - Static web export
 - TSL (Time Script Language) compilation via Build Program
 
@@ -44,6 +47,27 @@ node ../tme/bin/tme build
 ### Run
 
 Open `dist/index.html` in a WebGPU-enabled browser.
+
+## Game Loop
+
+TME uses a fixed timestep game loop. The update rate is independent of the display refresh rate:
+
+```tsl
+game "Demo"
+
+x = 0
+
+update(dt):
+    x += 100 * dt
+
+draw:
+    rect(x, 100, 100, 100, "#ff0000")
+```
+
+- `start()` is the explicit entry point — nothing runs before it
+- `fps` configures the fixed update rate (default: 60)
+- `update(dt)` receives a fixed delta time (e.g., 0.01667 for 60fps)
+- `draw()` runs at the browser's animation frame rate via `requestAnimationFrame()`
 
 ## Project Structure
 
