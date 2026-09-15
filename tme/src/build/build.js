@@ -10,6 +10,8 @@ const TME_ROOT = path.resolve(__dirname, '..', '..', '..');
 const TSL_DIR = path.join(TME_ROOT, 'TSL');
 const TSL_CLI = path.join(TSL_DIR, 'src', 'cli.js');
 
+const REQUIRED_DIST_FILES = ['game.js', 'engine.js'];
+
 function validateProject(projectDir) {
   projectDir = path.resolve(projectDir);
 
@@ -45,13 +47,10 @@ function validateTSL() {
 }
 
 function invokeTSL(projectDir, tslPath) {
-  const outputPath = path.join(projectDir, 'dist', 'game.js');
-  
-  // Ensure dist directory exists
   const distDir = path.join(projectDir, 'dist');
-  if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true });
-  }
+  const outputPath = path.resolve(path.join(distDir, 'game.js'));
+
+  fs.mkdirSync(distDir, { recursive: true });
 
   try {
     execSync(`node "${TSL_CLI}" build "${tslPath}" -o "${outputPath}"`, {
@@ -100,9 +99,11 @@ function copyUserFiles(projectDir) {
     }
   }
 
+  const excludedDirs = ['node_modules', '.git', 'dist'];
+
   const entries = fs.readdirSync(projectDir, { withFileTypes: true });
   for (const entry of entries) {
-    if (entry.isDirectory() && !['node_modules', '.git', 'dist'].includes(entry.name)) {
+    if (entry.isDirectory() && !excludedDirs.includes(entry.name)) {
       const srcPath = path.join(projectDir, entry.name);
       const destPath = path.join(distDir, entry.name);
       if (!fs.existsSync(destPath)) {
@@ -131,6 +132,26 @@ function packageRuntime(projectDir) {
   }
 }
 
+function verifyBuildOutput(projectDir) {
+  const distDir = path.join(projectDir, 'dist');
+
+  const required = [...REQUIRED_DIST_FILES, 'index.html', 'style.css'];
+  const missing = [];
+
+  for (const filename of required) {
+    const filePath = path.join(distDir, filename);
+    if (!fs.existsSync(filePath)) {
+      missing.push(filename);
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`Build output incomplete. Missing required files: ${missing.join(', ')}`);
+  }
+
+  return true;
+}
+
 async function buildProject(projectDir) {
   console.log('TME Build Program starting...');
 
@@ -150,7 +171,11 @@ async function buildProject(projectDir) {
   console.log('Copying user files...');
   copyUserFiles(projectDir);
 
+  console.log('Verifying build output...');
+  verifyBuildOutput(projectDir);
+  console.log('Build output verified.');
+
   console.log('Build complete. Output: dist/');
 }
 
-module.exports = { buildProject };
+module.exports = { buildProject, validateProject, validateTSL, invokeTSL, copyUserFiles, packageRuntime, verifyBuildOutput, REQUIRED_DIST_FILES };

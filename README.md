@@ -76,12 +76,26 @@ project/
 ├── game.tsl        # Game source (TSL)
 ├── index.html      # HTML page (user-owned)
 ├── style.css       # CSS styles (user-owned)
+├── assets/         # User-created directories (copied recursively)
+│   └── images/
+│       └── player.png
 └── dist/           # Build output
     ├── index.html
     ├── game.js     # Compiled game code
     ├── engine.js   # TEMF runtime
-    └── style.css
+    ├── style.css
+    └── assets/
+        └── images/
+            └── player.png
 ```
+
+## Build Behavior
+
+- `tme build` compiles `game.tsl` via TSL, packages the TEMF runtime, and preserves all user files
+- User `index.html` and `style.css` are never overwritten during builds
+- All user-created directories and files are recursively copied to `dist/` preserving their relative paths
+- `node_modules`, `.git`, and `dist` are excluded from the copy process
+- Build fails explicitly if required outputs (`game.js`, `engine.js`) or user files are missing
 
 ## License
 
