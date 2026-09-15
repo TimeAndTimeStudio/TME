@@ -289,8 +289,8 @@ function _createRenderer() {
     };
     @vertex
     fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
-      let rectIdx = vertexIndex / 4u;
-      let cornerIdx = vertexIndex % 4u;
+      let rectIdx = vertexIndex / 6u;
+      let cornerIdx = vertexIndex % 6u;
       let base = rectIdx * 3u;
       let x = rectData[base].x;
       let y = rectData[base].y;
@@ -309,8 +309,12 @@ function _createRenderer() {
         pos = vec2f(x + w, y);
       } else if (cornerIdx == 2u) {
         pos = vec2f(x, y + h);
-      } else {
+      } else if (cornerIdx == 3u) {
+        pos = vec2f(x + w, y);
+      } else if (cornerIdx == 4u) {
         pos = vec2f(x + w, y + h);
+      } else {
+        pos = vec2f(x, y + h);
       }
       let cx = x + w * 0.5;
       let cy = y + h * 0.5;
@@ -360,7 +364,7 @@ function _createRenderer() {
       }],
     },
     primitive: {
-      topology: 'triangle-strip',
+      topology: 'triangle-list',
       cullMode: 'none',
     },
   });
@@ -1258,7 +1262,7 @@ function _drawRects(rects, rp) {
 
   rp.setPipeline(TEMF._rectPipeline);
   rp.setBindGroup(0, TEMF._rectBindGroup);
-  rp.draw(4, rects.length, 0, 0);
+  rp.draw(6, rects.length, 0, 0);
 }
 
 function _queueImageDraw(imgDraw) {
