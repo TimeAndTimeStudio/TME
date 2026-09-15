@@ -372,7 +372,6 @@ function _createRenderer() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  const rectBindGroupLayout = rectPipeline.getBindGroupLayout(0);
   const rectBindGroup = device.createBindGroup({
     layout: rectBindGroupLayout,
     entries: [{
@@ -1544,6 +1543,9 @@ function fps(fpsValue) {
   TEMF._fps = fpsValue;
   TEMF._step = 1 / TEMF._fps;
   console.log('FPS set to:', fpsValue);
+}
+if (typeof window !== 'undefined') {
+  window.fps = fps;
 }
 
 TEMF.cleanupTextures = _cleanupTextures;
