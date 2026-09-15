@@ -579,7 +579,11 @@ async function initWebGPU() {
 
   const adapter = await navigator.gpu.requestAdapter();
   if (!adapter) {
-    throw new Error('WebGPU: Failed to request adapter.');
+    const isFileProtocol = location.protocol === 'file:';
+    if (isFileProtocol) {
+      throw new Error('WebGPU requires a local server. Run: npx serve . or python -m http.server');
+    }
+    throw new Error('WebGPU: Failed to request adapter. Check browser compatibility and permissions.');
   }
 
   TEMF._device = await adapter.requestDevice();

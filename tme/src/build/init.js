@@ -44,7 +44,22 @@ async function initProject(projectDir) {
 </body>
 </html>
 `,
-    'style.css': ``
+    'style.css': `html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+}
+
+#game {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+`
   };
 
   const conflicts = [];
