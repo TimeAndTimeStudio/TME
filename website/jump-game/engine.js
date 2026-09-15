@@ -214,15 +214,11 @@ function _evictTextureCache() {
     const entry = TEMF._textureCache.get(oldestKey);
     if (entry.texture) {
       entry.texture.destroy();
-    }
-    TEMF._textureCache.delete(oldestKey);
-
-    for (const bindGroup of TEMF._imageBindGroups) {
-      if (bindGroup[1] === oldestKey) {
-        TEMF._imageBindGroups.delete(oldestKey);
-        break;
+      if (TEMF._imageBindGroups) {
+        TEMF._imageBindGroups.delete(entry.texture);
       }
     }
+    TEMF._textureCache.delete(oldestKey);
   }
 }
 
@@ -243,13 +239,18 @@ function _getOrCreateTexture(path) {
   const entry = { status: 'pending' };
   TEMF._textureCache.set(path, entry);
 
+  let loadedWidth = 0, loadedHeight = 0;
   _loadImage(path)
     .then((img) => {
-      const texture = _createTexture(TEMF._device, img);
+      loadedWidth = img.width;
+      loadedHeight = img.height;
+      return _createTexture(TEMF._device, img);
+    })
+    .then((texture) => {
       entry.status = 'loaded';
       entry.texture = texture;
-      entry.width = img.width;
-      entry.height = img.height;
+      entry.width = loadedWidth;
+      entry.height = loadedHeight;
       entry.lastUsed = performance.now();
 
       if (TEMF._pendingImageDraws.length > 0) {
@@ -507,7 +508,7 @@ function _createRenderer() {
   });
 
   const imageUniformBuffer = device.createBuffer({
-    size: 1024 * 11 * 4,
+    size: 1024 * 12 * 4, // 12 floats/item (48-byte stride incl. padding) to match WGSL struct alignment
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
@@ -1203,26 +1204,29 @@ const audio = {
 function _getOrCreateImageBindGroup(texture) {
   if (!texture) return null;
 
-  const texId = texture.id || String(texture);
-  if (TEMF._imageBindGroups.has(texId)) {
-    return TEMF._imageBindGroups.get(texId);
+  if (TEMF._imageBindGroups.has(texture)) {
+    return TEMF._imageBindGroups.get(texture);
   }
 
   const bindGroup = TEMF._device.createBindGroup({
     layout: TEMF._imageBindGroupLayout,
     entries: [
       {
-        binding: 0,
+        binding: 1,
+        resource: { buffer: TEMF._imageUniformBuffer },
+      },
+      {
+        binding: 2,
         resource: TEMF._imageSampler,
       },
       {
-        binding: 1,
+        binding: 3,
         resource: texture.createView(),
       },
     ],
   });
 
-  TEMF._imageBindGroups.set(texId, bindGroup);
+  TEMF._imageBindGroups.set(texture, bindGroup);
   return bindGroup;
 }
 
@@ -1262,7 +1266,7 @@ function _drawRects(rects, rp) {
 
   rp.setPipeline(TEMF._rectPipeline);
   rp.setBindGroup(0, TEMF._rectBindGroup);
-  rp.draw(6, rects.length, 0, 0);
+  rp.draw(rects.length * 6, 1, 0, 0);
 }
 
 function _queueImageDraw(imgDraw) {
@@ -1275,54 +1279,43 @@ function _queueImageDraw(imgDraw) {
     return;
   }
 
-  const texId = texEntry.texture.id || String(texEntry.texture);
+  const texture = texEntry.texture;
   if (!TEMF._imageTextureGroups) TEMF._imageTextureGroups = new Map();
   if (!TEMF._imageTextureOrder) TEMF._imageTextureOrder = [];
 
-  if (!TEMF._imageTextureGroups.has(texId)) {
-    TEMF._imageTextureGroups.set(texId, []);
-    TEMF._imageTextureOrder.push(texId);
+  if (!TEMF._imageTextureGroups.has(texture)) {
+    TEMF._imageTextureGroups.set(texture, []);
+    TEMF._imageTextureOrder.push(texture);
   }
-  TEMF._imageTextureGroups.get(texId).push(imgDraw);
+  TEMF._imageTextureGroups.get(texture).push(imgDraw);
 }
 
 function _drawImages(rp) {
   const device = TEMF._device;
   if (!device || !TEMF._imageTextureGroups || TEMF._imageTextureGroups.size === 0) return;
 
-  for (const texId of TEMF._imageTextureOrder) {
-    const items = TEMF._imageTextureGroups.get(texId);
+  for (const texture of TEMF._imageTextureOrder) {
+    const items = TEMF._imageTextureGroups.get(texture);
     if (!items || items.length === 0) continue;
 
-    let texEntry = null;
-    for (const [, entry] of TEMF._textureCache) {
-      if (entry.status === 'loaded') {
-        const tid = entry.texture.id || String(entry.texture);
-        if (tid === texId) {
-          texEntry = entry;
-          break;
-        }
-      }
-    }
-    if (!texEntry || !texEntry.texture) continue;
-
-    const bindGroup = _getOrCreateImageBindGroup(texEntry.texture);
+    const bindGroup = _getOrCreateImageBindGroup(texture);
     if (!bindGroup) continue;
 
-    const uniformData = new Float32Array(items.length * 11);
+    const uniformData = new Float32Array(items.length * 12);
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      uniformData[i * 11 + 0] = item.x;
-      uniformData[i * 11 + 1] = item.y;
-      uniformData[i * 11 + 2] = item.width;
-      uniformData[i * 11 + 3] = item.height;
-      uniformData[i * 11 + 4] = item.u0 || 0;
-      uniformData[i * 11 + 5] = item.v0 || 0;
-      uniformData[i * 11 + 6] = item.u1 || 1;
-      uniformData[i * 11 + 7] = item.v1 || 1;
-      uniformData[i * 11 + 8] = item.rotation || 0;
-      uniformData[i * 11 + 9] = item.scale || 1;
-      uniformData[i * 11 + 10] = item.alpha || 1;
+      uniformData[i * 12 + 0] = item.x;
+      uniformData[i * 12 + 1] = item.y;
+      uniformData[i * 12 + 2] = item.width;
+      uniformData[i * 12 + 3] = item.height;
+      uniformData[i * 12 + 4] = item.u0 || 0;
+      uniformData[i * 12 + 5] = item.v0 || 0;
+      uniformData[i * 12 + 6] = item.u1 || 1;
+      uniformData[i * 12 + 7] = item.v1 || 1;
+      uniformData[i * 12 + 8] = item.rotation || 0;
+      uniformData[i * 12 + 9] = item.scale || 1;
+      uniformData[i * 12 + 10] = item.alpha || 1;
+      uniformData[i * 12 + 11] = 0; // padding to match WGSL struct's 48-byte stride
     }
 
     device.queue.writeBuffer(
@@ -1330,13 +1323,12 @@ function _drawImages(rp) {
       0,
       uniformData.buffer,
       0,
-      items.length * 44
+      items.length * 48
     );
 
     rp.setPipeline(TEMF._imagePipeline);
     rp.setBindGroup(0, bindGroup);
-    rp.setVertexBuffer(0, TEMF._imageVertexBuffer);
-    rp.draw(6, items.length, 0, 0);
+    rp.draw(items.length * 6, 1, 0, 0);
   }
 
   TEMF._imageTextureGroups.clear();
