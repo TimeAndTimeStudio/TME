@@ -1450,6 +1450,8 @@ function start(button) {
   const game = {};
   if (typeof update === 'function') game.update = update;
   if (typeof draw === 'function') game.draw = draw;
+  if (typeof window.update === 'function') game.update = window.update;
+  if (typeof window.draw === 'function') game.draw = window.draw;
 
   TEMF._game = game;
   TEMF._fps = TEMF._fps || 60;
