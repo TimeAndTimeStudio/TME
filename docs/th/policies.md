@@ -47,18 +47,4 @@
 - วาดสี่เหลี่ยมได้สูงสุด 1024 รูปต่อเฟรม
 - วาดภาพได้สูงสุด 1024 รูปต่อเฟรม
 
-## GitHub และการเผยแพร่
 
-### กฎ Repository
-- Push ได้เฉพาะ: `https://github.com/TimeAndTimeStudio/TME`
-- ห้าม push ไปยัง repository อื่น
-- ใช้ `LICENSE` ทางการจาก repository
-
-### ไฟล์ภายใน (ห้าม commit)
-- `AGENTS.md`
-- `SPEC.md`
-- `project.md`
-- `phase.md`
-
-### ไฟล์ที่จำเป็น
-- `LICENSE` — ต้องตรงกับ repository ทางการทุกประการ

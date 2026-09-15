@@ -47,18 +47,4 @@
 - Max 1024 rectangles per frame
 - Max 1024 images per frame
 
-## GitHub & Deployment
 
-### Repository Rules
-- Push only to: `https://github.com/TimeAndTimeStudio/TME`
-- Never push to other repositories
-- Use official `LICENSE` from repository
-
-### Local-Only Files (Do Not Commit)
-- `AGENTS.md`
-- `SPEC.md`
-- `project.md`
-- `phase.md`
-
-### Required Files
-- `LICENSE` — Must match official repository exactly
