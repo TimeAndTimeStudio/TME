@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — TME — Time Mini Engine</title>
+  <meta name="description" content="Learn about TME (Time Mini Engine) — game engine architecture, render system, input handling, and GPL-3.0 license.">
+  <meta name="keywords" content="TME, Time Mini Engine, game engine, 2D game, WebGPU, mini fast, game development">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="TimeAndTimeStudio">
+  <link rel="canonical" href="https://tme.timeandtime.online/about">
+  <meta name="theme-color" content="#E8751A">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="About TME — Time Mini Engine">
+  <meta property="og:description" content="Learn about TME's architecture, render system, input handling, and GPL-3.0 license.">
+  <meta property="og:image" content="https://tme.timeandtime.online/og-image.png">
+  <meta property="og:url" content="https://tme.timeandtime.online/about">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="TME">
+  <meta property="og:locale" content="th_TH">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About TME — Time Mini Engine">
+  <meta name="twitter:description" content="Learn about TME's architecture, render system, input handling, and GPL-3.0 license.">
+  <meta name="twitter:image" content="https://tme.timeandtime.online/og-image.png">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "About TME",
+    "url": "https://tme.timeandtime.online/about",
+    "description": "Learn about TME's architecture, render system, input handling, and GPL-3.0 license."
+  }
+  </script>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <div class="logo">T<span>M</span>E</div>
+      <button class="menu-toggle" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="docs.html">Docs</a></li>
+        <li><a href="https://github.com/TimeAndTimeStudio/TME" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+      <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="th" onclick="setLang('th')">TH</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="hero" style="padding-bottom: 20px;">
+        <h1>About <span class="highlight">TME</span></h1>
+        <div class="lang-th">
+          <p class="tagline">Small, Simple, Fast — 2D Game Engine</p>
+        </div>
+        <div class="lang-en">
+          <p class="tagline">Small, Simple, Fast — 2D Game Engine</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- What is TME -->
+    <section class="container" style="padding: 40px 24px;">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 16px;">
+          <span class="lang-th">TME คืออะไร?</span>
+          <span class="lang-en">What is TME?</span>
+        </h2>
+        <div class="lang-th">
+          <p>TME (Time Mini Engine) คือ game engine ขนาดเล็กสำหรับสร้างเกม 2D ออกแบบมาเพื่อเขียนง่าย รันเร็ว ใช้ WebGPU สำหรับ render และมี build system ที่เรียบง่าย</p>
+        </div>
+        <div class="lang-en">
+          <p>TME (Time Mini Engine) is a small game engine for creating 2D games. Designed for easy writing, fast running, WebGPU rendering, and simple build system.</p>
+        </div>
+
+        <div class="note">
+          <span class="lang-th"><strong>เป้าหมาย:</strong> ไม่ใช่ game engine ขนาดใหญ่ แต่เป็น engine เล็กที่ถูกต้อง คาดเดาได้ และง่ายต่อการพัฒนาเกม</span>
+          <span class="lang-en"><strong>Goal:</strong> Not to build a large game engine, but a small, correct, predictable, and easy-to-use engine for game development.</span>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Architecture</span>
+          <span class="lang-en">Architecture</span>
+        </h2>
+        <div class="lang-th">
+          <ul>
+            <li>TME Engine — render (WebGPU), input (keyboard/mouse/touch), audio</li>
+            <li>TEMF Runtime — game loop, start(), lifecycle, coordination</li>
+            <li>Build Program — tme build, invoke TSL compiler, output static dist/</li>
+            <li>TSL External — read-only compiler for game.tsl → game.js</li>
+          </ul>
+        </div>
+        <div class="lang-en">
+          <ul>
+            <li>TME Engine — render (WebGPU), input (keyboard/mouse/touch), audio</li>
+            <li>TEMF Runtime — game loop, start(), lifecycle, coordination</li>
+            <li>Build Program — tme build, invoke TSL compiler, output static dist/</li>
+            <li>TSL External — read-only compiler for game.tsl → game.js</li>
+          </ul>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Project Stats</span>
+          <span class="lang-en">Project Stats</span>
+        </h2>
+        <div class="feature-grid" style="margin-top: 20px;">
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">1.0.0</div>
+            <p>
+              <span class="lang-th">Version</span>
+              <span class="lang-en">Version</span>
+            </p>
+          </div>
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">3</div>
+            <p>
+              <span class="lang-th">Engine Subsystems</span>
+              <span class="lang-en">Engine Subsystems</span>
+            </p>
+          </div>
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">6</div>
+            <p>
+              <span class="lang-th">Test Suites</span>
+              <span class="lang-en">Test Suites</span>
+            </p>
+          </div>
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">WebGPU</div>
+            <p>
+              <span class="lang-th">Only Backend</span>
+              <span class="lang-en">Only Backend</span>
+            </p>
+          </div>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Build Pipeline</span>
+          <span class="lang-en">Build Pipeline</span>
+        </h2>
+        <div class="pipeline" style="margin: 24px 0;">
+          <div class="pipeline-step">game.tsl</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">TSL Compiler</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">game.js</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">TME Engine</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">WebGPU</div>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Out of Scope (v1.0)</span>
+          <span class="lang-en">Out of Scope (v1.0)</span>
+        </h2>
+        <div class="lang-th">
+          <ul>
+            <li>Physics, collision engine</li>
+            <li>Animation framework, particle system</li>
+            <li>Tilemap, scene manager, camera system</li>
+            <li>Font/text renderer, UI framework</li>
+            <li>Canvas2D/WebGL fallback</li>
+            <li>Plugin system, dependency injection</li>
+            <li>Large asset manager, event bus</li>
+          </ul>
+        </div>
+        <div class="lang-en">
+          <ul>
+            <li>Physics, collision engine</li>
+            <li>Animation framework, particle system</li>
+            <li>Tilemap, scene manager, camera system</li>
+            <li>Font/text renderer, UI framework</li>
+            <li>Canvas2D/WebGL fallback</li>
+            <li>Plugin system, dependency injection</li>
+            <li>Large asset manager, event bus</li>
+          </ul>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">License</span>
+          <span class="lang-en">License</span>
+        </h2>
+        <div class="lang-th">
+          <p>TME ปล่อยภายใต้ <strong>GPL-3.0 License</strong></p>
+        </div>
+        <div class="lang-en">
+          <p>TME is released under the <strong>GPL-3.0 License</strong></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <span class="lang-th">TME v1.0.0 — Time Mini Engine &nbsp;|&nbsp; GPL-3.0 License</span>
+      <span class="lang-en">TME v1.0.0 — Time Mini Engine &nbsp;|&nbsp; GPL-3.0 License</span>
+    </p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

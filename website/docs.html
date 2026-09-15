@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docs — TME — Time Mini Engine</title>
+  <meta name="description" content="TME (Time Mini Engine) documentation — API reference, render, input, audio, game loop, build process, and project structure.">
+  <meta name="keywords" content="TME, Time Mini Engine, game engine, 2D game, WebGPU, API, documentation">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="TimeAndTimeStudio">
+  <link rel="canonical" href="https://tme.timeandtime.online/docs">
+  <meta name="theme-color" content="#E8751A">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="TME Documentation — Time Mini Engine">
+  <meta property="og:description" content="TME documentation — API reference, render, input, audio, game loop, build process, and project structure.">
+  <meta property="og:image" content="https://tme.timeandtime.online/og-image.png">
+  <meta property="og:url" content="https://tme.timeandtime.online/docs">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="TME">
+  <meta property="og:locale" content="th_TH">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TME Documentation — Time Mini Engine">
+  <meta name="twitter:description" content="TME documentation — API reference, render, input, audio, game loop, build process, and project structure.">
+  <meta name="twitter:image" content="https://tme.timeandtime.online/og-image.png">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "TME Documentation",
+    "url": "https://tme.timeandtime.online/docs",
+    "description": "TME documentation — API reference, render, input, audio, game loop, build process, and project structure."
+  }
+  </script>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <div class="logo">T<span>M</span>E</div>
+      <button class="menu-toggle" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="docs.html" class="active">Docs</a></li>
+        <li><a href="https://github.com/TimeAndTimeStudio/TME" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+      <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="th" onclick="setLang('th')">TH</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="docs-layout">
+
+        <aside class="docs-sidebar">
+          <div class="lang-th">
+            <h3>Reference</h3>
+            <div class="search-box">
+              <input type="text" id="docSearch" placeholder="ค้นหาเอกสาร..." autocomplete="off">
+              <div class="search-results" id="searchResults"></div>
+            </div>
+            <ul id="docNav">
+              <li><a href="#getting-started" class="active">เริ่มต้นใช้งาน</a></li>
+              <li><a href="#project-structure">Project Structure</a></li>
+              <li><a href="#render">Render</a></li>
+              <li><a href="#input">Input</a></li>
+              <li><a href="#audio">Audio</a></li>
+              <li><a href="#game-loop">Game Loop</a></li>
+              <li><a href="#build">Build</a></li>
+            </ul>
+          </div>
+          <div class="lang-en">
+            <h3>Reference</h3>
+            <div class="search-box">
+              <input type="text" id="docSearch" placeholder="Search docs..." autocomplete="off">
+              <div class="search-results" id="searchResults"></div>
+            </div>
+            <ul id="docNav">
+              <li><a href="#getting-started" class="active">Getting Started</a></li>
+              <li><a href="#project-structure">Project Structure</a></li>
+              <li><a href="#render">Render</a></li>
+              <li><a href="#input">Input</a></li>
+              <li><a href="#audio">Audio</a></li>
+              <li><a href="#game-loop">Game Loop</a></li>
+              <li><a href="#build">Build</a></li>
+            </ul>
+          </div>
+        </aside>
+
+        <div class="docs-content">
+
+          <section id="getting-started">
+            <div class="lang-th">
+              <h2>เริ่มต้นใช้งาน</h2>
+              <p>TME (Time Mini Engine) คือ game engine ขนาดเล็กสำหรับสร้างเกม 2D ใช้ WebGPU สำหรับ render และมี build system ที่เรียบง่าย</p>
+
+              <h3>การติดตั้ง</h3>
+              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TME.git
+cd TME</div>
+
+              <h3>สร้างโปรเจกต์ใหม่</h3>
+              <div class="code-block">npx tme init my-game
+cd my-game</div>
+
+              <h3>Build</h3>
+              <div class="code-block">npx tme build</div>
+
+              <h3>รันเกม</h3>
+              <div class="code-block">เปิด index.html ในเบราว์เซอร์</div>
+            </div>
+            <div class="lang-en">
+              <h2>Getting Started</h2>
+              <p>TME (Time Mini Engine) is a small game engine for creating 2D games. Uses WebGPU for rendering and has a simple build system.</p>
+
+              <h3>Installation</h3>
+              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TME.git
+cd TME</div>
+
+              <h3>Create New Project</h3>
+              <div class="code-block">npx tme init my-game
+cd my-game</div>
+
+              <h3>Build</h3>
+              <div class="code-block">npx tme build</div>
+
+              <h3>Run Game</h3>
+              <div class="code-block">Open index.html in browser</div>
+            </div>
+          </section>
+
+          <section id="project-structure">
+            <div class="lang-th">
+              <h2>Project Structure</h2>
+
+              <h3>โครงสร้างโปรเจกต์</h3>
+              <div class="code-block">my-game/
+├── game.tsl          # Game source code
+├── index.html        # HTML page with canvas
+├── style.css         # User CSS
+├── assets/           # User assets (images, audio)
+└── dist/             # Build output</div>
+
+              <h3>ไฟล์ที่จำเป็น</h3>
+              <ul>
+                <li><code>game.tsl</code> — Game source code</li>
+                <li><code>index.html</code> — ต้องมี <code>&lt;canvas id="game"&gt;</code></li>
+                <li><code>style.css</code> — User CSS (optional)</li>
+              </ul>
+            </div>
+            <div class="lang-en">
+              <h2>Project Structure</h2>
+
+              <h3>Project Layout</h3>
+              <div class="code-block">my-game/
+├── game.tsl          # Game source code
+├── index.html        # HTML page with canvas
+├── style.css         # User CSS
+├── assets/           # User assets (images, audio)
+└── dist/             # Build output</div>
+
+              <h3>Required Files</h3>
+              <ul>
+                <li><code>game.tsl</code> — Game source code</li>
+                <li><code>index.html</code> — Must contain <code>&lt;canvas id="game"&gt;</code></li>
+                <li><code>style.css</code> — User CSS (optional)</li>
+              </ul>
+            </div>
+          </section>
+
+          <section id="render">
+            <div class="lang-th">
+              <h2>Render</h2>
+              <p>TME ใช้ WebGPU สำหรับ rendering — ไม่มี Canvas2D/WebGL fallback</p>
+
+              <h3>rect()</h3>
+              <p>วาดสี่เหลี่ยม</p>
+              <div class="code-block">rect(x, y, width, height, color, rotation?, scale?, alpha?)</div>
+              <table>
+                <thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead>
+                <tbody>
+                  <tr><td>x, y</td><td>number</td><td>—</td></tr>
+                  <tr><td>width, height</td><td>number</td><td>—</td></tr>
+                  <tr><td>color</td><td>string</td><td>—</td></tr>
+                  <tr><td>rotation</td><td>number</td><td>0 (radians)</td></tr>
+                  <tr><td>scale</td><td>number</td><td>1 (รองรับทศนิยม)</td></tr>
+                  <tr><td>alpha</td><td>number</td><td>1</td></tr>
+                </tbody>
+              </table>
+
+              <h3>image()</h3>
+              <p>วาดรูปภาพ</p>
+              <div class="code-block">image(src, x, y, width, height, rotation?, scale?, alpha?)</div>
+              <p>Image โหลดแบบ on-demand — โหลดเมื่อใช้เท่านั้น</p>
+            </div>
+            <div class="lang-en">
+              <h2>Render</h2>
+              <p>TME uses WebGPU for rendering — no Canvas2D/WebGL fallback.</p>
+
+              <h3>rect()</h3>
+              <p>Draw a rectangle.</p>
+              <div class="code-block">rect(x, y, width, height, color, rotation?, scale?, alpha?)</div>
+              <table>
+                <thead><tr><th>Parameter</th><th>Type</th><th>Default</th></tr></thead>
+                <tbody>
+                  <tr><td>x, y</td><td>number</td><td>—</td></tr>
+                  <tr><td>width, height</td><td>number</td><td>—</td></tr>
+                  <tr><td>color</td><td>string</td><td>—</td></tr>
+                  <tr><td>rotation</td><td>number</td><td>0 (radians)</td></tr>
+                  <tr><td>scale</td><td>number</td><td>1 (supports decimals)</td></tr>
+                  <tr><td>alpha</td><td>number</td><td>1</td></tr>
+                </tbody>
+              </table>
+
+              <h3>image()</h3>
+              <p>Draw an image.</p>
+              <div class="code-block">image(src, x, y, width, height, rotation?, scale?, alpha?)</div>
+              <p>Images load on-demand — only loaded when used.</p>
+            </div>
+          </section>
+
+          <section id="input">
+            <div class="lang-th">
+              <h2>Input</h2>
+              <p>รองรับ keyboard, mouse, touch</p>
+
+              <h3>Keyboard</h3>
+              <div class="code-block">if input.keyboard.is_down("space"):
+  print("Space pressed")</div>
+
+              <h3>Mouse</h3>
+              <div class="code-block">if input.mouse.is_down(0):
+  print(f"Mouse at {input.mouse.x}, {input.mouse.y}")</div>
+
+              <h3>Touch</h3>
+              <div class="code-block">if input.pointer.is_touch:
+  print(f"Touch at {input.pointer.x}, {input.pointer.y}")</div>
+            </div>
+            <div class="lang-en">
+              <h2>Input</h2>
+              <p>Supports keyboard, mouse, touch.</p>
+
+              <h3>Keyboard</h3>
+              <div class="code-block">if input.keyboard.is_down("space"):
+  print("Space pressed")</div>
+
+              <h3>Mouse</h3>
+              <div class="code-block">if input.mouse.is_down(0):
+  print(f"Mouse at {input.mouse.x}, {input.mouse.y}")</div>
+
+              <h3>Touch</h3>
+              <div class="code-block">if input.pointer.is_touch:
+  print(f"Touch at {input.pointer.x}, {input.pointer.y}")</div>
+            </div>
+          </section>
+
+          <section id="audio">
+            <div class="lang-th">
+              <h2>Audio</h2>
+              <p>ใช้ audio object เดียวสำหรับ SFX และ BGM</p>
+
+              <h3>Sound Effects</h3>
+              <div class="code-block">audio.play("sfx_jump")</div>
+
+              <h3>Background Music</h3>
+              <div class="code-block">audio.play("bgm_main", true)  # loop</div>
+
+              <h3>Control</h3>
+              <div class="code-block">audio.volume = 0.5
+audio.pause()
+audio.resume()</div>
+            </div>
+            <div class="lang-en">
+              <h2>Audio</h2>
+              <p>Uses one unified audio object for SFX and BGM.</p>
+
+              <h3>Sound Effects</h3>
+              <div class="code-block">audio.play("sfx_jump")</div>
+
+              <h3>Background Music</h3>
+              <div class="code-block">audio.play("bgm_main", true)  # loop</div>
+
+              <h3>Control</h3>
+              <div class="code-block">audio.volume = 0.5
+audio.pause()
+audio.resume()</div>
+            </div>
+          </section>
+
+          <section id="game-loop">
+            <div class="lang-th">
+              <h2>Game Loop</h2>
+              <p>TEMF runtime จัดการ game loop — คุณแค่เขียน update และ draw</p>
+
+              <h3>โครงสร้าง</h3>
+              <div class="code-block">function update(dt):
+  # Game logic — เรียกทุก frame
+
+function draw():
+  # Render — เรียกหลัง update
+
+start()  # เริ่ม game loop</div>
+
+              <h3>Fixed Timestep</h3>
+              <p>update(dt) ใช้ fixed timestep — dt มีค่าคงที่ทุก frame</p>
+            </div>
+            <div class="lang-en">
+              <h2>Game Loop</h2>
+              <p>TEMF runtime manages the game loop — you just write update and draw.</p>
+
+              <h3>Structure</h3>
+              <div class="code-block">function update(dt):
+  # Game logic — called every frame
+
+function draw():
+  # Render — called after update
+
+start()  # Start game loop</div>
+
+              <h3>Fixed Timestep</h3>
+              <p>update(dt) uses fixed timestep — dt is constant every frame.</p>
+            </div>
+          </section>
+
+          <section id="build">
+            <div class="lang-th">
+              <h2>Build</h2>
+              <p>Build Program orchestrate การ build ทั้งหมด</p>
+
+              <h3>คำสั่ง</h3>
+              <div class="code-block">npx tme init [project]  # สร้างโปรเจกต์ใหม่
+npx tme build           # build โปรเจกต์</div>
+
+              <h3>Output</h3>
+              <div class="code-block">dist/
+├── index.html
+├── game.js
+├── engine.js
+├── style.css
+└── assets/</div>
+
+              <h3>กฎสำคัญ</h3>
+              <ul>
+                <li>WebGPU เท่านั้น — ไม่มี fallback</li>
+                <li>index.html ต้องมี canvas#game</li>
+                <li>style.css เป็น user-owned — build ไม่ทับ</li>
+                <li>TSL เป็น external read-only — build ไม่แก้</li>
+              </ul>
+            </div>
+            <div class="lang-en">
+              <h2>Build</h2>
+              <p>Build Program orchestrates the entire build process.</p>
+
+              <h3>Commands</h3>
+              <div class="code-block">npx tme init [project]  # Create new project
+npx tme build           # Build project</div>
+
+              <h3>Output</h3>
+              <div class="code-block">dist/
+├── index.html
+├── game.js
+├── engine.js
+├── style.css
+└── assets/</div>
+
+              <h3>Important Rules</h3>
+              <ul>
+                <li>WebGPU only — no fallback</li>
+                <li>index.html must have canvas#game</li>
+                <li>style.css is user-owned — build never overwrites</li>
+                <li>TSL is external read-only — build never modifies</li>
+              </ul>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>
+      <span class="lang-th">TME v1.0.0 — Time Mini Engine &nbsp;|&nbsp; GPL-3.0 License</span>
+      <span class="lang-en">TME v1.0.0 — Time Mini Engine &nbsp;|&nbsp; GPL-3.0 License</span>
+    </p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
