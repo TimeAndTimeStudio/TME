@@ -1476,7 +1476,9 @@ function start(button) {
       console.log('Adding click listener to button:', button);
       btn.addEventListener('click', () => {
         console.log('Button clicked!');
-        initAndStart();
+        if (!TEMF._started) {
+          initAndStart();
+        }
       });
       return;
     }
