@@ -10,6 +10,11 @@
 - Rectangle (`rect()`) and image (`image()`) rendering
 - Texture caching for efficient image loading
 - Keyboard, mouse, and touch input (tap, down, drag, up)
+- Unified audio API with Sound Effects (SFX) and Background Music (BGM)
+- Audio volume controls (master, SFX, BGM) and mute
+- Audio looping for both SFX and BGM
+- BGM pause, resume, and stop
+- Audio caching to avoid repeated decoding
 - Fixed timestep game loop with `start()`, `fps`, `update(dt)`, and `draw`
 - Frame-rate independent movement (speed * dt)
 - Spiral of death prevention (elapsed time clamped to 0.25s)
@@ -68,6 +73,42 @@ draw:
 - `fps` configures the fixed update rate (default: 60)
 - `update(dt)` receives a fixed delta time (e.g., 0.01667 for 60fps)
 - `draw()` runs at the browser's animation frame rate via `requestAnimationFrame()`
+
+## Audio API
+
+TME provides a unified `audio` object for both Sound Effects (SFX) and Background Music (BGM):
+
+```tsl
+game "AudioDemo"
+
+start:
+    audio.play("audio/bgm/theme.mp3", type="bgm", loop=true)
+
+update(dt):
+    if key.down("Space"):
+        audio.play("audio/sfx/jump.wav", type="sfx")
+```
+
+### Audio Controls
+
+```tsl
+audio.volume      # Master volume (0..1)
+audio.sfxVolume   # SFX volume (0..1)
+audio.bgmVolume   # BGM volume (0..1)
+audio.muted       # Master mute (true/false)
+```
+
+### BGM Controls
+
+```tsl
+audio.pause()   # Pause BGM (preserves position)
+audio.resume()  # Resume BGM from pause
+audio.stop()    # Stop BGM (resets position)
+```
+
+### Audio Caching
+
+Audio files are cached after first load. Repeated playback of the same file reuses the cached decoded audio data.
 
 ## Project Structure
 

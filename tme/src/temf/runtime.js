@@ -44,6 +44,19 @@ const TEMF = {
   _touchX: 0,
   _touchY: 0,
   _touchState: { down: false, tapped: false, dragging: false },
+  _audioContext: null,
+  _audioInitialized: false,
+  _audioCache: new Map(),
+  _sfxNodes: [],
+  _bgmSource: null,
+  _bgmBuffer: null,
+  _bgmGain: null,
+  _sfxGain: null,
+  _masterGain: null,
+  _audioVolume: 1,
+  _audioSfxVolume: 1,
+  _audioBgmVolume: 1,
+  _audioMuted: false,
 };
 
 const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
@@ -709,6 +722,293 @@ function _initTouch() {
   });
 }
 
+function _initAudio() {
+  if (TEMF._audioInitialized) return;
+  if (typeof AudioContext === 'undefined' && typeof webkitAudioContext !== 'undefined') {
+    TEMF._audioContext = new webkitAudioContext();
+  } else {
+    TEMF._audioContext = new (AudioContext || webkitAudioContext)();
+  }
+  TEMF._audioInitialized = true;
+
+  TEMF._masterGain = TEMF._audioContext.createGain();
+  TEMF._masterGain.connect(TEMF._audioContext.destination);
+  TEMF._masterGain.gain.value = TEMF._audioVolume;
+
+  TEMF._sfxGain = TEMF._audioContext.createGain();
+  TEMF._sfxGain.gain.value = TEMF._audioSfxVolume;
+  TEMF._sfxGain.connect(TEMF._masterGain);
+
+  TEMF._bgmGain = TEMF._audioContext.createGain();
+  TEMF._bgmGain.gain.value = TEMF._audioBgmVolume;
+  TEMF._bgmGain.connect(TEMF._masterGain);
+}
+
+function _resumeAudioContext() {
+  if (TEMF._audioContext && TEMF._audioContext.state === 'suspended') {
+    TEMF._audioContext.resume().catch(() => {});
+  }
+}
+
+async function _decodeAudioData(arrayBuffer) {
+  if (!TEMF._audioContext) return null;
+  try {
+    return await TEMF._audioContext.decodeAudioData(arrayBuffer);
+  } catch (e) {
+    console.error('Failed to decode audio:', e.message);
+    return null;
+  }
+}
+
+async function _loadAudioBuffer(path) {
+  if (TEMF._audioCache.has(path)) {
+    return TEMF._audioCache.get(path);
+  }
+
+  const base = _getBasePath();
+  const url = base + path;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to load audio: ${url}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await _decodeAudioData(arrayBuffer);
+    if (audioBuffer) {
+      TEMF._audioCache.set(path, audioBuffer);
+    }
+    return audioBuffer;
+  } catch (e) {
+    console.error(e.message);
+    return null;
+  }
+}
+
+function _playSfx(path, loop) {
+  if (!TEMF._audioContext) return null;
+  _resumeAudioContext();
+
+  const audioBuffer = TEMF._audioCache.get(path);
+  if (!audioBuffer) {
+    _loadAudioBuffer(path).then((buffer) => {
+      if (buffer) {
+        TEMF._audioCache.set(path, buffer);
+        if (loop) {
+          _playSfxInstance(buffer, true);
+        }
+      }
+    });
+    return null;
+  }
+
+  return _playSfxInstance(audioBuffer, loop);
+}
+
+function _playSfxInstance(buffer, loop) {
+  let source = null;
+  try {
+    source = TEMF._audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.loop = loop || false;
+    source.connect(TEMF._sfxGain);
+    source.start(0);
+  } catch (e) {
+    console.error('SFX playback failed:', e.message);
+    return null;
+  }
+
+  const node = { source, type: 'sfx', loop: loop || false, path };
+  TEMF._sfxNodes.push(node);
+
+  if (!loop) {
+    source.onended = () => {
+      const idx = TEMF._sfxNodes.indexOf(node);
+      if (idx !== -1) {
+        TEMF._sfxNodes.splice(idx, 1);
+      }
+    };
+  }
+
+  return node;
+}
+
+function _stopSfxNode(node) {
+  try {
+    if (node && node.source) {
+      node.source.onended = null;
+      node.source.stop();
+    }
+  } catch (e) {}
+  const idx = TEMF._sfxNodes.indexOf(node);
+  if (idx !== -1) {
+    TEMF._sfxNodes.splice(idx, 1);
+  }
+}
+
+function _stopAllSfx() {
+  for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
+    _stopSfxNode(TEMF._sfxNodes[i]);
+  }
+}
+
+function _playBgm(path, loop) {
+  if (!TEMF._audioContext) return;
+  _resumeAudioContext();
+
+  if (TEMF._bgmSource) {
+    try {
+      TEMF._bgmSource.onended = null;
+      TEMF._bgmSource.stop();
+    } catch (e) {}
+    TEMF._bgmSource = null;
+  }
+
+  const audioBuffer = TEMF._audioCache.get(path);
+  if (!audioBuffer) {
+    _loadAudioBuffer(path).then((buffer) => {
+      if (buffer) {
+        TEMF._audioCache.set(path, buffer);
+        _playBgmInstance(buffer, loop !== false);
+      }
+    });
+    return;
+  }
+
+  _playBgmInstance(audioBuffer, loop !== false);
+}
+
+function _playBgmInstance(buffer, loop) {
+  let source = null;
+  try {
+    source = TEMF._audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.loop = loop || true;
+    source.connect(TEMF._bgmGain);
+    source.start(0);
+    TEMF._bgmSource = source;
+  } catch (e) {
+    console.error('BGM playback failed:', e.message);
+  }
+}
+
+function _stopBgm() {
+  if (TEMF._bgmSource) {
+    try {
+      TEMF._bgmSource.onended = null;
+      TEMF._bgmSource.stop();
+    } catch (e) {}
+    TEMF._bgmSource = null;
+  }
+}
+
+function _pauseBgm() {
+  if (!TEMF._audioContext || !TEMF._bgmSource) return;
+  try {
+    TEMF._audioContext.suspend();
+  } catch (e) {}
+}
+
+function _resumeBgm() {
+  if (!TEMF._audioContext) return;
+  try {
+    TEMF._audioContext.resume();
+  } catch (e) {}
+}
+
+function _setMasterVolume(val) {
+  TEMF._audioVolume = Math.max(0, Math.min(1, val));
+  if (TEMF._masterGain) {
+    TEMF._masterGain.gain.value = TEMF._audioMuted ? 0 : TEMF._audioVolume;
+  }
+}
+
+function _setSfxVolume(val) {
+  TEMF._audioSfxVolume = Math.max(0, Math.min(1, val));
+  if (TEMF._sfxGain) {
+    TEMF._sfxGain.gain.value = TEMF._audioSfxVolume;
+  }
+}
+
+function _setBgmVolume(val) {
+  TEMF._audioBgmVolume = Math.max(0, Math.min(1, val));
+  if (TEMF._bgmGain) {
+    TEMF._bgmGain.gain.value = TEMF._audioBgmVolume;
+  }
+}
+
+function _setMuted(muted) {
+  TEMF._audioMuted = !!muted;
+  if (TEMF._masterGain) {
+    TEMF._masterGain.gain.value = TEMF._audioMuted ? 0 : TEMF._audioVolume;
+  }
+}
+
+function _cleanupAudio() {
+  _stopAllSfx();
+  _stopBgm();
+  if (TEMF._audioCache) {
+    TEMF._audioCache.clear();
+  }
+  if (TEMF._audioContext) {
+    try {
+      TEMF._audioContext.close();
+    } catch (e) {}
+    TEMF._audioContext = null;
+  }
+  TEMF._audioInitialized = false;
+}
+
+const audio = {
+  play(path, type, opts) {
+    if (!path || !type) return;
+    const options = typeof opts === 'object' ? opts : {};
+    const loop = options.loop || false;
+
+    if (type === 'sfx') {
+      if (!TEMF._audioContext) _initAudio();
+      _playSfx(path, loop);
+    } else if (type === 'bgm') {
+      if (!TEMF._audioContext) _initAudio();
+      _playBgm(path, loop);
+    }
+  },
+  stop() {
+    _stopBgm();
+    _stopAllSfx();
+  },
+  pause() {
+    _pauseBgm();
+  },
+  resume() {
+    _resumeBgm();
+  },
+  get volume() {
+    return TEMF._audioVolume;
+  },
+  set volume(val) {
+    _setMasterVolume(val);
+  },
+  get sfxVolume() {
+    return TEMF._audioSfxVolume;
+  },
+  set sfxVolume(val) {
+    _setSfxVolume(val);
+  },
+  get bgmVolume() {
+    return TEMF._audioBgmVolume;
+  },
+  set bgmVolume(val) {
+    _setBgmVolume(val);
+  },
+  get muted() {
+    return TEMF._audioMuted;
+  },
+  set muted(val) {
+    _setMuted(val);
+  },
+};
+
 function _getOrCreateImageBindGroup(texture) {
   if (!texture) return null;
 
@@ -970,7 +1270,7 @@ function start(game, fps) {
   });
 }
 
-export { start, TEMF, mouse, touch };
+export { start, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -980,4 +1280,5 @@ if (typeof window !== 'undefined') {
   window.key = { down: _keyDown };
   window.mouse = mouse;
   window.touch = touch;
+  window.audio = audio;
 }
