@@ -1,5 +1,5 @@
 /**
- * Phase 7 — Keyboard Input Tests
+ * Keyboard Input Tests
  *
  * Tests the key.down() API exposed by TEMF runtime.
  */
@@ -28,7 +28,7 @@ function _testClearKeys() {
   _testKeys.clear();
 }
 
-describe('Phase 7 — Keyboard Input', () => {
+describe('Keyboard Input', () => {
   beforeEach(() => {
     _testClearKeys();
   });
