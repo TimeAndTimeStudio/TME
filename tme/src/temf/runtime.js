@@ -574,11 +574,7 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
 
 async function initWebGPU() {
   if (!navigator.gpu) {
-    const isSecureContext = window.isSecureContext;
-    if (!isSecureContext) {
-      throw new Error('WebGPU requires HTTPS or localhost. Current: ' + location.protocol + '//' + location.host);
-    }
-    throw new Error('WebGPU is not supported. Enable in chrome://flags/#enable-webgpu');
+    throw new Error('WebGPU is not supported by this browser. Please use a browser with WebGPU support.');
   }
 
   const adapter = await navigator.gpu.requestAdapter();
@@ -587,7 +583,7 @@ async function initWebGPU() {
     if (isFileProtocol) {
       throw new Error('WebGPU requires a local server. Run: npx serve . or python -m http.server');
     }
-    throw new Error('WebGPU: No adapter found. Check browser WebGPU support and GPU permissions.');
+    throw new Error('WebGPU: Failed to request adapter. Check browser compatibility and permissions.');
   }
 
   TEMF._device = await adapter.requestDevice();
