@@ -28,6 +28,8 @@ function update(dt):
 function draw():
   rect(0, 400, 800, 50, "brown")
   image("player.png", player.x, player.y, 50, 50)
+
+start()
 ```
 
 ## Build
