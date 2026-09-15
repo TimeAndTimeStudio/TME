@@ -1307,6 +1307,8 @@ function _draw() {
   const device = TEMF._device;
   const context = TEMF._context;
 
+  console.log('_draw: device=', !!device, 'context=', !!context, 'drawList=', TEMF._drawList.length);
+
   if (!device || !context) return;
 
   console.log('Drawing', TEMF._drawList.length, 'items');
