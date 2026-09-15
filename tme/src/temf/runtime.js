@@ -1435,7 +1435,7 @@ function gameLoop() {
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-function start(game, fps) {
+function start(game, fps, button) {
   if (TEMF._started) {
     return;
   }
@@ -1447,17 +1447,29 @@ function start(game, fps) {
   TEMF._accumulator = 0;
   TEMF._lastTime = 0;
 
-  initWebGPU().then(() => {
-    createResizeObserver();
-    window.addEventListener('resize', resizeCanvas);
-    _initKeyboard();
-    _initMouse();
-    _initTouch();
-    TEMF._lastTime = performance.now();
-    gameLoop();
-  }).catch(err => {
-    console.error('TEMF initialization failed:', err.message);
-  });
+  function initAndStart() {
+    initWebGPU().then(() => {
+      createResizeObserver();
+      window.addEventListener('resize', resizeCanvas);
+      _initKeyboard();
+      _initMouse();
+      _initTouch();
+      TEMF._lastTime = performance.now();
+      gameLoop();
+    }).catch(err => {
+      console.error('TEMF initialization failed:', err.message);
+    });
+  }
+
+  if (button) {
+    const btn = typeof button === 'string' ? document.getElementById(button) : button;
+    if (btn) {
+      btn.addEventListener('click', initAndStart);
+      return;
+    }
+  }
+
+  initAndStart();
 }
 
 TEMF.cleanupTextures = _cleanupTextures;
