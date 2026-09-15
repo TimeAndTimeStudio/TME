@@ -1435,25 +1435,9 @@ function gameLoop() {
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-function start(fpsOrButton, button) {
+function start(button) {
   if (TEMF._started) {
     return;
-  }
-
-  let fps, btnId;
-
-  if (typeof fpsOrButton === 'number') {
-    fps = fpsOrButton;
-    btnId = button;
-  } else if (typeof fpsOrButton === 'string') {
-    fps = 60;
-    btnId = fpsOrButton;
-  } else if (typeof fpsOrButton === 'object' && fpsOrButton !== null) {
-    fps = 60;
-    btnId = fpsOrButton;
-  } else {
-    fps = 60;
-    btnId = fpsOrButton;
   }
 
   TEMF._started = true;
@@ -1463,13 +1447,15 @@ function start(fpsOrButton, button) {
   if (typeof draw === 'function') game.draw = draw;
 
   TEMF._game = game;
-  TEMF._fps = fps;
+  TEMF._fps = TEMF._fps || 60;
   TEMF._step = 1 / TEMF._fps;
   TEMF._accumulator = 0;
   TEMF._lastTime = 0;
 
   function initAndStart() {
+    console.log('Starting game loop...');
     initWebGPU().then(() => {
+      console.log('WebGPU initialized');
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
       _initKeyboard();
@@ -1478,14 +1464,18 @@ function start(fpsOrButton, button) {
       TEMF._lastTime = performance.now();
       gameLoop();
     }).catch(err => {
-      console.error('TEMF initialization failed:', err.message);
+      console.error('TEMF initialization failed:', err);
     });
   }
 
-  if (btnId) {
-    const btn = typeof btnId === 'string' ? document.getElementById(btnId) : btnId;
+  if (button) {
+    const btn = typeof button === 'string' ? document.getElementById(button) : button;
     if (btn) {
-      btn.addEventListener('click', initAndStart);
+      console.log('Adding click listener to button:', button);
+      btn.addEventListener('click', () => {
+        console.log('Button clicked!');
+        initAndStart();
+      });
       return;
     }
   }
@@ -1493,13 +1483,20 @@ function start(fpsOrButton, button) {
   initAndStart();
 }
 
+function fps(fpsValue) {
+  TEMF._fps = fpsValue;
+  TEMF._step = 1 / TEMF._fps;
+  console.log('FPS set to:', fpsValue);
+}
+
 TEMF.cleanupTextures = _cleanupTextures;
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, TEMF, mouse, touch, audio };
+export { start, fps, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
+  window.fps = fps;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
