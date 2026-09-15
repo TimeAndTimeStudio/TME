@@ -15,7 +15,7 @@ rect(x: number, y: number, width: number, height: number, color: string, rotatio
 - `height` (number): Height of the rectangle.
 - `color` (string): Fill color in hex format. Supports `#RRGGBB` or `#RRGGBBAA`.
 - `rotation` (number, optional): Rotation angle in degrees. Default `0`.
-- `scale` (number, optional): Uniform scale factor. Default `1`.
+- `scale` (number, optional): Uniform scale factor, supports decimals. Default `1`. Values less than `1` shrink, greater than `1` enlarge.
 - `alpha` (number, optional): Overall opacity from `0` (transparent) to `1` (opaque). Default uses color alpha.
 
 **Default Behavior:**
@@ -42,7 +42,7 @@ image(src: string, x: number, y: number, width?: number, height?: number, rotati
 - `width` (number, optional): Display width. If omitted, uses original image width.
 - `height` (number, optional): Display height. If omitted, uses original image height.
 - `rotation` (number, optional): Rotation angle in degrees. Default `0`.
-- `scale` (number, optional): Uniform scale factor. Default `1`.
+- `scale` (number, optional): Uniform scale factor, supports decimals. Default `1`. Values less than `1` shrink, greater than `1` enlarge.
 - `alpha` (number, optional): Overall opacity from `0` to `1`. Default `1`.
 
 **Default Behavior:**
