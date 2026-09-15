@@ -35,6 +35,7 @@ const TEMF = {
   _rectMax: 1024,
   _textureCache: new Map(),
   _imageElements: new Map(),
+  _keyPressed: new Set(),
 };
 
 const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
@@ -558,6 +559,22 @@ function createResizeObserver() {
   }
 }
 
+function _initKeyboard() {
+  if (typeof window === 'undefined') return;
+
+  window.addEventListener('keydown', (e) => {
+    TEMF._keyPressed.add(e.key);
+  });
+
+  window.addEventListener('keyup', (e) => {
+    TEMF._keyPressed.delete(e.key);
+  });
+}
+
+function _keyDown(key) {
+  return TEMF._keyPressed.has(key);
+}
+
 function _getOrCreateImageBindGroup(texture) {
   if (!texture) return null;
 
@@ -765,6 +782,7 @@ function start(game, fps) {
   initWebGPU().then(() => {
     createResizeObserver();
     window.addEventListener('resize', resizeCanvas);
+    _initKeyboard();
     TEMF._lastTime = performance.now();
     gameLoop();
   }).catch(err => {
@@ -779,4 +797,5 @@ if (typeof window !== 'undefined') {
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
+  window.key = { down: _keyDown };
 }
