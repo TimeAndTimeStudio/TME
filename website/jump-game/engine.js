@@ -1303,6 +1303,8 @@ function _draw() {
 
   if (!device || !context) return;
 
+  console.log('Drawing', TEMF._drawList.length, 'items');
+
   if (TEMF._drawList.length === 0) {
     const commandEncoder = device.createCommandEncoder();
     const textureView = context.getCurrentTexture().createView();
