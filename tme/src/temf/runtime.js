@@ -574,7 +574,11 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
 
 async function initWebGPU() {
   if (!navigator.gpu) {
-    throw new Error('WebGPU is not supported by this browser. Please use a browser with WebGPU support.');
+    const isSecureContext = window.isSecureContext;
+    if (!isSecureContext) {
+      throw new Error('WebGPU requires HTTPS or localhost. Current: ' + location.protocol + '//' + location.host);
+    }
+    throw new Error('WebGPU is not supported. Enable in chrome://flags/#enable-webgpu');
   }
 
   const adapter = await navigator.gpu.requestAdapter();
