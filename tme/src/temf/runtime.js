@@ -1435,9 +1435,25 @@ function gameLoop() {
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-function start(button) {
+function start(fpsOrButton, button) {
   if (TEMF._started) {
     return;
+  }
+
+  let fps, btnId;
+
+  if (typeof fpsOrButton === 'number') {
+    fps = fpsOrButton;
+    btnId = button;
+  } else if (typeof fpsOrButton === 'string') {
+    fps = 60;
+    btnId = fpsOrButton;
+  } else if (typeof fpsOrButton === 'object' && fpsOrButton !== null) {
+    fps = 60;
+    btnId = fpsOrButton;
+  } else {
+    fps = 60;
+    btnId = fpsOrButton;
   }
 
   TEMF._started = true;
@@ -1447,7 +1463,7 @@ function start(button) {
   if (typeof draw === 'function') game.draw = draw;
 
   TEMF._game = game;
-  TEMF._fps = 60;
+  TEMF._fps = fps;
   TEMF._step = 1 / TEMF._fps;
   TEMF._accumulator = 0;
   TEMF._lastTime = 0;
@@ -1466,8 +1482,8 @@ function start(button) {
     });
   }
 
-  if (button) {
-    const btn = typeof button === 'string' ? document.getElementById(button) : button;
+  if (btnId) {
+    const btn = typeof btnId === 'string' ? document.getElementById(btnId) : btnId;
     if (btn) {
       btn.addEventListener('click', initAndStart);
       return;
