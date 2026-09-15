@@ -76,6 +76,8 @@ test('phase13: SFX can be stopped individually', () => {
 
   ok(runtimeContent.includes('_stopSfxNode('), '_stopSfxNode function exists');
   ok(runtimeContent.includes('node.source.stop()'), 'individual SFX can be stopped');
+  ok(runtimeContent.includes('stopSfx('), 'audio.stopSfx method exists');
+  ok(runtimeContent.includes('_stopSfxByPath('), '_stopSfxByPath function exists');
 });
 
 test('phase13: SFX does not stop BGM', () => {
@@ -257,34 +259,29 @@ test('phase13: audio does not crash on autoplay rejection', () => {
 
 // --- Audio cleanup tests ---
 
-test('phase13: cleanupAudio stops all playback', () => {
+test('phase13: automatic audio cleanup on SFX end', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  ok(runtimeContent.includes('_stopAllSfx()'), 'cleanup stops all SFX');
-  ok(runtimeContent.includes('_stopBgm()'), 'cleanup stops BGM');
+  ok(runtimeContent.includes('_releaseAudioIfUnused('), 'automatic cleanup function exists');
+  ok(runtimeContent.includes('TEMF._audioCache.delete(path)'), 'cache entry removed when unused');
+  ok(runtimeContent.includes('TEMF._audioUsage'), 'usage tracking exists');
 });
 
-test('phase13: cleanupAudio clears cache', () => {
+test('phase13: stopSfx method exists for stopping specific SFX', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  ok(runtimeContent.includes('TEMF._audioCache.clear()'), 'cleanup clears audio cache');
+  ok(runtimeContent.includes('stopSfx('), 'audio.stopSfx method exists');
+  ok(runtimeContent.includes('_stopSfxByPath('), '_stopSfxByPath function exists');
 });
 
-test('phase13: cleanupAudio closes AudioContext', () => {
+test('phase13: looping SFX can be stopped by path', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  ok(runtimeContent.includes('TEMF._audioContext.close()'), 'cleanup closes AudioContext');
-});
-
-test('phase13: audio.clearCache() is available on public API', () => {
-  const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
-  const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
-
-  ok(runtimeContent.includes('clearCache()'), 'audio.clearCache method exists');
-  ok(runtimeContent.includes('_cleanupAudio()'), 'clearCache calls cleanup');
+  ok(runtimeContent.includes('node.path === targetPath'), 'stops SFX by matching path');
+  ok(runtimeContent.includes('if (!loop)') && runtimeContent.includes('source.onended'), 'tracks both looping and non-looping SFX');
 });
 
 // --- Build/export tests ---
@@ -382,7 +379,7 @@ test('phase13: audio API does not expose Web Audio objects', () => {
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
   // The public API (audio object) should not expose these
-  const publicApiMethods = ['play', 'stop', 'pause', 'resume', 'clearCache'];
+  const publicApiMethods = ['play', 'stop', 'pause', 'resume', 'stopSfx'];
   const publicApiProps = ['volume', 'sfxVolume', 'bgmVolume', 'muted'];
 
   // Verify public API structure

@@ -49,6 +49,7 @@ const TEMF = {
   _audioContext: null,
   _audioInitialized: false,
   _audioCache: new Map(),
+  _audioUsage: new Map(),
   _sfxNodes: [],
   _bgmSource: null,
   _bgmBuffer: null,
@@ -809,6 +810,7 @@ async function _decodeAudioData(arrayBuffer) {
 
 async function _loadAudioBuffer(path) {
   if (TEMF._audioCache.has(path)) {
+    TEMF._audioUsage.set(path, (TEMF._audioUsage.get(path) || 0) + 1);
     return TEMF._audioCache.get(path);
   }
 
@@ -824,6 +826,7 @@ async function _loadAudioBuffer(path) {
     const audioBuffer = await _decodeAudioData(arrayBuffer);
     if (audioBuffer) {
       TEMF._audioCache.set(path, audioBuffer);
+      TEMF._audioUsage.set(path, 1);
     }
     return audioBuffer;
   } catch (e) {
@@ -838,21 +841,18 @@ function _playSfx(path, loop) {
 
   const audioBuffer = TEMF._audioCache.get(path);
   if (!audioBuffer) {
-    _loadAudioBuffer(path).then((buffer) => {
+    return _loadAudioBuffer(path).then((buffer) => {
       if (buffer) {
-        TEMF._audioCache.set(path, buffer);
-        if (loop) {
-          _playSfxInstance(buffer, true);
-        }
+        return _playSfxInstance(buffer, loop, path);
       }
+      return null;
     });
-    return null;
   }
 
-  return _playSfxInstance(audioBuffer, loop);
+  return _playSfxInstance(audioBuffer, loop, path);
 }
 
-function _playSfxInstance(buffer, loop) {
+function _playSfxInstance(buffer, loop, path) {
   let source = null;
   try {
     source = TEMF._audioContext.createBufferSource();
@@ -874,6 +874,15 @@ function _playSfxInstance(buffer, loop) {
       if (idx !== -1) {
         TEMF._sfxNodes.splice(idx, 1);
       }
+      _releaseAudioIfUnused(path);
+    };
+  } else {
+    source.onended = () => {
+      const idx = TEMF._sfxNodes.indexOf(node);
+      if (idx !== -1) {
+        TEMF._sfxNodes.splice(idx, 1);
+      }
+      _releaseAudioIfUnused(path);
     };
   }
 
@@ -891,12 +900,53 @@ function _stopSfxNode(node) {
   if (idx !== -1) {
     TEMF._sfxNodes.splice(idx, 1);
   }
+  if (node && node.path) {
+    _releaseAudioIfUnused(node.path);
+  }
+}
+
+function _stopSfxByPath(targetPath) {
+  for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
+    const node = TEMF._sfxNodes[i];
+    if (node && node.path === targetPath) {
+      _stopSfxNode(node);
+    }
+  }
+}
+
+function _releaseAudioIfUnused(path) {
+  let usage = TEMF._audioUsage.get(path) || 0;
+  usage--;
+  if (usage <= 0) {
+    TEMF._audioUsage.delete(path);
+    TEMF._audioCache.delete(path);
+  } else {
+    TEMF._audioUsage.set(path, usage);
+  }
 }
 
 function _stopAllSfx() {
   for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
     _stopSfxNode(TEMF._sfxNodes[i]);
   }
+}
+
+function _cleanupAudio() {
+  _stopAllSfx();
+  _stopBgm();
+  if (TEMF._audioCache) {
+    TEMF._audioCache.clear();
+  }
+  if (TEMF._audioUsage) {
+    TEMF._audioUsage.clear();
+  }
+  if (TEMF._audioContext) {
+    try {
+      TEMF._audioContext.close();
+    } catch (e) {}
+    TEMF._audioContext = null;
+  }
+  TEMF._audioInitialized = false;
 }
 
 function _playBgm(path, loop) {
@@ -913,19 +963,17 @@ function _playBgm(path, loop) {
 
   const audioBuffer = TEMF._audioCache.get(path);
   if (!audioBuffer) {
-    _loadAudioBuffer(path).then((buffer) => {
+    return _loadAudioBuffer(path).then((buffer) => {
       if (buffer) {
-        TEMF._audioCache.set(path, buffer);
-        _playBgmInstance(buffer, loop !== false);
+        _playBgmInstance(buffer, loop !== false, path);
       }
     });
-    return;
   }
 
-  _playBgmInstance(audioBuffer, loop !== false);
+  _playBgmInstance(audioBuffer, loop !== false, path);
 }
 
-function _playBgmInstance(buffer, loop) {
+function _playBgmInstance(buffer, loop, path) {
   let source = null;
   try {
     source = TEMF._audioContext.createBufferSource();
@@ -934,6 +982,10 @@ function _playBgmInstance(buffer, loop) {
     source.connect(TEMF._bgmGain);
     source.start(0);
     TEMF._bgmSource = source;
+    if (path) {
+      TEMF._bgmBuffer = buffer;
+      TEMF._audioUsage.set(path, (TEMF._audioUsage.get(path) || 0) + 1);
+    }
   } catch (e) {
     console.error('BGM playback failed:', e.message);
   }
@@ -1000,21 +1052,6 @@ function _cleanupSfxNodes() {
   }
 }
 
-function _cleanupAudio() {
-  _stopAllSfx();
-  _stopBgm();
-  if (TEMF._audioCache) {
-    TEMF._audioCache.clear();
-  }
-  if (TEMF._audioContext) {
-    try {
-      TEMF._audioContext.close();
-    } catch (e) {}
-    TEMF._audioContext = null;
-  }
-  TEMF._audioInitialized = false;
-}
-
 function _cleanupTextures() {
   for (const [, entry] of TEMF._textureCache) {
     if (entry.texture) {
@@ -1076,8 +1113,9 @@ const audio = {
   set muted(val) {
     _setMuted(val);
   },
-  clearCache() {
-    _cleanupAudio();
+  stopSfx(path) {
+    if (!path) return;
+    _stopSfxByPath(path);
   },
 };
 
