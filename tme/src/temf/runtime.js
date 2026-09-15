@@ -583,7 +583,11 @@ async function initWebGPU() {
     if (isFileProtocol) {
       throw new Error('WebGPU requires a local server. Run: npx serve . or python -m http.server');
     }
-    throw new Error('WebGPU: Failed to request adapter. Check browser compatibility and permissions.');
+    const isSecureContext = window.isSecureContext;
+    if (!isSecureContext) {
+      throw new Error('WebGPU requires a secure context (HTTPS or localhost). Current: ' + location.origin);
+    }
+    throw new Error('WebGPU adapter not found. Ensure WebGPU is enabled in browser settings (chrome://flags/#enable-webgpu).');
   }
 
   TEMF._device = await adapter.requestDevice();
