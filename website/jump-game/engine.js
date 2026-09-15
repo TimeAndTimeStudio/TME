@@ -1417,6 +1417,7 @@ const touch = {
 };
 
 function gameLoop() {
+  console.log('gameLoop called');
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
   TEMF._lastTime = now;
@@ -1430,6 +1431,7 @@ function gameLoop() {
   }
 
   if (TEMF._game && typeof TEMF._game.draw === 'function') {
+    console.log('Calling game.draw()');
     _cleanupSfxNodes();
     _draw();
   }
@@ -1464,6 +1466,7 @@ function start(button) {
       _initMouse();
       _initTouch();
       TEMF._lastTime = performance.now();
+      console.log('Starting gameLoop...');
       gameLoop();
     }).catch(err => {
       console.error('TEMF initialization failed:', err);
@@ -1476,7 +1479,9 @@ function start(button) {
       console.log('Adding click listener to button:', button);
       btn.addEventListener('click', () => {
         console.log('Button clicked!');
-        initAndStart();
+        if (!TEMF._started) {
+          initAndStart();
+        }
       });
       return;
     }
