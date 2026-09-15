@@ -119,8 +119,3 @@ Mutes only BGM playback.
 
 **Type:** `boolean`
 
-## Rules
-- SFX playback does not stop or restart BGM
-- BGM pause/resume/stop work independently
-- Audio buffers cache and release automatically when unused
-- AudioContext initializes on first `audio.play()` call

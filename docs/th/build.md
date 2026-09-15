@@ -40,14 +40,6 @@ dist/
 └── <ไดเรกทอรีผู้ใช้>  # คัดลอกแบบ recursive
 ```
 
-## กฎการ Build
-- รักษา HTML/CSS ของผู้ใช้ระหว่าง build
-- คัดลอกไดเรกทอรีผู้ใช้แบบ recursive พร้อมชื่ออะไรก็ได้ (เช่น `images/`, `sprites/`)
-- Export แบบ static — ไม่มี npm dependencies ตอนรันไทม์
-- TSL ล้มเหลว = build ล้มเหลว (ไม่มีการ fallback)
-- ไม่มี `canvas#game` = หยุด build ก่อนเรียก TSL
-- ไฟล์เอนจิน: `game.js`, `engine.js`
-- ไฟล์ผู้ใช้: `index.html`, `style.css`, ไฟล์อื่นทั้งหมด
 
 ## การเผยแพร่
 - อัปโหลด `dist/` ไปยังบริการโฮสติ้งแบบ static ใดๆ

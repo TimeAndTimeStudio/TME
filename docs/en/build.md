@@ -40,14 +40,6 @@ dist/
 └── <user directories>  # Copied recursively
 ```
 
-## Build Rules
-- User HTML/CSS preserved across builds
-- User directories copied recursively with arbitrary names (e.g., `images/`, `sprites/`)
-- Static export — no npm dependencies at runtime
-- TSL failure causes build failure (no fallback)
-- Missing `canvas#game` stops build before TSL invocation
-- Engine-owned outputs: `game.js`, `engine.js`
-- User-owned inputs: `index.html`, `style.css`, all other files
 
 ## Deployment
 - Upload `dist/` to any static hosting service

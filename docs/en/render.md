@@ -61,10 +61,4 @@ image('images/player.png', 100, 100, 64, 64);
 image('images/enemy.png', 200, 150, { rotation: 90, scale: 1.5, alpha: 0.8 });
 ```
 
-## Rendering Rules
-- WebGPU only. No Canvas2D or WebGL fallback.
-- Draw order determines depth (no z-buffer). Later draws appear on top.
-- Images load asynchronously. If an image is not yet loaded, it renders when available.
-- Textures are cached using LRU strategy (max 64 textures).
-- Resources release automatically when no longer referenced.
-- Alpha blending enabled for transparency effects.
+
