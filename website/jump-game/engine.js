@@ -1368,6 +1368,25 @@ function _draw() {
   TEMF._drawList.length = 0;
 }
 
+const input = {
+  keyboard: {
+    is_down: (key) => {
+      const normalized = _normalizeKey(key);
+      return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
+    }
+  },
+  mouse: {
+    get x() { return TEMF._mouseX; },
+    get y() { return TEMF._mouseY; },
+    is_down: (btn) => _getMouseButtonState(btn).down
+  },
+  pointer: {
+    get x() { return TEMF._mouseX; },
+    get y() { return TEMF._mouseY; },
+    get is_touch() { return TEMF._touchState.down; }
+  }
+};
+
 const mouse = {
   get x() { return TEMF._mouseX; },
   get y() { return TEMF._mouseY; },
@@ -1417,7 +1436,6 @@ const touch = {
 };
 
 function gameLoop() {
-  console.log('gameLoop called');
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
   TEMF._lastTime = now;
@@ -1427,16 +1445,11 @@ function gameLoop() {
     if (TEMF._game && typeof TEMF._game.update === 'function') {
       TEMF._game.update(TEMF._step);
     }
+    if (TEMF._game && typeof TEMF._game.draw === 'function') {
+      _cleanupSfxNodes();
+      _draw();
+    }
     TEMF._accumulator -= TEMF._step;
-  }
-
-  if (TEMF._game && typeof TEMF._game.draw === 'function') {
-    console.log('Calling game.draw()');
-    _cleanupSfxNodes();
-    _draw();
-  } else {
-    console.log('game.draw is not a function:', typeof TEMF._game?.draw);
-    console.log('TEMF._game:', TEMF._game);
   }
 
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
@@ -1510,6 +1523,7 @@ if (typeof window !== 'undefined') {
   window.rect = _rect;
   window.image = _image;
   window.key = { down: _keyDown };
+  window.input = input;
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;

@@ -1436,7 +1436,6 @@ const touch = {
 };
 
 function gameLoop() {
-  console.log('gameLoop called');
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
   TEMF._lastTime = now;
@@ -1446,16 +1445,11 @@ function gameLoop() {
     if (TEMF._game && typeof TEMF._game.update === 'function') {
       TEMF._game.update(TEMF._step);
     }
+    if (TEMF._game && typeof TEMF._game.draw === 'function') {
+      _cleanupSfxNodes();
+      _draw();
+    }
     TEMF._accumulator -= TEMF._step;
-  }
-
-  if (TEMF._game && typeof TEMF._game.draw === 'function') {
-    console.log('Calling game.draw()');
-    _cleanupSfxNodes();
-    _draw();
-  } else {
-    console.log('game.draw is not a function:', typeof TEMF._game?.draw);
-    console.log('TEMF._game:', TEMF._game);
   }
 
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
