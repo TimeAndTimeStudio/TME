@@ -22,9 +22,9 @@ test('phase13: audio has stop, pause, resume methods', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  ok(runtimeContent.includes('stop()'), 'audio.stop exists');
-  ok(runtimeContent.includes('pause()'), 'audio.pause exists');
-  ok(runtimeContent.includes('resume()'), 'audio.resume exists');
+  ok(runtimeContent.includes('stop('), 'audio.stop exists');
+  ok(runtimeContent.includes('pause('), 'audio.pause exists');
+  ok(runtimeContent.includes('resume('), 'audio.resume exists');
 });
 
 test('phase13: audio has volume properties', () => {

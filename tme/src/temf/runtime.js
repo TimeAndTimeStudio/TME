@@ -1079,14 +1079,26 @@ const audio = {
       _playBgm(path, loop);
     }
   },
-  stop() {
-    _stopBgm();
-    _stopAllSfx();
+  stop(type) {
+    if (type === 'sfx') {
+      _stopAllSfx();
+    } else if (type === 'bgm') {
+      _stopBgm();
+    } else {
+      _stopBgm();
+      _stopAllSfx();
+    }
   },
-  pause() {
+  pause(type) {
+    if (type === 'sfx') {
+      return;
+    }
     _pauseBgm();
   },
-  resume() {
+  resume(type) {
+    if (type === 'sfx') {
+      return;
+    }
     _resumeBgm();
   },
   get volume() {
