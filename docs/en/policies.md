@@ -1,18 +1,64 @@
 # Policies & Limitations
 
 ## Resource Policies
-- **Image Loading**: On-demand only. No preloading.
-- **Memory Management**: Automatic cleanup of textures, buffers, and audio when unreferenced.
-- **Static Export**: No npm dependencies at runtime. Self-contained `dist/` package.
+
+### Image Loading
+- On-demand only. No preloading or caching of unused images.
+- Images load asynchronously when first referenced.
+- Textures cached using LRU strategy (max 64 textures).
+- Old textures destroyed automatically when cache full.
+
+### Memory Management
+- Textures destroyed when evicted from cache.
+- Audio buffers released when no longer referenced.
+- SFX nodes cleaned up after playback ends.
+- Call `TEMF.cleanupTextures()` to manually release all textures.
+- Call `TEMF.cleanupAudio()` to manually release all audio resources.
+
+### Static Export
+- No npm dependencies at runtime.
+- Self-contained `dist/` package.
+- Loads local JavaScript modules directly in browser.
 
 ## MVP Limitations
-- No ECS, scenes, cameras, physics, or animation systems.
-- No text rendering, UI frameworks, or shader graphs.
-- Single touch support for touch input.
-- No gamepad or advanced gesture handling.
+
+### Not Implemented
+- No ECS, entity/component systems
+- No scene or camera management
+- No physics or collision detection
+- No animation framework
+- No tilemap support
+- No text/font rendering
+- No UI framework
+- No shader graphs or material systems
+- No plugin architecture
+- No dependency injection
+- No global event bus
+
+### Input Limitations
+- Single touch support only
+- No gamepad support
+- No advanced gesture handling
+- Mouse button parameter accepts number only (0, 1, 2)
+
+### Rendering Limitations
+- WebGPU only (no Canvas2D or WebGL fallback)
+- Draw order determines depth (no z-buffer)
+- Max 1024 rectangles per frame
+- Max 1024 images per frame
 
 ## GitHub & Deployment
+
+### Repository Rules
 - Push only to: `https://github.com/TimeAndTimeStudio/TME`
-- Never push to `game` repository.
-- Exclude local docs: `AGENTS.md`, `SPEC.md`, `project.md`, `phase.md`.
-- Use official `LICENSE` from repository.
+- Never push to other repositories
+- Use official `LICENSE` from repository
+
+### Local-Only Files (Do Not Commit)
+- `AGENTS.md`
+- `SPEC.md`
+- `project.md`
+- `phase.md`
+
+### Required Files
+- `LICENSE` — Must match official repository exactly

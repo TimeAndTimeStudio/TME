@@ -1,20 +1,64 @@
 # การเรนเดอร์
 
-## `rect(x, y, width, height, color)`
-วาดสี่เหลี่ยมเติมเต็ม รองรับสีรูปแบบ hex เช่น `#FF5733` เรนเดอร์ผ่าน WebGPU พร้อมรองรับการแปลงรูปทรง
+## `rect(x, y, width, height, color, opts?)`
+วาดสี่เหลี่ยมเติมเต็มพร้อมการแปลงรูปทรงแบบเลือกได้ เรนเดอร์ผ่าน WebGPU พร้อม alpha blending
 
-## `image(src, x, y, width, height)`
-โหลดและวาดภาพแบบขอใช้เมื่อจำเป็น รองรับ transformation:
+**Signature:**
+```typescript
+rect(x: number, y: number, width: number, height: number, color: string, opts?: TransformOptions): void
+```
+
+**พารามิเตอร์:**
+- `x` (number): พิกัด X ของมุมบนซ้าย
+- `y` (number): พิกัด Y ของมุมบนซ้าย
+- `width` (number): ความกว้าง
+- `height` (number): ความสูง
+- `color` (string): สีเติม รูปแบบ hex รองรับ `#RRGGBB` หรือ `#RRGGBBAA`
+- `opts` (object, ไม่บังคับ): ตัวเลือกการแปลงรูปทรง
+
+**TransformOptions:**
+- `rotation` (number): มุมหมุนเป็นองศา ค่าเริ่มต้น `0`
+- `scale` (number): อัตราส่วนขยายแบบเดียวกัน ค่าเริ่มต้น `1`
+- `alpha` (number): ความทึบแสงจาก `0` (โปร่งใส) ถึง `1` (ทึบ) ค่าเริ่มต้น `1`
+
+**ตัวอย่าง:**
 ```javascript
-image(src, x, y, width, height, {
-  rotation: 0,      // เรเดียน
-  scale: 1,         // ค่าเดียวหรือ {x, y}
-  alpha: 1          // 0 ถึง 1
-})
+rect(100, 100, 64, 64, '#FF5733');
+rect(200, 200, 50, 50, '#33FF57', { rotation: 45, scale: 2, alpha: 0.5 });
+```
+
+## `image(src, x, y, width, height, opts?)`
+โหลดและวาดภาพแบบขอใช้เมื่อจำเป็นพร้อมการแปลงรูปทรงแบบเลือกได้ ภาพโหลดแบบ asynchronous และเก็บใน LRU cache
+
+**Signature:**
+```typescript
+image(src: string, x: number, y: number, width?: number, height?: number, opts?: TransformOptions): void
+image(src: string, x: number, y: number, opts?: TransformOptions): void
+```
+
+**พารามิเตอร์:**
+- `src` (string): เส้นทางไปยังไฟล์ภาพ (เช่น `'images/player.png'`)
+- `x` (number): พิกัด X ของมุมบนซ้าย
+- `y` (number): พิกัด Y ของมุมบนซ้าย
+- `width` (number, ไม่บังคับ): ความกว้างที่แสดง ถ้าไม่ระบุใช้ความกว้างเดิมของภาพ
+- `height` (number, ไม่บังคับ): ความสูงที่แสดง ถ้าไม่ระบุใช้ความสูงเดิมของภาพ
+- `opts` (object, ไม่บังคับ): ตัวเลือกการแปลงรูปทรง
+
+**TransformOptions:**
+- `rotation` (number): มุมหมุนเป็นองศา ค่าเริ่มต้น `0`
+- `scale` (number): อัตราส่วนขยายแบบเดียวกัน ค่าเริ่มต้น `1`
+- `alpha` (number): ความทึบแสงจาก `0` ถึง `1` ค่าเริ่มต้น `1`
+
+**ตัวอย่าง:**
+```javascript
+image('images/player.png', 100, 100, 64, 64);
+image('images/enemy.png', 200, 150, { rotation: 90, scale: 1.5, alpha: 0.8 });
 ```
 
 ## กฎการเรนเดอร์
 - ใช้ WebGPU เท่านั้น ไม่มี Canvas2D หรือ WebGL รองรับ
-- ลำดับการวาดกำหนดความลึก (ไม่มี z-buffer)
-- โหลดภาพแบบ asynchronous และเก็บเท็กซ์เจอร์ใน LRU cache
-- ทรัพยากรจะถูกลบอัตโนมัติเมื่อไม่มีการอ้างอิงถึง
+- ลำดับการวาดกำหนดความลึก (ไม่มี z-buffer) การวาดทีหลังจะอยู่ด้านบน
+- ภาพโหลดแบบ asynchronous จะเรนเดอร์เมื่อพร้อม
+- เท็กซ์เจอร์เก็บใน LRU cache (สูงสุด 64 เท็กซ์เจอร์)
+- ทรัพยากรถูกลบอัตโนมัติเมื่อไม่มีการอ้างอิงถึง
+- เปิดใช้ alpha blending สำหรับเอฟเฟกต์ความโปร่งใส

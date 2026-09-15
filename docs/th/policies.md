@@ -1,18 +1,64 @@
 # นโยบายและข้อจำกัด
 
 ## นโยบายทรัพยากร
-- **โหลดภาพ**: โหลดเมื่อจำเป็นเท่านั้น ไม่มีการโหลดล่วงหน้า
-- **จัดการหน่วยความจำ**: ลบเท็กซ์เจอร์ บัฟเฟอร์ และเสียงอัตโนมัติเมื่อไม่มีการอ้างอิง
-- **Export แบบ Static**: ไม่มี npm dependencies ตอนรันไทม์ แพ็กเกจ `dist/` ทำงานได้เอง
+
+### การโหลดภาพ
+- โหลดเมื่อจำเป็นเท่านั้น ไม่มีการโหลดล่วงหน้าหรือเก็บภาพที่ไม่ใช้
+- ภาพโหลดแบบ asynchronous เมื่อถูกอ้างอิงครั้งแรก
+- เท็กซ์เจอร์เก็บใน LRU cache (สูงสุด 64 เท็กซ์เจอร์)
+- เท็กซ์เจอร์เก่าถูกลบอัตโนมัติเมื่อ cache เต็ม
+
+### การจัดการหน่วยความจำ
+- เท็กซ์เจอร์ถูกลบเมื่อถูก eject จาก cache
+- บัฟเฟอร์เสียงปล่อยเมื่อไม่มีการอ้างอิงถึง
+- SFX nodes ลบหลังเล่นเสร็จ
+- เรียก `TEMF.cleanupTextures()` เพื่อเท็กซ์เจอร์ทั้งหมดด้วยตนเอง
+- เรียก `TEMF.cleanupAudio()` เพื่อปล่อยทรัพยากรเสียงทั้งหมดด้วยตนเอง
+
+### การ Export แบบ Static
+- ไม่มี npm dependencies ตอนรันไทม์
+- แพ็กเกจ `dist/` ทำงานได้เอง
+- โหลดโมดูล JavaScript ท้องถิ่นโดยตรงในเบราว์เซอร์
 
 ## ข้อจำกัด (MVP)
-- ไม่มี ECS, ฉาก, กล้อง, ฟิสิกส์, หรือระบบแอนิเมชัน
-- ไม่มีตัวพิมพ์ UI framework หรือ shader graph
+
+### ยังไม่มีการพัฒนา
+- ไม่มี ECS, entity/component systems
+- ไม่มี scene หรือ camera management
+- ไม่มีฟิสิกส์หรือ collision detection
+- ไม่มี animation framework
+- ไม่มี tilemap support
+- ไม่มี text/font rendering
+- ไม่มี UI framework
+- ไม่มี shader graphs หรือ material systems
+- ไม่มี plugin architecture
+- ไม่มี dependency injection
+- ไม่มี global event bus
+
+### ข้อจำกัดการอินพุต
 - รองรับหน้าจอสัมผัสเพียงจุดเดียว
-- ไม่มีเกมแพดหรือ gesture ขั้นสูง
+- ไม่มีเกมแพด
+- ไม่มี gesture ขั้นสูง
+- พารามิเตอร์ปุ่มเมาส์รับเฉพาะ number (0, 1, 2)
+
+### ข้อจำกัดการเรนเดอร์
+- ใช้ WebGPU เท่านั้น (ไม่รองรับ Canvas2D หรือ WebGL)
+- ลำดับการวาดกำหนดความลึก (ไม่มี z-buffer)
+- วาดสี่เหลี่ยมได้สูงสุด 1024 รูปต่อเฟรม
+- วาดภาพได้สูงสุด 1024 รูปต่อเฟรม
 
 ## GitHub และการเผยแพร่
+
+### กฎ Repository
 - Push ได้เฉพาะ: `https://github.com/TimeAndTimeStudio/TME`
-- ห้าม push ไปยัง repository `game`
-- ไม่รวมเอกสารภายใน: `AGENTS.md`, `SPEC.md`, `project.md`, `phase.md`
-- ใช้ไฟล์ `LICENSE` ทางการจาก repository
+- ห้าม push ไปยัง repository อื่น
+- ใช้ `LICENSE` ทางการจาก repository
+
+### ไฟล์ภายใน (ห้าม commit)
+- `AGENTS.md`
+- `SPEC.md`
+- `project.md`
+- `phase.md`
+
+### ไฟล์ที่จำเป็น
+- `LICENSE` — ต้องตรงกับ repository ทางการทุกประการ

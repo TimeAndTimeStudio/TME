@@ -5,25 +5,42 @@
 ### `key.down(key)`
 Checks whether a specific key is currently being pressed.
 
-**Parameters:**
-- `key` (string): The key identifier. Supports standard DOM key names.
+**Signature:**
+```typescript
+key.down(key: string | number): boolean
+```
 
-**Returns:** `boolean` — `true` if the key is currently pressed, `false` otherwise.
+**Parameters:**
+- `key` (string | number): Key identifier. Supports letters, numbers, function keys, and special keys.
 
 **Supported Keys:**
-- Arrow keys: `'ArrowUp'`, `'ArrowDown'`, `'ArrowLeft'`, `'ArrowRight'`
-- Letters: `'KeyA'`, `'KeyB'`, ..., `'KeyZ'`
-- Numbers: `'Digit0'`, `'Digit1'`, ..., `'Digit9'`
-- Special: `'Space'`, `'Enter'`, `'Escape'`, `'Tab'`
+
+| Category | Values |
+|----------|--------|
+| Letters | `'A'`–`'Z'` (case-insensitive) |
+| Numbers | `0`–`9` or `'0'`–`'9'` |
+| Function | `'F1'`–`'F12'` |
+| Special | `'SPACE'`, `'ENTER'`, `'ESC'`, `'TAB'`, `'CTRL'`, `'SHIFT'`, `'ALT'` |
+| Navigation | `'UP'`, `'DOWN'`, `'LEFT'`, `'RIGHT'`, `'HOME'`, `'END'`, `'PAGEUP'`, `'PAGEDOWN'` |
+| Editing | `'DELETE'`, `'BACKSPACE'`, `'CAPSLOCK'` |
+
+**Returns:** `boolean` — `true` if the key is currently pressed, `false` otherwise.
 
 **Example:**
 ```javascript
 function update(dt) {
-  if (key.down('ArrowLeft')) {
-    player.x -= 100 * dt;
+  if (key.down('A') || key.down('ArrowLeft')) {
+    player.x -= 200 * dt;
   }
-  if (key.down('Space')) {
+  if (key.down('D') || key.down('ArrowRight')) {
+    player.x += 200 * dt;
+  }
+  if (key.down('SPACE')) {
     jump();
+  }
+  if (key.down(1)) {
+    // Pressing '1' key
+    selectWeapon(1);
   }
 }
 ```
@@ -38,8 +55,13 @@ Current mouse position in pixels relative to the canvas.
 ### `mouse.click(button)`
 Returns `true` for the single frame when a mouse button is clicked. Automatically resets after being read.
 
+**Signature:**
+```typescript
+mouse.click(button?: number): boolean
+```
+
 **Parameters:**
-- `button` (number, optional): The mouse button index. Default is `0`.
+- `button` (number, optional): Mouse button index. Default `0`.
   - `0` — Left button
   - `1` — Middle button (scroll wheel)
   - `2` — Right button
@@ -50,7 +72,6 @@ Returns `true` for the single frame when a mouse button is clicked. Automaticall
 ```javascript
 function update(dt) {
   if (mouse.click(0)) {
-    // Left click detected
     selectObjectAt(mouse.x, mouse.y);
   }
 }
@@ -59,56 +80,41 @@ function update(dt) {
 ### `mouse.down(button)`
 Returns `true` while a mouse button is currently held down.
 
+**Signature:**
+```typescript
+mouse.down(button?: number): boolean
+```
+
 **Parameters:**
-- `button` (number, optional): The mouse button index. Default is `0`.
+- `button` (number, optional): Mouse button index. Default `0`.
 
 **Returns:** `boolean` — `true` if the button is currently pressed, `false` otherwise.
 
-**Example:**
-```javascript
-function update(dt) {
-  if (mouse.down(0)) {
-    // Left button held — continuous action
-    dragObjectTo(mouse.x, mouse.y);
-  }
-}
-```
-
 ### `mouse.drag(button)`
-Returns `true` for the single frame when the user starts dragging (holding button while moving). Automatically resets after being read.
+Returns `true` for the single frame when the user starts dragging. Automatically resets after being read.
+
+**Signature:**
+```typescript
+mouse.drag(button?: number): boolean
+```
 
 **Parameters:**
-- `button` (number, optional): The mouse button index. Default is `0`.
+- `button` (number, optional): Mouse button index. Default `0`.
 
 **Returns:** `boolean` — `true` on the frame dragging started, `false` otherwise.
-
-**Example:**
-```javascript
-function update(dt) {
-  if (mouse.drag(0)) {
-    // Dragging just started
-    startDrag(mouse.x, mouse.y);
-  }
-}
-```
 
 ### `mouse.up(button)`
 Returns `true` for the single frame when a mouse button is released. Automatically resets after being read.
 
+**Signature:**
+```typescript
+mouse.up(button?: number): boolean
+```
+
 **Parameters:**
-- `button` (number, optional): The mouse button index. Default is `0`.
+- `button` (number, optional): Mouse button index. Default `0`.
 
 **Returns:** `boolean` — `true` on the frame the button was released, `false` otherwise.
-
-**Example:**
-```javascript
-function update(dt) {
-  if (mouse.up(0)) {
-    // Left button released
-    endDrag();
-  }
-}
-```
 
 ## Touch
 
@@ -120,59 +126,39 @@ Current touch position in pixels relative to the canvas. Single touch only.
 ### `touch.tap()`
 Returns `true` for the single frame when the user taps the screen. Automatically resets after being read.
 
-**Returns:** `boolean` — `true` on the frame the tap occurred, `false` otherwise.
-
-**Example:**
-```javascript
-function update(dt) {
-  if (touch.tap()) {
-    // Tap detected
-    selectAt(touch.x, touch.y);
-  }
-}
+**Signature:**
+```typescript
+touch.tap(): boolean
 ```
+
+**Returns:** `boolean` — `true` on the frame the tap occurred, `false` otherwise.
 
 ### `touch.down()`
 Returns `true` while the screen is currently being touched.
 
+**Signature:**
+```typescript
+touch.down(): boolean
+```
+
 **Returns:** `boolean` — `true` if touching, `false` otherwise.
 
-**Example:**
-```javascript
-function update(dt) {
-  if (touch.down()) {
-    // Finger on screen — continuous action
-    moveCharacterTo(touch.x, touch.y);
-  }
-}
-```
-
 ### `touch.drag()`
-Returns `true` for the single frame when the user starts dragging (touching while moving). Automatically resets after being read.
+Returns `true` for the single frame when the user starts dragging. Automatically resets after being read.
+
+**Signature:**
+```typescript
+touch.drag(): boolean
+```
 
 **Returns:** `boolean` — `true` on the frame dragging started, `false` otherwise.
-
-**Example:**
-```javascript
-function update(dt) {
-  if (touch.drag()) {
-    // Dragging just started
-    startDrag(touch.x, touch.y);
-  }
-}
-```
 
 ### `touch.up()`
 Returns `true` for the single frame when the user lifts their finger from the screen. Automatically resets after being read.
 
-**Returns:** `boolean` — `true` on the frame the touch ended, `false` otherwise.
-
-**Example:**
-```javascript
-function update(dt) {
-  if (touch.up()) {
-    // Touch ended
-    endDrag();
-  }
-}
+**Signature:**
+```typescript
+touch.up(): boolean
 ```
+
+**Returns:** `boolean` — `true` on the frame the touch ended, `false` otherwise.

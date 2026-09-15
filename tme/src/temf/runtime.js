@@ -642,8 +642,40 @@ function _initKeyboard() {
   });
 }
 
+function _normalizeKey(key) {
+  if (typeof key === 'number') {
+    if (key >= 0 && key <= 9) {
+      return 'Digit' + key;
+    }
+    return String(key);
+  }
+  if (typeof key !== 'string') return key;
+  const k = key.trim().toUpperCase();
+  if (k.length === 1 && /[A-Z0-9]/.test(k)) {
+    return k;
+  }
+  const keyMap = {
+    'F1': 'F1', 'F2': 'F2', 'F3': 'F3', 'F4': 'F4',
+    'F5': 'F5', 'F6': 'F6', 'F7': 'F7', 'F8': 'F8',
+    'F9': 'F9', 'F10': 'F10', 'F11': 'F11', 'F12': 'F12',
+    'SPACE': ' ', 'ENTER': 'Enter', 'RETURN': 'Enter',
+    'ESC': 'Escape', 'ESCAPE': 'Escape', 'TAB': 'Tab',
+    'CTRL': 'Control', 'CONTROL': 'Control',
+    'SHIFT': 'Shift', 'ALT': 'Alt', 'DELETE': 'Delete',
+    'BACKSPACE': 'Backspace', 'CAPSLOCK': 'CapsLock',
+    'ARROWUP': 'ArrowUp', 'ARROWDOWN': 'ArrowDown',
+    'ARROWLEFT': 'ArrowLeft', 'ARROWRIGHT': 'ArrowRight',
+    'UP': 'ArrowUp', 'DOWN': 'ArrowDown',
+    'LEFT': 'ArrowLeft', 'RIGHT': 'ArrowRight',
+    'HOME': 'Home', 'END': 'End', 'PAGEUP': 'PageUp',
+    'PAGEDOWN': 'PageDown', 'INSERT': 'Insert',
+  };
+  return keyMap[k] || key;
+}
+
 function _keyDown(key) {
-  return TEMF._keyPressed.has(key);
+  const normalized = _normalizeKey(key);
+  return TEMF._keyPressed.has(normalized);
 }
 
 function _initMouse() {
