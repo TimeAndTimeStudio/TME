@@ -1089,16 +1089,10 @@ const audio = {
       _stopAllSfx();
     }
   },
-  pause(type) {
-    if (type === 'sfx') {
-      return;
-    }
+  pause() {
     _pauseBgm();
   },
-  resume(type) {
-    if (type === 'sfx') {
-      return;
-    }
+  resume() {
     _resumeBgm();
   },
   get volume() {
