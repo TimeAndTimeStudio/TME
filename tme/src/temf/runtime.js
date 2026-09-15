@@ -1341,21 +1341,25 @@ const mouse = {
   get x() { return TEMF._mouseX; },
   get y() { return TEMF._mouseY; },
   click(btn) {
-    const state = _getMouseState(btn || '0');
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
     return state.clicked;
   },
   down(btn) {
-    const state = _getMouseState(btn || '0');
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
     return state.down;
   },
   drag(btn) {
-    const state = _getMouseState(btn || '0');
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
     const dragging = state.dragging;
     state.dragging = false;
     return dragging;
   },
   up(btn) {
-    const state = _getMouseState(btn || '0');
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
     return !state.down && !state.clicked;
   },
 };
