@@ -1192,6 +1192,7 @@ function _getOrCreateImageBindGroup(texture) {
 
 function _drawRects(rects, rp) {
   const device = TEMF._device;
+  console.log('_drawRects: device=', !!device, 'rects=', rects.length, 'pipeline=', !!TEMF._rectPipeline);
   if (!device || rects.length === 0) return;
 
   const data = new Float32Array(rects.length * 3 * 4);
