@@ -1222,8 +1222,7 @@ function _drawRects(rects, rp) {
 
   rp.setPipeline(TEMF._rectPipeline);
   rp.setBindGroup(0, TEMF._rectBindGroup);
-  rp.setVertexBuffer(0, TEMF._rectVertexBuffer);
-  rp.draw(6, rects.length, 0, 0);
+  rp.draw(4, rects.length, 0, 0);
 }
 
 function _queueImageDraw(imgDraw) {
