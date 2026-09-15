@@ -1061,14 +1061,7 @@ const audio = {
     }
   },
   stop(type) {
-    if (type === 'sfx') {
-      _stopAllSfx();
-    } else if (type === 'bgm') {
-      _stopBgm();
-    } else {
-      _stopBgm();
-      _stopAllSfx();
-    }
+    _stopBgm();
   },
   pause() {
     _pauseBgm();
