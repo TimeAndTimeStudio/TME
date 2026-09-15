@@ -1344,6 +1344,7 @@ function _draw() {
   };
 
   const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+  console.log('RenderPass started');
 
   const currentRects = [];
 
@@ -1371,7 +1372,9 @@ function _draw() {
   _drawImages(renderPass);
 
   renderPass.end();
+  console.log('RenderPass ended, submitting commands...');
   device.queue.submit([commandEncoder.finish()]);
+  console.log('Commands submitted');
 
   TEMF._drawList.length = 0;
 }
