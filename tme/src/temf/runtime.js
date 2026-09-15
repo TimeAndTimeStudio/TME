@@ -1441,11 +1441,6 @@ function start(game, fps) {
   }
 
   TEMF._started = true;
-  if (!game) {
-    game = {};
-    if (typeof update === 'function') game.update = update;
-    if (typeof draw === 'function') game.draw = draw;
-  }
   TEMF._game = game;
   TEMF._fps = fps || 60;
   TEMF._step = 1 / TEMF._fps;
