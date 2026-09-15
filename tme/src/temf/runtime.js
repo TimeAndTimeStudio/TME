@@ -497,8 +497,13 @@ function _createRenderer() {
 }
 
 function _rect(x, y, width, height, color, rotation, scale, alpha) {
-  if (TEMF._drawList.length >= TEMF._rectMax) return;
+  console.log('_rect called:', x, y, width, height, color);
+  if (TEMF._drawList.length >= TEMF._rectMax) {
+    console.log('_drawList is full');
+    return;
+  }
   const [r, g, b, a] = _parseColor(color);
+  console.log('Parsed color:', r, g, b, a);
   const optRotation = (typeof rotation === 'number') ? rotation : 0;
   const optScale = (typeof scale === 'number') ? scale : 1;
   const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : a;
@@ -508,6 +513,7 @@ function _rect(x, y, width, height, color, rotation, scale, alpha) {
     rotation: optRotation,
     scale: optScale,
   });
+  console.log('Rect added, _drawList length:', TEMF._drawList.length);
 }
 
 function _image(path, x, y, width, height, rotation, scale, alpha) {
