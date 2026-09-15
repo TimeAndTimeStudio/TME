@@ -1,11 +1,11 @@
 # Rendering
 
-## `rect(x, y, width, height, color, opts?)`
+## `rect(x, y, width, height, color, rotation?, scale?, alpha?)`
 Draws a filled rectangle with optional transform parameters. Renders via WebGPU with alpha blending enabled.
 
 **Signature:**
 ```typescript
-rect(x: number, y: number, width: number, height: number, color: string, opts?: TransformOptions): void
+rect(x: number, y: number, width: number, height: number, color: string, rotation?: number, scale?: number, alpha?: number): void
 ```
 
 **Parameters:**
@@ -14,29 +14,25 @@ rect(x: number, y: number, width: number, height: number, color: string, opts?: 
 - `width` (number): Width of the rectangle.
 - `height` (number): Height of the rectangle.
 - `color` (string): Fill color in hex format. Supports `#RRGGBB` or `#RRGGBBAA`.
-- `opts` (object, optional): Transform options.
-
-**TransformOptions:**
-- `rotation` (number): Rotation angle in degrees. Default `0`.
-- `scale` (number): Uniform scale factor. Default `1`.
-- `alpha` (number): Overall opacity from `0` (transparent) to `1` (opaque). Default `1`.
+- `rotation` (number, optional): Rotation angle in degrees. Default `0`.
+- `scale` (number, optional): Uniform scale factor. Default `1`.
+- `alpha` (number, optional): Overall opacity from `0` (transparent) to `1` (opaque). Default uses color alpha.
 
 **Default Behavior:**
-If `opts` is omitted or `undefined`, all transforms use default values (rotation: 0, scale: 1, alpha: 1). The rectangle renders at full opacity with no rotation or scaling.
+If transform parameters are omitted, they use default values (rotation: 0, scale: 1, alpha: color alpha). The rectangle renders at full opacity with no rotation or scaling.
 
 **Example:**
 ```javascript
 rect(100, 100, 64, 64, '#FF5733');
-rect(200, 200, 50, 50, '#33FF57', { rotation: 45, scale: 2, alpha: 0.5 });
+rect(200, 200, 50, 50, '#33FF57', 45, 2, 0.5);
 ```
 
-## `image(src, x, y, width, height, opts?)`
+## `image(src, x, y, width, height, rotation?, scale?, alpha?)`
 Loads and draws an image on-demand with optional transform parameters. Images are loaded asynchronously and cached using LRU strategy.
 
 **Signature:**
 ```typescript
-image(src: string, x: number, y: number, width?: number, height?: number, opts?: TransformOptions): void
-image(src: string, x: number, y: number, opts?: TransformOptions): void
+image(src: string, x: number, y: number, width?: number, height?: number, rotation?: number, scale?: number, alpha?: number): void
 ```
 
 **Parameters:**
@@ -45,20 +41,17 @@ image(src: string, x: number, y: number, opts?: TransformOptions): void
 - `y` (number): Y coordinate of the top-left corner.
 - `width` (number, optional): Display width. If omitted, uses original image width.
 - `height` (number, optional): Display height. If omitted, uses original image height.
-- `opts` (object, optional): Transform options.
-
-**TransformOptions:**
-- `rotation` (number): Rotation angle in degrees. Default `0`.
-- `scale` (number): Uniform scale factor. Default `1`.
-- `alpha` (number): Overall opacity from `0` to `1`. Default `1`.
+- `rotation` (number, optional): Rotation angle in degrees. Default `0`.
+- `scale` (number, optional): Uniform scale factor. Default `1`.
+- `alpha` (number, optional): Overall opacity from `0` to `1`. Default `1`.
 
 **Default Behavior:**
-If `opts` is omitted or `undefined`, all transforms use default values (rotation: 0, scale: 1, alpha: 1). The image renders at original size, full opacity, with no rotation.
+If transform parameters are omitted, they use default values (rotation: 0, scale: 1, alpha: 1). The image renders at original size, full opacity, with no rotation.
 
 **Example:**
 ```javascript
 image('images/player.png', 100, 100, 64, 64);
-image('images/enemy.png', 200, 150, { rotation: 90, scale: 1.5, alpha: 0.8 });
+image('images/enemy.png', 200, 150, 90, 1.5, 0.8);
 ```
 
 

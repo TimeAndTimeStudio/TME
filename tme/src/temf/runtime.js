@@ -496,12 +496,12 @@ function _createRenderer() {
   TEMF._imageBindGroups = new Map();
 }
 
-function _rect(x, y, width, height, color, opts) {
+function _rect(x, y, width, height, color, rotation, scale, alpha) {
   if (TEMF._drawList.length >= TEMF._rectMax) return;
   const [r, g, b, a] = _parseColor(color);
-  const optRotation = (opts && typeof opts.rotation === 'number') ? opts.rotation : 0;
-  const optScale = (opts && typeof opts.scale === 'number') ? opts.scale : 1;
-  const optAlpha = (opts && opts.alpha !== undefined) ? opts.alpha : a;
+  const optRotation = (typeof rotation === 'number') ? rotation : 0;
+  const optScale = (typeof scale === 'number') ? scale : 1;
+  const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : a;
   TEMF._drawList.push({
     type: 'rect',
     x, y, width, height, r, g, b, a: optAlpha,
@@ -512,25 +512,18 @@ function _rect(x, y, width, height, color, opts) {
 
 function _image(path, x, y, width, height, rotation, scale, alpha) {
   let srcW, srcH;
-  let opts = {};
 
   if (typeof width === 'number' && typeof height === 'number') {
     srcW = width;
     srcH = height;
-    opts = typeof rotation === 'object' ? rotation : {};
-  } else if (typeof width === 'number' && typeof height === 'undefined') {
-    opts = typeof width === 'object' ? width : {};
-    srcW = 0;
-    srcH = 0;
   } else {
-    opts = typeof width === 'object' ? width : {};
     srcW = 0;
     srcH = 0;
   }
 
-  const optRotation = opts.rotation || 0;
-  const optScale = opts.scale || 1;
-  const optAlpha = opts.alpha !== undefined ? opts.alpha : 1;
+  const optRotation = (typeof rotation === 'number') ? rotation : 0;
+  const optScale = (typeof scale === 'number') ? scale : 1;
+  const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : 1;
 
   const img = TEMF._imageElements.get(path);
   let texW = 0, texH = 0;
