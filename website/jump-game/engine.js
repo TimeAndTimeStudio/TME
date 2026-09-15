@@ -1237,6 +1237,7 @@ function _drawRects(rects, rp) {
   );
 
   const canvasSizeData = new Float32Array([TEMF._canvas.width, TEMF._canvas.height]);
+  console.log('Canvas size:', TEMF._canvas.width, TEMF._canvas.height);
   device.queue.writeBuffer(TEMF._canvasSizeBuffer, 0, canvasSizeData);
 
   rp.setPipeline(TEMF._rectPipeline);
