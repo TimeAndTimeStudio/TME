@@ -17,5 +17,7 @@ function draw() {
   rect(0, GROUND, 800, 50, "brown");
   rect(player.x, player.y, 50, 50, "blue");
 }
+window.update = update;
+window.draw = draw;
 fps(60);
 start("startBtn");
