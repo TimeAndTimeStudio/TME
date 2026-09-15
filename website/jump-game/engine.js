@@ -264,7 +264,7 @@ function _createRenderer() {
 
   // Rectangle pipeline
   const rectShaderCode = `
-    var<uniform> rectData: array<vec4f, ${max * 3}>;
+    @group(0) @binding(0) var<uniform> rectData: array<vec4f, ${max * 3}>;
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) color: vec4f,
@@ -390,9 +390,9 @@ function _createRenderer() {
       alpha: f32,
       padding: f32,
     };
-    var<uniform> imageData: array<ImageUniforms, 1024>;
-    @group(1) @binding(0) var mySampler: sampler;
-    @group(1) @binding(1) var myTexture: texture_2d<f32>;
+    @group(0) @binding(1) var<uniform> imageData: array<ImageUniforms, 1024>;
+    @group(0) @binding(2) var mySampler: sampler;
+    @group(0) @binding(3) var myTexture: texture_2d<f32>;
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) uv: vec2f,
@@ -583,11 +583,7 @@ async function initWebGPU() {
     if (isFileProtocol) {
       throw new Error('WebGPU requires a local server. Run: npx serve . or python -m http.server');
     }
-    const isSecureContext = window.isSecureContext;
-    if (!isSecureContext) {
-      throw new Error('WebGPU requires a secure context (HTTPS or localhost). Current: ' + location.origin);
-    }
-    throw new Error('WebGPU adapter not found. Ensure WebGPU is enabled in browser settings (chrome://flags/#enable-webgpu).');
+    throw new Error('WebGPU: Failed to request adapter. Check browser compatibility and permissions.');
   }
 
   TEMF._device = await adapter.requestDevice();
