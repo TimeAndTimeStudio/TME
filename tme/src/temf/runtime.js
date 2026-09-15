@@ -34,6 +34,8 @@ const TEMF = {
   _drawList: [],
   _rectMax: 1024,
   _textureCache: new Map(),
+  _textureCacheMax: 64,
+  _pendingImageDraws: [],
   _imageElements: new Map(),
   _keyPressed: new Set(),
   _mouseX: 0,
@@ -176,16 +178,47 @@ async function _createTexture(device, img) {
   return texture;
 }
 
+function _evictTextureCache() {
+  if (TEMF._textureCache.size <= TEMF._textureCacheMax) return;
+
+  let oldestKey = null;
+  let oldestTime = Infinity;
+  for (const [key, entry] of TEMF._textureCache) {
+    if (entry.lastUsed !== undefined && entry.lastUsed < oldestTime) {
+      oldestTime = entry.lastUsed;
+      oldestKey = key;
+    }
+  }
+
+  if (oldestKey) {
+    const entry = TEMF._textureCache.get(oldestKey);
+    if (entry.texture) {
+      entry.texture.destroy();
+    }
+    TEMF._textureCache.delete(oldestKey);
+
+    for (const bindGroup of TEMF._imageBindGroups) {
+      if (bindGroup[1] === oldestKey) {
+        TEMF._imageBindGroups.delete(oldestKey);
+        break;
+      }
+    }
+  }
+}
+
 function _getOrCreateTexture(path) {
   if (!TEMF._device) return null;
 
   if (TEMF._textureCache.has(path)) {
     const entry = TEMF._textureCache.get(path);
+    entry.lastUsed = performance.now();
     if (entry.status === 'loaded') {
       return entry;
     }
     return null;
   }
+
+  _evictTextureCache();
 
   const entry = { status: 'pending' };
   TEMF._textureCache.set(path, entry);
@@ -197,11 +230,25 @@ function _getOrCreateTexture(path) {
       entry.texture = texture;
       entry.width = img.width;
       entry.height = img.height;
+      entry.lastUsed = performance.now();
+
+      if (TEMF._pendingImageDraws.length > 0) {
+        const pending = TEMF._pendingImageDraws.filter(d => d.path === path);
+        TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
+        for (const draw of pending) {
+          _queueImageDraw(draw);
+        }
+      }
     })
     .catch((err) => {
       entry.status = 'error';
       entry.error = err.message;
       console.error(err.message);
+
+      if (TEMF._pendingImageDraws.length > 0) {
+        const pending = TEMF._pendingImageDraws.filter(d => d.path === path);
+        TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
+      }
     });
 
   return null;
@@ -944,6 +991,15 @@ function _setMuted(muted) {
   }
 }
 
+function _cleanupSfxNodes() {
+  for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
+    const node = TEMF._sfxNodes[i];
+    if (!node || !node.source) {
+      TEMF._sfxNodes.splice(i, 1);
+    }
+  }
+}
+
 function _cleanupAudio() {
   _stopAllSfx();
   _stopBgm();
@@ -957,6 +1013,19 @@ function _cleanupAudio() {
     TEMF._audioContext = null;
   }
   TEMF._audioInitialized = false;
+}
+
+function _cleanupTextures() {
+  for (const [, entry] of TEMF._textureCache) {
+    if (entry.texture) {
+      entry.texture.destroy();
+      entry.texture = null;
+    }
+  }
+  TEMF._textureCache.clear();
+  if (TEMF._imageBindGroups) {
+    TEMF._imageBindGroups.clear();
+  }
 }
 
 const audio = {
@@ -1007,6 +1076,9 @@ const audio = {
   set muted(val) {
     _setMuted(val);
   },
+  clearCache() {
+    _cleanupAudio();
+  },
 };
 
 function _getOrCreateImageBindGroup(texture) {
@@ -1035,6 +1107,119 @@ function _getOrCreateImageBindGroup(texture) {
   return bindGroup;
 }
 
+function _drawRects(rects, rp) {
+  const device = TEMF._device;
+  if (!device || rects.length === 0) return;
+
+  const data = new Float32Array(rects.length * 3 * 4);
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i];
+    data[i * 12 + 0] = r.x;
+    data[i * 12 + 1] = r.y;
+    data[i * 12 + 2] = r.width;
+    data[i * 12 + 3] = r.height;
+    data[i * 12 + 4] = r.r;
+    data[i * 12 + 5] = r.g;
+    data[i * 12 + 6] = r.b;
+    data[i * 12 + 7] = r.a;
+    data[i * 12 + 8] = r.rotation || 0;
+    data[i * 12 + 9] = r.scale || 1;
+    data[i * 12 + 10] = 0;
+    data[i * 12 + 11] = 0;
+  }
+
+  device.queue.writeBuffer(
+    TEMF._rectUniformBuffer,
+    0,
+    data.buffer,
+    0,
+    rects.length * 3 * 16
+  );
+
+  rp.setPipeline(TEMF._rectPipeline);
+  rp.setBindGroup(0, TEMF._rectBindGroup);
+  rp.setVertexBuffer(0, TEMF._rectVertexBuffer);
+  rp.draw(6, rects.length, 0, 0);
+}
+
+function _queueImageDraw(imgDraw) {
+  const texEntry = _getOrCreateTexture(imgDraw.path);
+  if (!texEntry || texEntry.status !== 'loaded') {
+    if (texEntry && texEntry.status === 'pending') {
+      if (!TEMF._pendingImageDraws) TEMF._pendingImageDraws = [];
+      TEMF._pendingImageDraws.push(imgDraw);
+    }
+    return;
+  }
+
+  const texId = texEntry.texture.id || String(texEntry.texture);
+  if (!TEMF._imageTextureGroups) TEMF._imageTextureGroups = new Map();
+  if (!TEMF._imageTextureOrder) TEMF._imageTextureOrder = [];
+
+  if (!TEMF._imageTextureGroups.has(texId)) {
+    TEMF._imageTextureGroups.set(texId, []);
+    TEMF._imageTextureOrder.push(texId);
+  }
+  TEMF._imageTextureGroups.get(texId).push(imgDraw);
+}
+
+function _drawImages(rp) {
+  const device = TEMF._device;
+  if (!device || !TEMF._imageTextureGroups || TEMF._imageTextureGroups.size === 0) return;
+
+  for (const texId of TEMF._imageTextureOrder) {
+    const items = TEMF._imageTextureGroups.get(texId);
+    if (!items || items.length === 0) continue;
+
+    let texEntry = null;
+    for (const [, entry] of TEMF._textureCache) {
+      if (entry.status === 'loaded') {
+        const tid = entry.texture.id || String(entry.texture);
+        if (tid === texId) {
+          texEntry = entry;
+          break;
+        }
+      }
+    }
+    if (!texEntry || !texEntry.texture) continue;
+
+    const bindGroup = _getOrCreateImageBindGroup(texEntry.texture);
+    if (!bindGroup) continue;
+
+    const uniformData = new Float32Array(items.length * 11);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      uniformData[i * 11 + 0] = item.x;
+      uniformData[i * 11 + 1] = item.y;
+      uniformData[i * 11 + 2] = item.width;
+      uniformData[i * 11 + 3] = item.height;
+      uniformData[i * 11 + 4] = item.u0 || 0;
+      uniformData[i * 11 + 5] = item.v0 || 0;
+      uniformData[i * 11 + 6] = item.u1 || 1;
+      uniformData[i * 11 + 7] = item.v1 || 1;
+      uniformData[i * 11 + 8] = item.rotation || 0;
+      uniformData[i * 11 + 9] = item.scale || 1;
+      uniformData[i * 11 + 10] = item.alpha || 1;
+    }
+
+    device.queue.writeBuffer(
+      TEMF._imageUniformBuffer,
+      0,
+      uniformData.buffer,
+      0,
+      items.length * 44
+    );
+
+    rp.setPipeline(TEMF._imagePipeline);
+    rp.setBindGroup(0, bindGroup);
+    rp.setVertexBuffer(0, TEMF._imageVertexBuffer);
+    rp.draw(6, items.length, 0, 0);
+  }
+
+  TEMF._imageTextureGroups.clear();
+  TEMF._imageTextureOrder.length = 0;
+}
+
 function _draw() {
   const device = TEMF._device;
   const context = TEMF._context;
@@ -1042,7 +1227,6 @@ function _draw() {
   if (!device || !context) return;
 
   if (TEMF._drawList.length === 0) {
-    // Clear frame even if no draws
     const commandEncoder = device.createCommandEncoder();
     const textureView = context.getCurrentTexture().createView();
     const renderPassDescriptor = {
@@ -1060,19 +1244,6 @@ function _draw() {
     return;
   }
 
-  // Separate rects and images, preserving draw order info
-  const rects = [];
-  const images = [];
-
-  for (let i = 0; i < TEMF._drawList.length; i++) {
-    const item = TEMF._drawList[i];
-    if (item.type === 'rect') {
-      rects.push(item);
-    } else if (item.type === 'image') {
-      images.push(item);
-    }
-  }
-
   const commandEncoder = device.createCommandEncoder();
   const textureView = context.getCurrentTexture().createView();
 
@@ -1087,97 +1258,34 @@ function _draw() {
 
   const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
 
-  // Draw rects first
-  if (rects.length > 0) {
-    const data = new Float32Array(rects.length * 3 * 4); // 3 vec4f per rect
-    for (let i = 0; i < rects.length; i++) {
-      const r = rects[i];
-      data[i * 12 + 0] = r.x;
-      data[i * 12 + 1] = r.y;
-      data[i * 12 + 2] = r.width;
-      data[i * 12 + 3] = r.height;
-      data[i * 12 + 4] = r.r;
-      data[i * 12 + 5] = r.g;
-      data[i * 12 + 6] = r.b;
-      data[i * 12 + 7] = r.a;
-      data[i * 12 + 8] = r.rotation || 0;
-      data[i * 12 + 9] = r.scale || 1;
-      data[i * 12 + 10] = 0;
-      data[i * 12 + 11] = 0;
+  const currentRects = [];
+
+  for (let i = 0; i < TEMF._drawList.length; i++) {
+    const item = TEMF._drawList[i];
+    if (item.type === 'rect') {
+      currentRects.push(item);
+    } else if (item.type === 'image') {
+      if (currentRects.length > 0) {
+        _drawRects(currentRects, renderPass);
+        currentRects.length = 0;
+      }
+      if (!TEMF._imageTextureGroups) {
+        TEMF._imageTextureGroups = new Map();
+        TEMF._imageTextureOrder = [];
+      }
+      _queueImageDraw(item);
     }
-
-    device.queue.writeBuffer(
-      TEMF._rectUniformBuffer,
-      0,
-      data.buffer,
-      0,
-      rects.length * 3 * 16
-    );
-
-    renderPass.setPipeline(TEMF._rectPipeline);
-    renderPass.setBindGroup(0, TEMF._rectBindGroup);
-    renderPass.setVertexBuffer(0, TEMF._rectVertexBuffer);
-    renderPass.draw(6, rects.length, 0, 0);
   }
 
-  // Draw images
-  if (images.length > 0) {
-    // Group images by texture for batching
-    const byTexture = new Map();
-    for (let i = 0; i < images.length; i++) {
-      const img = images[i];
-      const texEntry = _getOrCreateTexture(img.path);
-      if (!texEntry || texEntry.status !== 'loaded') continue;
-      const texId = texEntry.texture.id || String(texEntry.texture);
-      if (!byTexture.has(texId)) {
-        byTexture.set(texId, { texture: texEntry.texture, items: [], uvs: [] });
-      }
-      const group = byTexture.get(texId);
-      group.items.push(img);
-      group.uvs.push({ u0: img.u0, v0: img.v0, u1: img.u1, v1: img.v1 });
-    }
-
-    // Draw each texture group
-    for (const [, group] of byTexture) {
-      const bindGroup = _getOrCreateImageBindGroup(group.texture);
-      if (!bindGroup) continue;
-
-      // Upload uniform data
-      const uniformData = new Float32Array(group.items.length * 11);
-      for (let i = 0; i < group.items.length; i++) {
-        const item = group.items[i];
-        uniformData[i * 11 + 0] = item.x;
-        uniformData[i * 11 + 1] = item.y;
-        uniformData[i * 11 + 2] = item.width;
-        uniformData[i * 11 + 3] = item.height;
-        uniformData[i * 11 + 4] = item.u0 || 0;
-        uniformData[i * 11 + 5] = item.v0 || 0;
-        uniformData[i * 11 + 6] = item.u1 || 1;
-        uniformData[i * 11 + 7] = item.v1 || 1;
-        uniformData[i * 11 + 8] = item.rotation || 0;
-        uniformData[i * 11 + 9] = item.scale || 1;
-        uniformData[i * 11 + 10] = item.alpha || 1;
-      }
-
-      device.queue.writeBuffer(
-        TEMF._imageUniformBuffer,
-        0,
-        uniformData.buffer,
-        0,
-        group.items.length * 44
-      );
-
-      renderPass.setPipeline(TEMF._imagePipeline);
-      renderPass.setBindGroup(0, bindGroup);
-      renderPass.setVertexBuffer(0, TEMF._imageVertexBuffer);
-      renderPass.draw(6, group.items.length, 0, 0);
-    }
+  if (currentRects.length > 0) {
+    _drawRects(currentRects, renderPass);
   }
+
+  _drawImages(renderPass);
 
   renderPass.end();
   device.queue.submit([commandEncoder.finish()]);
 
-  // Clear draw list
   TEMF._drawList.length = 0;
 }
 
@@ -1239,6 +1347,7 @@ function gameLoop() {
   }
 
   if (TEMF._game && typeof TEMF._game.draw === 'function') {
+    _cleanupSfxNodes();
     _draw();
   }
 
@@ -1269,6 +1378,9 @@ function start(game, fps) {
     console.error('TEMF initialization failed:', err.message);
   });
 }
+
+TEMF.cleanupTextures = _cleanupTextures;
+TEMF.cleanupAudio = _cleanupAudio;
 
 export { start, TEMF, mouse, touch, audio };
 

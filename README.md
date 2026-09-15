@@ -7,17 +7,21 @@
 ## Features
 
 - WebGPU rendering only (no Canvas2D/WebGL fallback)
-- Rectangle (`rect()`) and image (`image()`) rendering
-- Texture caching for efficient image loading
+- Rectangle (`rect()`) and image (`image()`) rendering with correct draw order
+- Texture caching with LRU eviction and bounded cache size
+- Async texture loading with pending draw queue
 - Keyboard, mouse, and touch input (tap, down, drag, up)
 - Unified audio API with Sound Effects (SFX) and Background Music (BGM)
 - Audio volume controls (master, SFX, BGM) and mute
 - Audio looping for both SFX and BGM
 - BGM pause, resume, and stop
 - Audio caching to avoid repeated decoding
+- Audio cache cleanup via `audio.clearCache()`
 - Fixed timestep game loop with `start()`, `fps`, `update(dt)`, and `draw`
 - Frame-rate independent movement (speed * dt)
 - Spiral of death prevention (elapsed time clamped to 0.25s)
+- Automatic SFX node cleanup
+- Resource cleanup via `TEMF.cleanupTextures()` and `TEMF.cleanupAudio()`
 - Static web export
 - TSL (Time Script Language) compilation via Build Program
 
@@ -109,6 +113,22 @@ audio.stop()    # Stop BGM (resets position)
 ### Audio Caching
 
 Audio files are cached after first load. Repeated playback of the same file reuses the cached decoded audio data.
+
+Call `audio.clearCache()` to release all audio resources.
+
+## Resource Management
+
+TME provides cleanup methods to minimize RAM usage:
+
+```js
+// Clean up texture cache (destroys GPU textures)
+TEMF.cleanupTextures()
+
+// Clean up audio cache and context
+TEMF.cleanupAudio()
+```
+
+The texture cache uses LRU eviction with a default maximum of 64 textures. When the cache is full, the least recently used texture is evicted.
 
 ## Project Structure
 
