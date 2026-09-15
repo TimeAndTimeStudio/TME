@@ -835,7 +835,7 @@ async function _loadAudioBuffer(path) {
   }
 }
 
-function _playSfx(path, loop) {
+function _playSfx(path) {
   if (!TEMF._audioContext) return null;
   _resumeAudioContext();
 
@@ -843,21 +843,21 @@ function _playSfx(path, loop) {
   if (!audioBuffer) {
     return _loadAudioBuffer(path).then((buffer) => {
       if (buffer) {
-        return _playSfxInstance(buffer, loop, path);
+        return _playSfxInstance(buffer, path);
       }
       return null;
     });
   }
 
-  return _playSfxInstance(audioBuffer, loop, path);
+  return _playSfxInstance(audioBuffer, path);
 }
 
-function _playSfxInstance(buffer, loop, path) {
+function _playSfxInstance(buffer, path) {
   let source = null;
   try {
     source = TEMF._audioContext.createBufferSource();
     source.buffer = buffer;
-    source.loop = loop || false;
+    source.loop = false;
     source.connect(TEMF._sfxGain);
     source.start(0);
   } catch (e) {
@@ -865,26 +865,16 @@ function _playSfxInstance(buffer, loop, path) {
     return null;
   }
 
-  const node = { source, type: 'sfx', loop: loop || false, path };
+  const node = { source, type: 'sfx', path };
   TEMF._sfxNodes.push(node);
 
-  if (!loop) {
-    source.onended = () => {
-      const idx = TEMF._sfxNodes.indexOf(node);
-      if (idx !== -1) {
-        TEMF._sfxNodes.splice(idx, 1);
-      }
-      _releaseAudioIfUnused(path);
-    };
-  } else {
-    source.onended = () => {
-      const idx = TEMF._sfxNodes.indexOf(node);
-      if (idx !== -1) {
-        TEMF._sfxNodes.splice(idx, 1);
-      }
-      _releaseAudioIfUnused(path);
-    };
-  }
+  source.onended = () => {
+    const idx = TEMF._sfxNodes.indexOf(node);
+    if (idx !== -1) {
+      TEMF._sfxNodes.splice(idx, 1);
+    }
+    _releaseAudioIfUnused(path);
+  };
 
   return node;
 }
@@ -905,12 +895,9 @@ function _stopSfxNode(node) {
   }
 }
 
-function _stopSfxByPath(targetPath) {
+function _stopAllSfx() {
   for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
-    const node = TEMF._sfxNodes[i];
-    if (node && node.path === targetPath) {
-      _stopSfxNode(node);
-    }
+    _stopSfxNode(TEMF._sfxNodes[i]);
   }
 }
 
@@ -922,12 +909,6 @@ function _releaseAudioIfUnused(path) {
     TEMF._audioCache.delete(path);
   } else {
     TEMF._audioUsage.set(path, usage);
-  }
-}
-
-function _stopAllSfx() {
-  for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
-    _stopSfxNode(TEMF._sfxNodes[i]);
   }
 }
 
@@ -1068,14 +1049,14 @@ function _cleanupTextures() {
 const audio = {
   play(path, type, opts) {
     if (!path || !type) return;
-    const options = typeof opts === 'object' ? opts : {};
-    const loop = options.loop || false;
 
     if (type === 'sfx') {
       if (!TEMF._audioContext) _initAudio();
-      _playSfx(path, loop);
+      _playSfx(path);
     } else if (type === 'bgm') {
       if (!TEMF._audioContext) _initAudio();
+      const options = typeof opts === 'object' ? opts : {};
+      const loop = options.loop !== false;
       _playBgm(path, loop);
     }
   },
@@ -1118,10 +1099,6 @@ const audio = {
   },
   set muted(val) {
     _setMuted(val);
-  },
-  stopSfx(path) {
-    if (!path) return;
-    _stopSfxByPath(path);
   },
 };
 

@@ -49,16 +49,15 @@ test('phase13: SFX play with type="sfx"', () => {
 
   ok(runtimeContent.includes('_playSfx('), '_playSfx function exists');
   ok(runtimeContent.includes('_playSfxInstance('), '_playSfxInstance function exists');
-  ok(runtimeContent.includes('source.loop = loop'), 'SFX supports loop option');
+  ok(runtimeContent.includes('source.loop = false'), 'SFX never loops');
 });
 
-test('phase13: SFX loop defaults to false', () => {
+test('phase13: SFX cannot loop', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  // SFX loop parameter defaults to false via: source.loop = loop || false
-  ok(runtimeContent.includes('source.loop = loop || false') || runtimeContent.includes('loop || false'),
-    'SFX loop defaults to false');
+  ok(runtimeContent.includes('source.loop = false'), 'SFX loop is always false');
+  ok(!runtimeContent.includes('_playSfx(path, loop)'), 'SFX does not accept loop parameter');
 });
 
 test('phase13: multiple SFX can overlap', () => {
@@ -70,14 +69,12 @@ test('phase13: multiple SFX can overlap', () => {
   ok(runtimeContent.includes('source.connect(TEMF._sfxGain)'), 'each SFX connects to sfxGain');
 });
 
-test('phase13: SFX can be stopped individually', () => {
+test('phase13: SFX plays until finished (no stop)', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  ok(runtimeContent.includes('_stopSfxNode('), '_stopSfxNode function exists');
-  ok(runtimeContent.includes('node.source.stop()'), 'individual SFX can be stopped');
-  ok(runtimeContent.includes('stopSfx('), 'audio.stopSfx method exists');
-  ok(runtimeContent.includes('_stopSfxByPath('), '_stopSfxByPath function exists');
+  ok(runtimeContent.includes('source.onended'), 'SFX has onended handler');
+  ok(!runtimeContent.includes('stopSfx('), 'no stopSfx method for SFX');
 });
 
 test('phase13: SFX does not stop BGM', () => {
@@ -89,15 +86,6 @@ test('phase13: SFX does not stop BGM', () => {
   ok(runtimeContent.includes('source.connect(TEMF._bgmGain)'), 'BGM connects to bgmGain');
   ok(runtimeContent.includes('_stopAllSfx()'), 'SFX stop is independent');
   ok(runtimeContent.includes('_stopBgm()'), 'BGM stop is independent');
-});
-
-test('phase13: looping SFX continues until stopped', () => {
-  const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
-  const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
-
-  // Looping SFX should not have onended handler that removes from array
-  ok(runtimeContent.includes('if (!loop)') && runtimeContent.includes('source.onended'),
-    'non-looping SFX has onended, looping SFX does not');
 });
 
 // --- BGM tests ---
@@ -268,20 +256,12 @@ test('phase13: automatic audio cleanup on SFX end', () => {
   ok(runtimeContent.includes('TEMF._audioUsage'), 'usage tracking exists');
 });
 
-test('phase13: stopSfx method exists for stopping specific SFX', () => {
+test('phase13: SFX cannot be stopped individually', () => {
   const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
-  ok(runtimeContent.includes('stopSfx('), 'audio.stopSfx method exists');
-  ok(runtimeContent.includes('_stopSfxByPath('), '_stopSfxByPath function exists');
-});
-
-test('phase13: looping SFX can be stopped by path', () => {
-  const runtimePath = require('path').resolve(__dirname, '..', 'tme', 'src', 'temf', 'runtime.js');
-  const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
-
-  ok(runtimeContent.includes('node.path === targetPath'), 'stops SFX by matching path');
-  ok(runtimeContent.includes('if (!loop)') && runtimeContent.includes('source.onended'), 'tracks both looping and non-looping SFX');
+  ok(!runtimeContent.includes('stopSfx('), 'no stopSfx method in audio object');
+  ok(runtimeContent.includes('source.onended'), 'SFX plays until onended');
 });
 
 // --- Build/export tests ---
@@ -379,7 +359,7 @@ test('phase13: audio API does not expose Web Audio objects', () => {
   const runtimeContent = require('fs').readFileSync(runtimePath, 'utf-8');
 
   // The public API (audio object) should not expose these
-  const publicApiMethods = ['play', 'stop', 'pause', 'resume', 'stopSfx'];
+  const publicApiMethods = ['play', 'stop', 'pause', 'resume'];
   const publicApiProps = ['volume', 'sfxVolume', 'bgmVolume', 'muted'];
 
   // Verify public API structure
