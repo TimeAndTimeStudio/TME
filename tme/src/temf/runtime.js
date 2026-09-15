@@ -1452,7 +1452,10 @@ function gameLoop() {
       TEMF._game.update(TEMF._step);
     }
     if (TEMF._game && typeof TEMF._game.draw === 'function') {
+      console.log('Calling TEMF._game.draw()');
       TEMF._game.draw();
+    } else {
+      console.log('TEMF._game.draw is not a function:', typeof TEMF._game?.draw);
     }
     _cleanupSfxNodes();
     _draw();
