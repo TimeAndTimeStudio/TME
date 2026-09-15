@@ -5,7 +5,8 @@
  * Supports: image(path, x, y), image(path, x, y, w, h),
  *           image(path, x, y, w, h, options...)
  *
- * Options: rotation, scale, alpha
+ * Options: rotation (degrees), scale, alpha
+ * Phase 6: Fixed rotation formula, proper options handling.
  */
 
 'use strict';
@@ -123,63 +124,63 @@ function createImage(drawList) {
     alpha
   ) {
     let srcX, srcY, srcW, srcH;
+    let opts = {};
 
     if (typeof width === 'number' && typeof height === 'number') {
       srcX = 0;
       srcY = 0;
       srcW = width;
       srcH = height;
+      opts = typeof rotation === 'object' ? rotation : {};
     } else {
-      rotation = height;
-      scale = width;
-      alpha = y;
-      x = width;
-      y = path;
-      path = srcX;
+      opts = typeof width === 'object' ? width : {};
       srcX = 0;
       srcY = 0;
       srcW = 0;
       srcH = 0;
     }
 
-    if (typeof rotation !== 'number') rotation = 0;
-    if (typeof scale !== 'number') scale = 1;
-    if (typeof alpha !== 'number') alpha = 1;
+    const optRotation = opts.rotation || 0;
+    const optScale = opts.scale || 1;
+    const optAlpha = opts.alpha !== undefined ? opts.alpha : 1;
 
     const img = _images.get(path);
-    let w = srcW || img.width;
-    let h = srcH || img.height;
+    let w = 0, h = 0;
+    let texW = img ? img.width : 0;
+    let texH = img ? img.height : 0;
 
-    if (srcW === 0 && srcH === 0) {
-      w = img.width * scale;
-      h = img.height * scale;
+    if (srcW > 0 && srcH > 0) {
+      w = srcW * optScale;
+      h = srcH * optScale;
+    } else if (img) {
+      w = texW * optScale;
+      h = texH * optScale;
     } else {
-      w = srcW * scale;
-      h = srcH * scale;
+      w = 64 * optScale;
+      h = 64 * optScale;
     }
 
-    const drawX = x - (w / 2) * (1 - Math.cos(rotation)) * (h / 2) - (w / 2);
-    const drawY = y - (h / 2) * (1 - Math.sin(rotation)) * (w / 2) - (h / 2);
-
-    const u0 = srcX / (img ? img.width : 1);
-    const v0 = srcY / (img ? img.height : 1);
-    const u1 = (srcX + (srcW || (img ? img.width : 1))) / (img ? img.width : 1);
-    const v1 = (srcY + (srcH || (img ? img.height : 1))) / (img ? img.height : 1);
+    const u0 = srcX / (texW || 1);
+    const v0 = srcY / (texH || 1);
+    const u1 = (srcX + (srcW || texW)) / (texW || 1);
+    const v1 = (srcY + (srcH || texH)) / (texH || 1);
 
     if (drawList.length >= IMAGE_MAX) return;
 
     drawList.push({
       type: 'image',
       path: path,
-      x: drawX,
-      y: drawY,
+      x: x,
+      y: y,
       width: w,
       height: h,
       u0: u0,
       v0: v0,
       u1: u1,
       v1: v1,
-      alpha: alpha,
+      alpha: optAlpha,
+      rotation: optRotation,
+      scale: optScale,
     });
   };
 }

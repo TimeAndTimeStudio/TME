@@ -3,6 +3,7 @@
  *
  * Parses color strings (#RRGGBB / #RRGGBBAA) and queues
  * rectangle draw calls for the WebGPU renderer.
+ * Phase 6: Supports rotation, scale, alpha options.
  */
 
 'use strict';
@@ -40,9 +41,12 @@ function parseColor(color) {
 }
 
 function createRect(rects) {
-  return function rect(x, y, width, height, color) {
+  return function rect(x, y, width, height, color, opts) {
     const [r, g, b, a] = parseColor(color);
-    rects.push({ x, y, width, height, r, g, b, a });
+    const optRotation = (opts && typeof opts.rotation === 'number') ? opts.rotation : 0;
+    const optScale = (opts && typeof opts.scale === 'number') ? opts.scale : 1;
+    const optAlpha = (opts && opts.alpha !== undefined) ? opts.alpha : a;
+    rects.push({ x, y, width, height, r, g, b, a: optAlpha, rotation: optRotation, scale: optScale });
   };
 }
 

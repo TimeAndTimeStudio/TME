@@ -5,6 +5,7 @@
  * initializing WebGPU and starting the game loop.
  *
  * Phase 4: Rectangle + Image rendering with texture caching.
+ * Phase 6: Transform (rotation, scale) and alpha for rect and image.
  */
 
 'use strict';
@@ -37,10 +38,10 @@ const TEMF = {
 };
 
 const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
-const IMAGE_VERT_SIZE = 24; // 6 vertices * 4 floats (quad with UV)
+const IMAGE_VERT_SIZE = 48; // 6 vertices * 8 floats (quad with UV + padding)
 
 const IMAGE_QUAD = new Float32Array([
-  // pos(4) + uv(4) per vertex
+  // pos(2) + padding(2) + uv(2) + padding(2) per vertex
   0, 0, 0, 0,  0, 0, 0, 0,
   1, 0, 0, 0,  1, 0, 0, 0,
   0, 1, 0, 0,  0, 1, 0, 0,
@@ -191,7 +192,7 @@ function _createRenderer() {
 
   // Rectangle pipeline
   const rectShaderCode = `
-    var<uniform> rectData: array<vec4f, ${max * 2}>;
+    var<uniform> rectData: array<vec4f, ${max * 3}>;
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) color: vec4f,
@@ -200,7 +201,7 @@ function _createRenderer() {
     fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
       let rectIdx = vertexIndex / 4u;
       let cornerIdx = vertexIndex % 4u;
-      let base = rectIdx * 2u;
+      let base = rectIdx * 3u;
       let x = rectData[base].x;
       let y = rectData[base].y;
       let w = rectData[base].z;
@@ -209,6 +210,8 @@ function _createRenderer() {
       let g = rectData[base + 1u].y;
       let b = rectData[base + 1u].z;
       let a = rectData[base + 1u].w;
+      let rotation = rectData[base + 2u].x;
+      let scale = rectData[base + 2u].y;
       var pos: vec2f;
       if (cornerIdx == 0u) {
         pos = vec2f(x, y);
@@ -219,6 +222,15 @@ function _createRenderer() {
       } else {
         pos = vec2f(x + w, y + h);
       }
+      let cx = x + w * 0.5;
+      let cy = y + h * 0.5;
+      pos = pos - vec2f(cx, cy);
+      pos = pos * scale;
+      let rad = rotation * 3.14159265 / 180.0;
+      let cos_r = cos(rad);
+      let sin_r = sin(rad);
+      pos = vec2f(pos.x * cos_r - pos.y * sin_r, pos.x * sin_r + pos.y * cos_r);
+      pos = pos + vec2f(cx, cy);
       return VSOut(vec4f(pos, 0.0, 1.0), vec4f(r, g, b, a));
     }
     @fragment
@@ -258,7 +270,7 @@ function _createRenderer() {
     },
   });
 
-  const uniformBufferSize = max * 2 * 4 * 4; // max rects * 2 vec4f * 4 floats * 4 bytes
+  const uniformBufferSize = max * 3 * 4 * 4; // max rects * 3 vec4f * 4 floats * 4 bytes
   const uniformBuffer = device.createBuffer({
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -297,6 +309,14 @@ function _createRenderer() {
       y: f32,
       w: f32,
       h: f32,
+      u0: f32,
+      v0: f32,
+      u1: f32,
+      v1: f32,
+      rotation: f32,
+      scale: f32,
+      alpha: f32,
+      padding: f32,
     };
     var<uniform> imageData: array<ImageUniforms, 1024>;
     @group(1) @binding(0) var mySampler: sampler;
@@ -304,7 +324,6 @@ function _createRenderer() {
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) uv: vec2f,
-      @location(1) texCoord: vec2f,
     };
     @vertex
     fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
@@ -318,23 +337,33 @@ function _createRenderer() {
       var pos: vec2f;
       var uv: vec2f;
       if (vertIdx == 0u) {
-        pos = vec2f(x0, y0); uv = vec2f(0.0, 0.0);
+        pos = vec2f(x0, y0); uv = vec2f(base.u0, base.v1);
       } else if (vertIdx == 1u) {
-        pos = vec2f(x1, y0); uv = vec2f(1.0, 0.0);
+        pos = vec2f(x1, y0); uv = vec2f(base.u1, base.v1);
       } else if (vertIdx == 2u) {
-        pos = vec2f(x0, y1); uv = vec2f(0.0, 1.0);
+        pos = vec2f(x0, y1); uv = vec2f(base.u0, base.v0);
       } else if (vertIdx == 3u) {
-        pos = vec2f(x0, y1); uv = vec2f(0.0, 1.0);
+        pos = vec2f(x0, y1); uv = vec2f(base.u0, base.v0);
       } else if (vertIdx == 4u) {
-        pos = vec2f(x1, y0); uv = vec2f(1.0, 0.0);
+        pos = vec2f(x1, y0); uv = vec2f(base.u1, base.v1);
       } else {
-        pos = vec2f(x1, y1); uv = vec2f(1.0, 1.0);
+        pos = vec2f(x1, y1); uv = vec2f(base.u1, base.v0);
       }
-      return VSOut(vec4f(pos, 0.0, 1.0), uv, uv);
+      let cx = base.x + base.w * 0.5;
+      let cy = base.y + base.h * 0.5;
+      pos = pos - vec2f(cx, cy);
+      pos = pos * base.scale;
+      let rad = base.rotation * 3.14159265 / 180.0;
+      let cos_r = cos(rad);
+      let sin_r = sin(rad);
+      pos = vec2f(pos.x * cos_r - pos.y * sin_r, pos.x * sin_r + pos.y * cos_r);
+      pos = pos + vec2f(cx, cy);
+      return VSOut(vec4f(pos, 0.0, 1.0), uv);
     }
     @fragment
     fn fs(input: VSOut) -> @location(0) vec4f {
-      return textureSample(myTexture, mySampler, input.texCoord);
+      let texColor = textureSample(myTexture, mySampler, input.uv);
+      return vec4f(texColor.rgb, texColor.a);
     }
   `;
 
@@ -370,7 +399,7 @@ function _createRenderer() {
   });
 
   const imageUniformBuffer = device.createBuffer({
-    size: 1024 * 4 * 4,
+    size: 1024 * 11 * 4,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
@@ -395,55 +424,50 @@ function _createRenderer() {
   TEMF._imageBindGroups = new Map();
 }
 
-function _rect(x, y, width, height, color) {
+function _rect(x, y, width, height, color, opts) {
   if (TEMF._drawList.length >= TEMF._rectMax) return;
   const [r, g, b, a] = _parseColor(color);
+  const optRotation = (opts && typeof opts.rotation === 'number') ? opts.rotation : 0;
+  const optScale = (opts && typeof opts.scale === 'number') ? opts.scale : 1;
+  const optAlpha = (opts && opts.alpha !== undefined) ? opts.alpha : a;
   TEMF._drawList.push({
     type: 'rect',
-    x, y, width, height, r, g, b, a,
+    x, y, width, height, r, g, b, a: optAlpha,
+    rotation: optRotation,
+    scale: optScale,
   });
 }
 
 function _image(path, x, y, width, height, rotation, scale, alpha) {
+  let srcW, srcH;
   let opts = {};
 
-  // Parse arguments: image(path, x, y), image(path, x, y, w, h), image(path, x, y, w, h, options)
   if (typeof width === 'number' && typeof height === 'number') {
-    // image(path, x, y, w, h, ...)
+    srcW = width;
+    srcH = height;
     opts = typeof rotation === 'object' ? rotation : {};
   } else if (typeof width === 'number' && typeof height === 'undefined') {
-    // image(path, x, y, w) - treat w as rotation? No, this is unusual.
-    // Actually per spec: image(path, x, y) or image(path, x, y, w, h)
-    // So if we have 4 args and the 4th is a number, it's ambiguous.
-    // Let's use: if arg4 is number and arg5 is number -> w, h
-    // if arg4 is number and arg5 is undefined -> w only, treat as width (auto height)
-    // This is handled by the caller passing proper args.
-    opts = typeof height === 'object' ? height : {};
-  } else {
-    // image(path, x, y, ...) where ... are options
     opts = typeof width === 'object' ? width : {};
+    srcW = 0;
+    srcH = 0;
+  } else {
+    opts = typeof width === 'object' ? width : {};
+    srcW = 0;
+    srcH = 0;
   }
 
   const optRotation = opts.rotation || 0;
   const optScale = opts.scale || 1;
   const optAlpha = opts.alpha !== undefined ? opts.alpha : 1;
 
-  // Get image dimensions
   const img = TEMF._imageElements.get(path);
-  let srcW = 0, srcH = 0, texW = 0, texH = 0;
+  let texW = 0, texH = 0;
 
   if (img) {
     texW = img.width;
     texH = img.height;
   }
 
-  // Determine source rectangle (for sprite sheets)
-  if (typeof width === 'number' && typeof height === 'number') {
-    srcW = width;
-    srcH = height;
-  }
-
-  // Calculate display size
   let displayW, displayH;
   if (srcW > 0 && srcH > 0) {
     displayW = srcW * optScale;
@@ -456,7 +480,6 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
     displayH = 64 * optScale;
   }
 
-  // Calculate UV coordinates
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
   if (img && srcW > 0 && srcH > 0) {
     u0 = 0;
@@ -479,6 +502,8 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
     u1: u1,
     v1: v1,
     alpha: optAlpha,
+    rotation: optRotation,
+    scale: optScale,
   });
 }
 
@@ -613,17 +638,21 @@ function _draw() {
 
   // Draw rects first
   if (rects.length > 0) {
-    const data = new Float32Array(rects.length * 2 * 4); // 2 vec4f per rect
+    const data = new Float32Array(rects.length * 3 * 4); // 3 vec4f per rect
     for (let i = 0; i < rects.length; i++) {
       const r = rects[i];
-      data[i * 8 + 0] = r.x;
-      data[i * 8 + 1] = r.y;
-      data[i * 8 + 2] = r.width;
-      data[i * 8 + 3] = r.height;
-      data[i * 8 + 4] = r.r;
-      data[i * 8 + 5] = r.g;
-      data[i * 8 + 6] = r.b;
-      data[i * 8 + 7] = r.a;
+      data[i * 12 + 0] = r.x;
+      data[i * 12 + 1] = r.y;
+      data[i * 12 + 2] = r.width;
+      data[i * 12 + 3] = r.height;
+      data[i * 12 + 4] = r.r;
+      data[i * 12 + 5] = r.g;
+      data[i * 12 + 6] = r.b;
+      data[i * 12 + 7] = r.a;
+      data[i * 12 + 8] = r.rotation || 0;
+      data[i * 12 + 9] = r.scale || 1;
+      data[i * 12 + 10] = 0;
+      data[i * 12 + 11] = 0;
     }
 
     device.queue.writeBuffer(
@@ -631,7 +660,7 @@ function _draw() {
       0,
       data.buffer,
       0,
-      rects.length * 2 * 16
+      rects.length * 3 * 16
     );
 
     renderPass.setPipeline(TEMF._rectPipeline);
@@ -663,13 +692,20 @@ function _draw() {
       if (!bindGroup) continue;
 
       // Upload uniform data
-      const uniformData = new Float32Array(group.items.length * 4);
+      const uniformData = new Float32Array(group.items.length * 11);
       for (let i = 0; i < group.items.length; i++) {
         const item = group.items[i];
-        uniformData[i * 4 + 0] = item.x;
-        uniformData[i * 4 + 1] = item.y;
-        uniformData[i * 4 + 2] = item.width;
-        uniformData[i * 4 + 3] = item.height;
+        uniformData[i * 11 + 0] = item.x;
+        uniformData[i * 11 + 1] = item.y;
+        uniformData[i * 11 + 2] = item.width;
+        uniformData[i * 11 + 3] = item.height;
+        uniformData[i * 11 + 4] = item.u0 || 0;
+        uniformData[i * 11 + 5] = item.v0 || 0;
+        uniformData[i * 11 + 6] = item.u1 || 1;
+        uniformData[i * 11 + 7] = item.v1 || 1;
+        uniformData[i * 11 + 8] = item.rotation || 0;
+        uniformData[i * 11 + 9] = item.scale || 1;
+        uniformData[i * 11 + 10] = item.alpha || 1;
       }
 
       device.queue.writeBuffer(
@@ -677,7 +713,7 @@ function _draw() {
         0,
         uniformData.buffer,
         0,
-        group.items.length * 16
+        group.items.length * 44
       );
 
       renderPass.setPipeline(TEMF._imagePipeline);
