@@ -1,36 +1,27 @@
 # TME — Time Mini Engine
 
-**TME (Time Mini Engine)** is a minimal WebGPU game engine framework.
+**TME (Time Mini Engine)** is a minimal WebGPU game engine framework.  
+**TEMF (Time Engine Mini Fast)** is the runtime that executes TME games.
 
-**TEMF (Time Engine Mini Fast)** is the runtime that runs TME games.
+## Overview
+
+TME provides a lightweight, WebGPU-only rendering and input system for browser-based games. Games are written in TSL (Time Script Language), compiled by the TSL compiler, and executed by the TEMF runtime.
 
 ## Features
 
-- WebGPU rendering only (no Canvas2D/WebGL fallback)
-- Rectangle (`rect()`) and image (`image()`) rendering with correct draw order
-- Texture caching with LRU eviction and bounded cache size
-- Async texture loading with pending draw queue
-- Keyboard, mouse, and touch input (tap, down, drag, up)
-- Unified audio API with Sound Effects (SFX) and Background Music (BGM)
-- Audio volume controls (master, SFX, BGM) and mute
-- Audio looping for both SFX and BGM
-- BGM pause, resume, and stop
-- Audio caching to avoid repeated decoding
-- Audio cache cleanup via `audio.clearCache()`
-- Fixed timestep game loop with `start()`, `fps`, `update(dt)`, and `draw`
-- Frame-rate independent movement (speed * dt)
-- Spiral of death prevention (elapsed time clamped to 0.25s)
-- Automatic SFX node cleanup
-- Resource cleanup via `TEMF.cleanupTextures()` and `TEMF.cleanupAudio()`
-- Static web export
-- TSL (Time Script Language) compilation via Build Program
+- **WebGPU Rendering** — `rect()` and `image()` with rotation, scale, and alpha transforms
+- **Texture Management** — On-demand loading, LRU cache (max 64 textures), automatic eviction
+- **Input System** — Keyboard, mouse (with button support), and touch (single-touch)
+- **Unified Audio API** — SFX (stackable) and BGM (single track) with volume and mute controls
+- **Fixed Timestep Game Loop** — Frame-rate independent updates via `start()` and `fps()`
+- **Static Export** — Self-contained `dist/` output, no runtime dependencies
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- A browser with WebGPU support (Chrome 113+, Edge 113+)
+- WebGPU-enabled browser (Chrome 113+, Edge 113+)
 
 ### Installation
 
@@ -57,106 +48,182 @@ node ../tme/bin/tme build
 
 Open `dist/index.html` in a WebGPU-enabled browser.
 
+## Project Structure
+
+```
+project/
+├── game.tsl         # Game source (TSL)
+├── index.html       # HTML page (user-owned)
+├── style.css        # CSS styles (user-owned)
+├── <directories>/   # User assets (copied recursively)
+└── dist/            # Build output
+    ├── index.html
+    ├── game.js      # Compiled game code
+    ├── engine.js    # TEMF runtime
+    └── style.css
+```
+
 ## Game Loop
 
 TME uses a fixed timestep game loop. The update rate is independent of the display refresh rate:
 
 ```tsl
-game "Demo"
+game "MyGame"
 
-x = 0
+speed = 200
 
 update(dt):
-    x += 100 * dt
+    if key.down("D"):
+        x += speed * dt
 
 draw:
-    rect(x, 100, 100, 100, "#ff0000")
+    rect(x, 100, 64, 64, "#ff0000")
 ```
 
-- `start()` is the explicit entry point — nothing runs before it
-- `fps` configures the fixed update rate (default: 60)
-- `update(dt)` receives a fixed delta time (e.g., 0.01667 for 60fps)
-- `draw()` runs at the browser's animation frame rate via `requestAnimationFrame()`
+### Lifecycle
+
+- `start()` — Explicit entry point. Nothing runs before this call.
+- `fps(n)` — Configures the fixed update rate (default: 60).
+- `update(dt)` — Receives fixed delta time (e.g., 0.01667 for 60fps).
+- `draw` — Runs at the browser's animation frame rate via `requestAnimationFrame()`.
+
+## Rendering API
+
+### `rect(x, y, width, height, color, rotation?, scale?, alpha?)`
+
+Draws a filled rectangle with optional transforms.
+
+```javascript
+rect(100, 100, 64, 64, '#FF5733');
+rect(100, 100, 64, 64, '#FF5733', 45, 2, 0.5);
+```
+
+**Parameters:**
+- `x, y` — Top-left corner coordinates
+- `width, height` — Dimensions
+- `color` — Hex color (`#RRGGBB` or `#RRGGBBAA`)
+- `rotation` — Angle in degrees (default: 0)
+- `scale` — Uniform scale factor (default: 1)
+- `alpha` — Opacity 0–1 (default: color alpha)
+
+### `image(src, x, y, width, height, rotation?, scale?, alpha?)`
+
+Loads and draws an image on-demand with optional transforms.
+
+```javascript
+image('images/player.png', 100, 100, 64, 64);
+image('images/player.png', 100, 100, 64, 64, 90, 1.5, 0.8);
+```
+
+**Parameters:**
+- `src` — Relative path to image file
+- `x, y, width, height` — Position and dimensions
+- `rotation, scale, alpha` — Same as `rect()`
+
+## Input API
+
+### Keyboard
+
+```javascript
+key.down("A")        // Returns true while key is held
+key.down("SPACE")    // Special keys: SPACE, ENTER, ESC, TAB, CTRL, SHIFT, ALT
+key.down("F1")       // Function keys: F1–F12
+key.down("1")        // Number keys: 0–9
+```
+
+### Mouse
+
+```javascript
+mouse.x              // Current X position
+mouse.y              // Current Y position
+mouse.down()         // True while any button is held
+mouse.click()        // True on click frame
+mouse.drag()         // True while dragging
+mouse.x, mouse.y     // Coordinates
+```
+
+**Button support (number only):**
+```javascript
+mouse.down(0)        // Left button
+mouse.down(1)        // Middle button
+mouse.down(2)        // Right button
+```
+
+### Touch
+
+```javascript
+touch.x              // Current X position
+touch.y              // Current Y position
+touch.down           // True while touching
+touch.tapped         // True on tap frame
+touch.dragging       // True while dragging
+```
 
 ## Audio API
 
-TME provides a unified `audio` object for both Sound Effects (SFX) and Background Music (BGM):
+### Playback
 
-```tsl
-game "AudioDemo"
+```javascript
+// SFX (stackable, short sounds)
+audio.play("sfx/jump.wav", "sfx");
 
-start:
-    audio.play("audio/bgm/theme.mp3", type="bgm", loop=true)
-
-update(dt):
-    if key.down("Space"):
-        audio.play("audio/sfx/jump.wav", type="sfx")
+// BGM (single track, loops by default)
+audio.play("bgm/theme.mp3", "bgm", true);
 ```
 
-### Audio Controls
+### Controls
 
-```tsl
-audio.volume      # Master volume (0..1)
-audio.sfxVolume   # SFX volume (0..1)
-audio.bgmVolume   # BGM volume (0..1)
-audio.muted       # Master mute (true/false)
+```javascript
+audio.volume         // Master volume (0–1)
+audio.sfxVolume      // SFX volume (0–1)
+audio.bgmVolume      // BGM volume (0–1)
+
+audio.muted          // Master mute
+audio.mutedSfx       // Mute SFX only
+audio.mutedBgm       // Mute BGM only
+
+audio.stop("bgm")    // Stop BGM
+audio.pause()        // Pause BGM
+audio.resume()       // Resume BGM
 ```
 
-### BGM Controls
+## Build System
 
-```tsl
-audio.pause()   # Pause BGM (preserves position)
-audio.resume()  # Resume BGM from pause
-audio.stop()    # Stop BGM (resets position)
-```
+### Commands
 
-### Audio Caching
+- `tme init [dir]` — Create a new project template
+- `tme build [dir]` — Compile and package the project
 
-Audio files are cached after first load. Repeated playback of the same file reuses the cached decoded audio data.
+### Build Process
 
-Call `audio.clearCache()` to release all audio resources.
+1. Validates `index.html` contains `<canvas id="game">`
+2. Compiles `game.tsl` via TSL compiler
+3. Packages TEMF runtime and TME engine
+4. Preserves user HTML/CSS without modification
+5. Recursively copies user directories to `dist/`
+6. Outputs static `dist/` package
+
+### Build Rules
+
+- User files (`index.html`, `style.css`, assets) are never overwritten
+- Build fails explicitly on missing inputs or TSL errors
+- No npm dependencies at runtime
+- Static export runs in any browser
 
 ## Resource Management
 
-TME provides cleanup methods to minimize RAM usage:
+### Texture Cache
 
-```js
-// Clean up texture cache (destroys GPU textures)
-TEMF.cleanupTextures()
+- LRU eviction (max 64 textures)
+- On-demand async loading
+- Automatic eviction when full
 
-// Clean up audio cache and context
-TEMF.cleanupAudio()
+### Cleanup
+
+```javascript
+TEMF.cleanupTextures()   // Release all GPU textures
+TEMF.cleanupAudio()      // Release all audio resources
 ```
-
-The texture cache uses LRU eviction with a default maximum of 64 textures. When the cache is full, the least recently used texture is evicted.
-
-## Project Structure
-
-```
-project/
-├── game.tsl        # Game source (TSL)
-├── index.html      # HTML page (user-owned)
-├── style.css       # CSS styles (user-owned)
-├── assets/         # User-created directories (copied recursively)
-│   └── images/
-│       └── player.png
-└── dist/           # Build output
-    ├── index.html
-    ├── game.js     # Compiled game code
-    ├── engine.js   # TEMF runtime
-    ├── style.css
-    └── assets/
-        └── images/
-            └── player.png
-```
-
-## Build Behavior
-
-- `tme build` compiles `game.tsl` via TSL, packages the TEMF runtime, and preserves all user files
-- User `index.html` and `style.css` are never overwritten during builds
-- All user-created directories and files are recursively copied to `dist/` preserving their relative paths
-- `node_modules`, `.git`, and `dist` are excluded from the copy process
-- Build fails explicitly if required outputs (`game.js`, `engine.js`) or user files are missing
 
 ## License
 
