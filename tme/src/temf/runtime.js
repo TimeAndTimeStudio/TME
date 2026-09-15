@@ -339,6 +339,7 @@ function _createRenderer() {
     },
     primitive: {
       topology: 'triangle-strip',
+      cullMode: 'none',
     },
   });
 
