@@ -1368,6 +1368,25 @@ function _draw() {
   TEMF._drawList.length = 0;
 }
 
+const input = {
+  keyboard: {
+    is_down: (key) => {
+      const normalized = _normalizeKey(key);
+      return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
+    }
+  },
+  mouse: {
+    get x() { return TEMF._mouseX; },
+    get y() { return TEMF._mouseY; },
+    is_down: (btn) => _getMouseButtonState(btn).down
+  },
+  pointer: {
+    get x() { return TEMF._mouseX; },
+    get y() { return TEMF._mouseY; },
+    get is_touch() { return TEMF._touchState.down; }
+  }
+};
+
 const mouse = {
   get x() { return TEMF._mouseX; },
   get y() { return TEMF._mouseY; },
@@ -1510,6 +1529,7 @@ if (typeof window !== 'undefined') {
   window.rect = _rect;
   window.image = _image;
   window.key = { down: _keyDown };
+  window.input = input;
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;
