@@ -1435,12 +1435,41 @@ function gameLoop() {
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-function start(game, fps, button) {
+function start(gameOrButton, fpsOrButton, button) {
   if (TEMF._started) {
     return;
   }
 
+  let game, fps, btnId;
+
+  if (typeof gameOrButton === 'string') {
+    btnId = gameOrButton;
+    game = null;
+    fps = 60;
+  } else if (typeof gameOrButton === 'object' && gameOrButton !== null) {
+    game = gameOrButton;
+    if (typeof fpsOrButton === 'number') {
+      fps = fpsOrButton;
+      btnId = button;
+    } else if (typeof fpsOrButton === 'string') {
+      btnId = fpsOrButton;
+      fps = 60;
+    } else {
+      fps = 60;
+      btnId = fpsOrButton;
+    }
+  } else {
+    game = null;
+    fps = 60;
+    btnId = gameOrButton;
+  }
+
   TEMF._started = true;
+  if (!game) {
+    game = {};
+    if (typeof update === 'function') game.update = update;
+    if (typeof draw === 'function') game.draw = draw;
+  }
   TEMF._game = game;
   TEMF._fps = fps || 60;
   TEMF._step = 1 / TEMF._fps;
@@ -1461,8 +1490,8 @@ function start(game, fps, button) {
     });
   }
 
-  if (button) {
-    const btn = typeof button === 'string' ? document.getElementById(button) : button;
+  if (btnId) {
+    const btn = typeof btnId === 'string' ? document.getElementById(btnId) : btnId;
     if (btn) {
       btn.addEventListener('click', initAndStart);
       return;

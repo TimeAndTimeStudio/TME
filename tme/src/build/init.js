@@ -53,12 +53,31 @@ async function initProject(projectDir) {
 
 body {
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 #game {
     display: block;
-    width: 100vw;
-    height: 100vh;
+    width: 800px;
+    height: 600px;
+}
+
+#startBtn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 18px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#startBtn:hover {
+    background: #45a049;
 }
 `
   };
