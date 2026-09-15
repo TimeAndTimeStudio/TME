@@ -1434,6 +1434,9 @@ function gameLoop() {
     console.log('Calling game.draw()');
     _cleanupSfxNodes();
     _draw();
+  } else {
+    console.log('game.draw is not a function:', typeof TEMF._game?.draw);
+    console.log('TEMF._game:', TEMF._game);
   }
 
   TEMF._animationFrameId = requestAnimationFrame(gameLoop);
