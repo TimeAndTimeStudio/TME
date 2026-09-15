@@ -21,6 +21,9 @@ rect(x: number, y: number, width: number, height: number, color: string, opts?: 
 - `scale` (number): Uniform scale factor. Default `1`.
 - `alpha` (number): Overall opacity from `0` (transparent) to `1` (opaque). Default `1`.
 
+**Default Behavior:**
+If `opts` is omitted or `undefined`, all transforms use default values (rotation: 0, scale: 1, alpha: 1). The rectangle renders at full opacity with no rotation or scaling.
+
 **Example:**
 ```javascript
 rect(100, 100, 64, 64, '#FF5733');
@@ -48,6 +51,9 @@ image(src: string, x: number, y: number, opts?: TransformOptions): void
 - `rotation` (number): Rotation angle in degrees. Default `0`.
 - `scale` (number): Uniform scale factor. Default `1`.
 - `alpha` (number): Overall opacity from `0` to `1`. Default `1`.
+
+**Default Behavior:**
+If `opts` is omitted or `undefined`, all transforms use default values (rotation: 0, scale: 1, alpha: 1). The image renders at original size, full opacity, with no rotation.
 
 **Example:**
 ```javascript
