@@ -15,6 +15,6 @@ function update(dt) {
 }
 function draw() {
   rect(0, GROUND, 800, 50, "brown");
-  image("player.png", player.x, player.y, 50, 50);
+  rect(player.x, player.y, 50, 50, "blue");
 }
 start();
