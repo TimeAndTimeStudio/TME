@@ -484,8 +484,8 @@ function _createRenderer() {
   const imageBindGroupLayout = imagePipeline.getBindGroupLayout(0);
 
   const sampler = device.createSampler({
-    magFilter: 'linear',
-    minFilter: 'linear',
+    magFilter: 'nearest',
+    minFilter: 'nearest',
   });
 
   TEMF._imagePipeline = imagePipeline;
