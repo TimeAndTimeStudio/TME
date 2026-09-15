@@ -40,25 +40,11 @@ async function initProject(projectDir) {
     <canvas id="game"></canvas>
 
     <script type="module" src="./engine.js"></script>
+    <script type="module" src="./game.js"></script>
 </body>
 </html>
 `,
-    'style.css': `html, body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-}
-
-body {
-    overflow: hidden;
-}
-
-#game {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-}
-`
+    'style.css': ``
   };
 
   const conflicts = [];
