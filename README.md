@@ -74,7 +74,7 @@ project/
 | **Input** | [docs/en/input.md](docs/en/input.md) |
 | **Audio** | [docs/en/audio.md](docs/en/audio.md) |
 | **Build** | [docs/en/build.md](docs/en/build.md) |
-| **Policies** | [docs/en/policies.md](docs/en/policies.md) |
+
 
 ## License
 
