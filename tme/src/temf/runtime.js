@@ -1423,11 +1423,13 @@ function gameLoop() {
   while (TEMF._accumulator >= TEMF._step) {
     if (TEMF._game && typeof TEMF._game.update === 'function') {
       TEMF._game.update(TEMF._step);
+    } else if (typeof update === 'function') {
+      update(TEMF._step);
     }
     TEMF._accumulator -= TEMF._step;
   }
 
-  if (TEMF._game && typeof TEMF._game.draw === 'function') {
+  if ((TEMF._game && typeof TEMF._game.draw === 'function') || typeof draw === 'function') {
     _cleanupSfxNodes();
     _draw();
   }
@@ -1446,6 +1448,12 @@ function start(game, fps) {
   TEMF._step = 1 / TEMF._fps;
   TEMF._accumulator = 0;
   TEMF._lastTime = 0;
+
+  if (!game && (typeof update !== 'function' || typeof draw !== 'function')) {
+    console.error('TEMF Error: Game must define update(dt) and draw() functions.');
+    console.error('TEMF Error: Example: function update(dt): { ... } function draw(): { ... }');
+    return;
+  }
 
   initWebGPU().then(() => {
     createResizeObserver();
