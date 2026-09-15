@@ -1,27 +1,56 @@
 /**
  * TEMF — Time Engine Mini Fast Runtime
- * 
+ *
  * Minimal runtime that waits for explicit start() before
  * initializing WebGPU and starting the game loop.
+ *
+ * Phase 4: Rectangle + Image rendering with texture caching.
  */
+
+'use strict';
 
 const TEMF = {
   _started: false,
   _canvas: null,
   _device: null,
   _context: null,
+  _canvasFormat: null,
   _fps: 60,
   _accumulator: 0,
   _lastTime: 0,
   _step: 0,
   _animationFrameId: null,
-  _game: null
+  _game: null,
+  _rectPipeline: null,
+  _rectBindGroupLayout: null,
+  _rectUniformBuffer: null,
+  _rectVertexBuffer: null,
+  _rectBindGroup: null,
+  _imagePipeline: null,
+  _imageBindGroupLayout: null,
+  _imageVertexBuffer: null,
+  _imageSampler: null,
+  _drawList: [],
+  _rectMax: 1024,
+  _textureCache: new Map(),
+  _imageElements: new Map(),
 };
 
+const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
+const IMAGE_VERT_SIZE = 24; // 6 vertices * 4 floats (quad with UV)
+
+const IMAGE_QUAD = new Float32Array([
+  // pos(4) + uv(4) per vertex
+  0, 0, 0, 0,  0, 0, 0, 0,
+  1, 0, 0, 0,  1, 0, 0, 0,
+  0, 1, 0, 0,  0, 1, 0, 0,
+  0, 1, 0, 0,  0, 1, 0, 0,
+  1, 0, 0, 0,  1, 0, 0, 0,
+  1, 1, 0, 0,  1, 1, 0, 0,
+]);
+
 function _resize() {
-  if (!TEMF._canvas || !TEMF._context) {
-    return;
-  }
+  if (!TEMF._canvas || !TEMF._context) return;
 
   const dpr = window.devicePixelRatio || 1;
   const width = TEMF._canvas.clientWidth * dpr;
@@ -31,6 +60,426 @@ function _resize() {
     TEMF._canvas.width = width;
     TEMF._canvas.height = height;
   }
+}
+
+function _parseColor(color) {
+  if (!color || typeof color !== 'string') {
+    return [1, 1, 1, 1];
+  }
+  const hex = color.trim();
+  const m8 = hex.match(/^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
+  if (m8) {
+    return [
+      parseInt(m8[1], 16) / 255,
+      parseInt(m8[2], 16) / 255,
+      parseInt(m8[3], 16) / 255,
+      1,
+    ];
+  }
+  const m16 = hex.match(/^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
+  if (m16) {
+    return [
+      parseInt(m16[1], 16) / 255,
+      parseInt(m16[2], 16) / 255,
+      parseInt(m16[3], 16) / 255,
+      parseInt(m16[4], 16) / 255,
+    ];
+  }
+  return [1, 1, 1, 1];
+}
+
+function _getBasePath() {
+  if (typeof document !== 'undefined') {
+    const scripts = document.querySelectorAll('script[src]');
+    for (let i = 0; i < scripts.length; i++) {
+      const src = scripts[i].src;
+      const idx = src.lastIndexOf('/');
+      if (idx !== -1) {
+        return src.substring(0, idx + 1);
+      }
+    }
+  }
+  return '';
+}
+
+async function _loadImage(path) {
+  if (TEMF._imageElements.has(path)) {
+    return TEMF._imageElements.get(path);
+  }
+
+  const base = _getBasePath();
+  const url = base + path;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = url;
+
+  return new Promise((resolve, reject) => {
+    img.onload = () => {
+      TEMF._imageElements.set(path, img);
+      resolve(img);
+    };
+    img.onerror = () => reject(new Error('Failed to load image: ' + path));
+  });
+}
+
+async function _createTexture(device, img) {
+  const width = img.width;
+  const height = img.height;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, width, height);
+
+  const texture = device.createTexture({
+    size: [width, height, 1],
+    format: 'rgba8unorm',
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  device.queue.writeTexture(
+    { texture: texture },
+    imageData.data,
+    { bytesPerRow: width * 4 },
+    [width, height]
+  );
+
+  return texture;
+}
+
+function _getOrCreateTexture(path) {
+  if (!TEMF._device) return null;
+
+  if (TEMF._textureCache.has(path)) {
+    const entry = TEMF._textureCache.get(path);
+    if (entry.status === 'loaded') {
+      return entry;
+    }
+    return null;
+  }
+
+  const entry = { status: 'pending' };
+  TEMF._textureCache.set(path, entry);
+
+  _loadImage(path)
+    .then((img) => {
+      const texture = _createTexture(TEMF._device, img);
+      entry.status = 'loaded';
+      entry.texture = texture;
+      entry.width = img.width;
+      entry.height = img.height;
+    })
+    .catch((err) => {
+      entry.status = 'error';
+      entry.error = err.message;
+      console.error(err.message);
+    });
+
+  return null;
+}
+
+function _createRenderer() {
+  const device = TEMF._device;
+  const format = TEMF._canvasFormat;
+  const max = TEMF._rectMax;
+
+  // Rectangle pipeline
+  const rectShaderCode = `
+    var<uniform> rectData: array<vec4f, ${max * 2}>;
+    struct VSOut {
+      @builtin(position) position: vec4f,
+      @location(0) color: vec4f,
+    };
+    @vertex
+    fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
+      let rectIdx = vertexIndex / 4u;
+      let cornerIdx = vertexIndex % 4u;
+      let base = rectIdx * 2u;
+      let x = rectData[base].x;
+      let y = rectData[base].y;
+      let w = rectData[base].z;
+      let h = rectData[base].w;
+      let r = rectData[base + 1u].x;
+      let g = rectData[base + 1u].y;
+      let b = rectData[base + 1u].z;
+      let a = rectData[base + 1u].w;
+      var pos: vec2f;
+      if (cornerIdx == 0u) {
+        pos = vec2f(x, y);
+      } else if (cornerIdx == 1u) {
+        pos = vec2f(x + w, y);
+      } else if (cornerIdx == 2u) {
+        pos = vec2f(x, y + h);
+      } else {
+        pos = vec2f(x + w, y + h);
+      }
+      return VSOut(vec4f(pos, 0.0, 1.0), vec4f(r, g, b, a));
+    }
+    @fragment
+    fn fs(input: VSOut) -> @location(0) vec4f {
+      return input.color;
+    }
+  `;
+
+  const rectPipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
+      module: device.createShaderModule({ code: rectShaderCode }),
+      entryPoint: 'vs',
+      buffers: [],
+    },
+    fragment: {
+      module: device.createShaderModule({ code: rectShaderCode }),
+      entryPoint: 'fs',
+      targets: [{
+        format: format,
+        blend: {
+          color: {
+            srcFactor: 'src-alpha',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add',
+          },
+          alpha: {
+            srcFactor: 'one',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add',
+          },
+        },
+      }],
+    },
+    primitive: {
+      topology: 'triangle-strip',
+    },
+  });
+
+  const uniformBufferSize = max * 2 * 4 * 4; // max rects * 2 vec4f * 4 floats * 4 bytes
+  const uniformBuffer = device.createBuffer({
+    size: uniformBufferSize,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  const vertexBuffer = device.createBuffer({
+    size: 6 * 4 * 4,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+
+  const quadVerts = new Float32Array([
+    0, 0,  1, 0,  0, 1,
+    0, 1,  1, 0,  1, 1,
+  ]);
+  device.queue.writeBuffer(vertexBuffer, 0, quadVerts);
+
+  const rectBindGroupLayout = rectPipeline.getBindGroupLayout(0);
+  const rectBindGroup = device.createBindGroup({
+    layout: rectBindGroupLayout,
+    entries: [{
+      binding: 0,
+      resource: { buffer: uniformBuffer },
+    }],
+  });
+
+  TEMF._rectPipeline = rectPipeline;
+  TEMF._rectBindGroupLayout = rectBindGroupLayout;
+  TEMF._rectUniformBuffer = uniformBuffer;
+  TEMF._rectVertexBuffer = vertexBuffer;
+  TEMF._rectBindGroup = rectBindGroup;
+
+  // Image pipeline
+  const imageShaderCode = `
+    struct ImageUniforms {
+      x: f32,
+      y: f32,
+      w: f32,
+      h: f32,
+    };
+    var<uniform> imageData: array<ImageUniforms, 1024>;
+    @group(1) @binding(0) var mySampler: sampler;
+    @group(1) @binding(1) var myTexture: texture_2d<f32>;
+    struct VSOut {
+      @builtin(position) position: vec4f,
+      @location(0) uv: vec2f,
+      @location(1) texCoord: vec2f,
+    };
+    @vertex
+    fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
+      let imgIdx = vertexIndex / 6u;
+      let vertIdx = vertexIndex % 6u;
+      let base = imageData[imgIdx];
+      let x0 = base.x;
+      let y0 = base.y;
+      let x1 = base.x + base.w;
+      let y1 = base.y + base.h;
+      var pos: vec2f;
+      var uv: vec2f;
+      if (vertIdx == 0u) {
+        pos = vec2f(x0, y0); uv = vec2f(0.0, 0.0);
+      } else if (vertIdx == 1u) {
+        pos = vec2f(x1, y0); uv = vec2f(1.0, 0.0);
+      } else if (vertIdx == 2u) {
+        pos = vec2f(x0, y1); uv = vec2f(0.0, 1.0);
+      } else if (vertIdx == 3u) {
+        pos = vec2f(x0, y1); uv = vec2f(0.0, 1.0);
+      } else if (vertIdx == 4u) {
+        pos = vec2f(x1, y0); uv = vec2f(1.0, 0.0);
+      } else {
+        pos = vec2f(x1, y1); uv = vec2f(1.0, 1.0);
+      }
+      return VSOut(vec4f(pos, 0.0, 1.0), uv, uv);
+    }
+    @fragment
+    fn fs(input: VSOut) -> @location(0) vec4f {
+      return textureSample(myTexture, mySampler, input.texCoord);
+    }
+  `;
+
+  const imagePipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
+      module: device.createShaderModule({ code: imageShaderCode }),
+      entryPoint: 'vs',
+      buffers: [],
+    },
+    fragment: {
+      module: device.createShaderModule({ code: imageShaderCode }),
+      entryPoint: 'fs',
+      targets: [{
+        format: format,
+        blend: {
+          color: {
+            srcFactor: 'src-alpha',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add',
+          },
+          alpha: {
+            srcFactor: 'one',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add',
+          },
+        },
+      }],
+    },
+    primitive: {
+      topology: 'triangle-list',
+    },
+  });
+
+  const imageUniformBuffer = device.createBuffer({
+    size: 1024 * 4 * 4,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  const imageVertexBuffer = device.createBuffer({
+    size: IMAGE_QUAD.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(imageVertexBuffer, 0, IMAGE_QUAD);
+
+  const imageBindGroupLayout = imagePipeline.getBindGroupLayout(0);
+
+  const sampler = device.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+  });
+
+  TEMF._imagePipeline = imagePipeline;
+  TEMF._imageBindGroupLayout = imageBindGroupLayout;
+  TEMF._imageUniformBuffer = imageUniformBuffer;
+  TEMF._imageVertexBuffer = imageVertexBuffer;
+  TEMF._imageSampler = sampler;
+  TEMF._imageBindGroups = new Map();
+}
+
+function _rect(x, y, width, height, color) {
+  if (TEMF._drawList.length >= TEMF._rectMax) return;
+  const [r, g, b, a] = _parseColor(color);
+  TEMF._drawList.push({
+    type: 'rect',
+    x, y, width, height, r, g, b, a,
+  });
+}
+
+function _image(path, x, y, width, height, rotation, scale, alpha) {
+  let opts = {};
+
+  // Parse arguments: image(path, x, y), image(path, x, y, w, h), image(path, x, y, w, h, options)
+  if (typeof width === 'number' && typeof height === 'number') {
+    // image(path, x, y, w, h, ...)
+    opts = typeof rotation === 'object' ? rotation : {};
+  } else if (typeof width === 'number' && typeof height === 'undefined') {
+    // image(path, x, y, w) - treat w as rotation? No, this is unusual.
+    // Actually per spec: image(path, x, y) or image(path, x, y, w, h)
+    // So if we have 4 args and the 4th is a number, it's ambiguous.
+    // Let's use: if arg4 is number and arg5 is number -> w, h
+    // if arg4 is number and arg5 is undefined -> w only, treat as width (auto height)
+    // This is handled by the caller passing proper args.
+    opts = typeof height === 'object' ? height : {};
+  } else {
+    // image(path, x, y, ...) where ... are options
+    opts = typeof width === 'object' ? width : {};
+  }
+
+  const optRotation = opts.rotation || 0;
+  const optScale = opts.scale || 1;
+  const optAlpha = opts.alpha !== undefined ? opts.alpha : 1;
+
+  // Get image dimensions
+  const img = TEMF._imageElements.get(path);
+  let srcW = 0, srcH = 0, texW = 0, texH = 0;
+
+  if (img) {
+    texW = img.width;
+    texH = img.height;
+  }
+
+  // Determine source rectangle (for sprite sheets)
+  if (typeof width === 'number' && typeof height === 'number') {
+    srcW = width;
+    srcH = height;
+  }
+
+  // Calculate display size
+  let displayW, displayH;
+  if (srcW > 0 && srcH > 0) {
+    displayW = srcW * optScale;
+    displayH = srcH * optScale;
+  } else if (img) {
+    displayW = texW * optScale;
+    displayH = texH * optScale;
+  } else {
+    displayW = 64 * optScale;
+    displayH = 64 * optScale;
+  }
+
+  // Calculate UV coordinates
+  let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
+  if (img && srcW > 0 && srcH > 0) {
+    u0 = 0;
+    v0 = 0;
+    u1 = srcW / texW;
+    v1 = srcH / texH;
+  }
+
+  if (TEMF._drawList.length >= TEMF._rectMax) return;
+
+  TEMF._drawList.push({
+    type: 'image',
+    path: path,
+    x: x,
+    y: y,
+    width: displayW,
+    height: displayH,
+    u0: u0,
+    v0: v0,
+    u1: u1,
+    v1: v1,
+    alpha: optAlpha,
+  });
 }
 
 async function initWebGPU() {
@@ -58,14 +507,15 @@ async function initWebGPU() {
     throw new Error('WebGPU: Failed to get canvas context.');
   }
 
-  const displayFormat = navigator.gpu.getPreferredCanvasFormat();
+  TEMF._canvasFormat = navigator.gpu.getPreferredCanvasFormat();
   TEMF._context.configure({
     device: TEMF._device,
-    format: displayFormat,
-    alphaMode: 'premultiplied'
+    format: TEMF._canvasFormat,
+    alphaMode: 'premultiplied',
   });
 
   _resize();
+  _createRenderer();
 }
 
 function resizeCanvas() {
@@ -83,27 +533,165 @@ function createResizeObserver() {
   }
 }
 
+function _getOrCreateImageBindGroup(texture) {
+  if (!texture) return null;
+
+  const texId = texture.id || String(texture);
+  if (TEMF._imageBindGroups.has(texId)) {
+    return TEMF._imageBindGroups.get(texId);
+  }
+
+  const bindGroup = TEMF._device.createBindGroup({
+    layout: TEMF._imageBindGroupLayout,
+    entries: [
+      {
+        binding: 0,
+        resource: TEMF._imageSampler,
+      },
+      {
+        binding: 1,
+        resource: texture.createView(),
+      },
+    ],
+  });
+
+  TEMF._imageBindGroups.set(texId, bindGroup);
+  return bindGroup;
+}
+
 function _draw() {
-  if (!TEMF._device || !TEMF._context) {
+  const device = TEMF._device;
+  const context = TEMF._context;
+
+  if (!device || !context) return;
+
+  if (TEMF._drawList.length === 0) {
+    // Clear frame even if no draws
+    const commandEncoder = device.createCommandEncoder();
+    const textureView = context.getCurrentTexture().createView();
+    const renderPassDescriptor = {
+      colorAttachments: [{
+        view: textureView,
+        clearValue: { r: 0, g: 0, b: 0, a: 1 },
+        loadOp: 'clear',
+        storeOp: 'store',
+      }],
+    };
+    const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+    renderPass.end();
+    device.queue.submit([commandEncoder.finish()]);
+    TEMF._drawList.length = 0;
     return;
   }
 
-  const commandEncoder = TEMF._device.createCommandEncoder();
-  const textureView = TEMF._context.getCurrentTexture().createView();
+  // Separate rects and images, preserving draw order info
+  const rects = [];
+  const images = [];
+
+  for (let i = 0; i < TEMF._drawList.length; i++) {
+    const item = TEMF._drawList[i];
+    if (item.type === 'rect') {
+      rects.push(item);
+    } else if (item.type === 'image') {
+      images.push(item);
+    }
+  }
+
+  const commandEncoder = device.createCommandEncoder();
+  const textureView = context.getCurrentTexture().createView();
 
   const renderPassDescriptor = {
     colorAttachments: [{
       view: textureView,
       clearValue: { r: 0, g: 0, b: 0, a: 1 },
       loadOp: 'clear',
-      storeOp: 'store'
-    }]
+      storeOp: 'store',
+    }],
   };
 
   const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
-  renderPass.end();
 
-  TEMF._device.queue.submit([commandEncoder.finish()]);
+  // Draw rects first
+  if (rects.length > 0) {
+    const data = new Float32Array(rects.length * 2 * 4); // 2 vec4f per rect
+    for (let i = 0; i < rects.length; i++) {
+      const r = rects[i];
+      data[i * 8 + 0] = r.x;
+      data[i * 8 + 1] = r.y;
+      data[i * 8 + 2] = r.width;
+      data[i * 8 + 3] = r.height;
+      data[i * 8 + 4] = r.r;
+      data[i * 8 + 5] = r.g;
+      data[i * 8 + 6] = r.b;
+      data[i * 8 + 7] = r.a;
+    }
+
+    device.queue.writeBuffer(
+      TEMF._rectUniformBuffer,
+      0,
+      data.buffer,
+      0,
+      rects.length * 2 * 16
+    );
+
+    renderPass.setPipeline(TEMF._rectPipeline);
+    renderPass.setBindGroup(0, TEMF._rectBindGroup);
+    renderPass.setVertexBuffer(0, TEMF._rectVertexBuffer);
+    renderPass.draw(6, rects.length, 0, 0);
+  }
+
+  // Draw images
+  if (images.length > 0) {
+    // Group images by texture for batching
+    const byTexture = new Map();
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      const texEntry = _getOrCreateTexture(img.path);
+      if (!texEntry || texEntry.status !== 'loaded') continue;
+      const texId = texEntry.texture.id || String(texEntry.texture);
+      if (!byTexture.has(texId)) {
+        byTexture.set(texId, { texture: texEntry.texture, items: [], uvs: [] });
+      }
+      const group = byTexture.get(texId);
+      group.items.push(img);
+      group.uvs.push({ u0: img.u0, v0: img.v0, u1: img.u1, v1: img.v1 });
+    }
+
+    // Draw each texture group
+    for (const [, group] of byTexture) {
+      const bindGroup = _getOrCreateImageBindGroup(group.texture);
+      if (!bindGroup) continue;
+
+      // Upload uniform data
+      const uniformData = new Float32Array(group.items.length * 4);
+      for (let i = 0; i < group.items.length; i++) {
+        const item = group.items[i];
+        uniformData[i * 4 + 0] = item.x;
+        uniformData[i * 4 + 1] = item.y;
+        uniformData[i * 4 + 2] = item.width;
+        uniformData[i * 4 + 3] = item.height;
+      }
+
+      device.queue.writeBuffer(
+        TEMF._imageUniformBuffer,
+        0,
+        uniformData.buffer,
+        0,
+        group.items.length * 16
+      );
+
+      renderPass.setPipeline(TEMF._imagePipeline);
+      renderPass.setBindGroup(0, bindGroup);
+      renderPass.setVertexBuffer(0, TEMF._imageVertexBuffer);
+      renderPass.draw(6, group.items.length, 0, 0);
+    }
+  }
+
+  renderPass.end();
+  device.queue.submit([commandEncoder.finish()]);
+
+  // Clear draw list
+  TEMF._drawList.length = 0;
 }
 
 function gameLoop() {
@@ -153,4 +741,6 @@ export { start, TEMF };
 if (typeof window !== 'undefined') {
   window.start = start;
   window.TEMF = TEMF;
+  window.rect = _rect;
+  window.image = _image;
 }
