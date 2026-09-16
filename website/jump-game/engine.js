@@ -273,12 +273,22 @@ function _resize() {
   if (!TEMF._canvas || !TEMF._context) return;
 
   const dpr = window.devicePixelRatio || 1;
-  let width = TEMF._canvas.clientWidth * dpr;
-  let height = TEMF._canvas.clientHeight * dpr;
-
   const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
+
+  // BUGFIX: once we rotate the canvas via CSS (style.transform set),
+  // canvas.clientWidth/clientHeight reflect the swapped '100vh'/'100vw'
+  // style we wrote last time, not the real viewport. Reading those back
+  // created a feedback loop that flipped rotation on/off every time
+  // _resize() ran again (ResizeObserver, window resize, orientationchange).
+  // Use the actual viewport size instead whenever we're already rotated.
+  const alreadyRotated = !isFullscreen && !!TEMF._canvas.style.transform;
+  const cw = alreadyRotated ? window.innerHeight : TEMF._canvas.clientWidth;
+  const ch = alreadyRotated ? window.innerWidth : TEMF._canvas.clientHeight;
+
+  let width = cw * dpr;
+  let height = ch * dpr;
+
   if (isFullscreen || (isMobile && height > width)) {
     if (height > width) {
       [width, height] = [height, width];
