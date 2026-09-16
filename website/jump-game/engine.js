@@ -1538,13 +1538,13 @@ function _showOrientationOverlay(callback) {
   if (TEMF._requireOrientation === 'landscape') {
     title = '📱 หมอจอเป็นแนวนอน';
     instructions = isMobile 
-      ? '1. หมอจอก่อน<br>2. กดปุ่ม 3 นิ้วเพื่อ fullscreen<br>3. หรือกด F11'
-      : 'กด F11 เพื่อ fullscreen';
+      ? '1. หมอจอก่อน<br>2. กดปุ่มด้านล่างเพื่อ fullscreen<br>3. หรือกด F11'
+      : 'กดปุ่มด้านล่างเพื่อ fullscreen<br>หรือกด F11';
   } else if (TEMF._requireOrientation === 'portrait') {
     title = '📱 ต้องใช้โหมด fullscreen';
     instructions = isMobile
-      ? 'กดปุ่ม 3 นิ้วเพื่อ fullscreen<br>แล้วกดเริ่มเกม'
-      : 'กด F11 เพื่อ fullscreen แล้วกดเริ่มเกม';
+      ? 'กดปุ่มด้านล่างเพื่อ fullscreen<br>แล้วกดเริ่มเกม'
+      : 'กดปุ่มด้านล่างเพื่อ fullscreen<br>แล้วกดเริ่มเกม';
   }
   
   overlay.innerHTML = `
