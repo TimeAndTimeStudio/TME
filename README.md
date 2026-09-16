@@ -3,7 +3,7 @@
 **TME (Time Mini Engine)** is a minimal WebGPU game engine framework.  
 **TEMF (Time Engine Mini Fast)** is the runtime that executes TME games.
 
-**Live Demo**: [https://tme.timeandtime.online/](https://tme.timeandtime.online/)
+**Official Website**: [https://tme.timeandtime.online/](https://tme.timeandtime.online/)
 
 ## Overview
 
@@ -77,7 +77,7 @@ project/
 
 | Resource | Link |
 |----------|------|
-| **Live Demo** | [https://tme.timeandtime.online/](https://tme.timeandtime.online/) |
+| **Official Website** | [https://tme.timeandtime.online/](https://tme.timeandtime.online/) |
 | **Interactive Docs** | [docs.html](website/docs.html) |
 | **English Docs** | [docs/en/](docs/en/) |
 | **Thai Docs** | [docs/th/](docs/th/) |
