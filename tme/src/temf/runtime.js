@@ -1525,32 +1525,34 @@ function _bootstrap(button) {
 }
 
 function _showOrientationOverlay(callback) {
+  const existingOverlay = document.getElementById('temf-fullscreen-overlay');
+  if (existingOverlay) existingOverlay.remove();
+  
   const overlay = document.createElement('div');
   overlay.id = 'temf-fullscreen-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;font-family:sans-serif;text-align:center;padding:20px;';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;font-family:sans-serif;text-align:center;padding:20px;';
   
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  const isPortrait = window.innerHeight > window.innerWidth;
   
   let title = '';
   let instructions = '';
   
   if (TEMF._requireOrientation === 'landscape') {
-    title = '📱 หมอจอเป็นแนวนอน';
+    title = '🎮 ต้องการโหมดแนวนอน';
     instructions = isMobile 
-      ? '1. หมอจอก่อน<br>2. กดปุ่มด้านล่างเพื่อ fullscreen<br>3. หรือกด F11'
-      : 'กดปุ่มด้านล่างเพื่อ fullscreen<br>หรือกด F11';
+      ? '1. หมอโทรศัพท์เป็นแนวนอน<br>2. กดปุ่มด้านล่างเพื่อเข้า fullscreen<br>3. หรือกด F11 (PC)'
+      : 'กด F11 เพื่อเข้า fullscreen<br>แล้วกดปุ่มด้านล่าง';
   } else if (TEMF._requireOrientation === 'portrait') {
-    title = '📱 ต้องใช้โหมด fullscreen';
+    title = '🎮 ต้องการโหมด fullscreen';
     instructions = isMobile
-      ? 'กดปุ่มด้านล่างเพื่อ fullscreen<br>แล้วกดเริ่มเกม'
-      : 'กดปุ่มด้านล่างเพื่อ fullscreen<br>แล้วกดเริ่มเกม';
+      ? 'กดปุ่มด้านล่างเพื่อเข้า fullscreen<br>แล้วกดเริ่มเกม'
+      : 'กด F11 เพื่อเข้า fullscreen<br>แล้วกดปุ่มด้านล่าง';
   }
   
   overlay.innerHTML = `
-    <h2 style="margin-bottom:20px;">${title}</h2>
-    <p style="font-size:18px;line-height:1.6;white-space:pre-line;">${instructions}</p>
-    <button id="temf-start-btn" style="margin-top:30px;padding:15px 40px;font-size:20px;background:#4CAF50;color:#fff;border:none;border-radius:8px;cursor:pointer;">เริ่มเกม</button>
+    <h2 style="margin-bottom:20px;font-size:24px;">${title}</h2>
+    <p style="font-size:16px;line-height:1.8;white-space:pre-line;margin-bottom:30px;">${instructions}</p>
+    <button id="temf-start-btn" style="padding:15px 50px;font-size:20px;background:#4CAF50;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;box-shadow:0 4px 6px rgba(0,0,0,0.3);">เริ่มเกม</button>
   `;
   
   document.body.appendChild(overlay);
@@ -1558,11 +1560,14 @@ function _showOrientationOverlay(callback) {
   document.getElementById('temf-start-btn').addEventListener('click', () => {
     if (isMobile || TEMF._requireOrientation === 'landscape') {
       requestFullscreen();
-      document.addEventListener('fullscreenchange', () => {
+      const checkFullscreen = () => {
         if (document.fullscreenElement || document.webkitFullscreenElement) {
           setTimeout(callback, 500);
         }
-      }, { once: true });
+      };
+      setTimeout(checkFullscreen, 100);
+      setTimeout(checkFullscreen, 500);
+      setTimeout(checkFullscreen, 1000);
     } else {
       callback();
     }
@@ -1634,6 +1639,18 @@ function handleFullscreenChange() {
   setTimeout(() => {
     resizeCanvas();
   }, 100);
+  
+  if (!document.fullscreenElement && !document.webkitFullscreenElement && TEMF._started && TEMF._requireOrientation) {
+    TEMF._started = false;
+    if (TEMF._game && typeof TEMF._game.draw === 'function') {
+      const overlay = document.getElementById('temf-fullscreen-overlay');
+      if (overlay) overlay.remove();
+      _showOrientationOverlay(() => {
+        TEMF._started = false;
+        _bootstrap();
+      });
+    }
+  }
 }
 
 function exitFullscreen() {
