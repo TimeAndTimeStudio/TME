@@ -1496,6 +1496,9 @@ function _bootstrap(button) {
       window.addEventListener('orientationchange', () => {
         setTimeout(checkOrientation, 100);
       });
+      window.addEventListener('resize', () => {
+        setTimeout(checkOrientation, 100);
+      });
       _initKeyboard();
       _initMouse();
       _initTouch();
@@ -1516,8 +1519,8 @@ function _bootstrap(button) {
     
     if (!isCorrectOrientation) {
       TEMF._started = false;
-      const overlay = document.getElementById('temf-fullscreen-overlay');
-      if (overlay) overlay.remove();
+      const existingOverlay = document.getElementById('temf-fullscreen-overlay');
+      if (existingOverlay) existingOverlay.remove();
       _showOrientationOverlay(() => {
         TEMF._started = false;
         _bootstrap();
