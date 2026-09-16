@@ -1512,12 +1512,22 @@ function _bootstrap(button) {
     initWebGPU().then(() => {
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
-      window.addEventListener('orientationchange', () => {
-        setTimeout(checkOrientation, 100);
-      });
+      
+      // Use modern Screen Orientation API with fallback
+      if (screen.orientation && screen.orientation.addEventListener) {
+        screen.orientation.addEventListener('change', () => {
+          setTimeout(checkOrientation, 100);
+        });
+      } else {
+        window.addEventListener('orientationchange', () => {
+          setTimeout(checkOrientation, 100);
+        });
+      }
+      
       window.addEventListener('resize', () => {
         setTimeout(checkOrientation, 100);
       });
+      
       _initKeyboard();
       _initMouse();
       _initTouch();
