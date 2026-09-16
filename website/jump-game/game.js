@@ -27,3 +27,4 @@ function draw() {
 }
 fps(60);
 setGame({ update: update, draw: draw });
+start();

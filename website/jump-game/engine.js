@@ -1661,8 +1661,4 @@ if (typeof window !== 'undefined') {
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;
-
-  // Auto-start: no need for game code to call start() manually.
-  // (window.start is still exposed above in case manual control is ever needed.)
-  start();
 }
