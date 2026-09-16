@@ -1318,7 +1318,9 @@ function _bootstrap() {
   TEMF._lastTime = 0;
   TEMF._started = true;
 
+  console.log('[TEMF] bootstrap starting (webgl)...');
   initWebGL().then(() => {
+    console.log('[TEMF] WebGL initialized, starting game loop.');
     createResizeObserver();
     window.addEventListener('resize', resizeCanvas);
     _initKeyboard();
@@ -1332,6 +1334,7 @@ function _bootstrap() {
 }
 
 function setGame(gameObj) {
+  console.log('[TEMF] setGame() called (webgl runtime).');
   TEMF._game = gameObj || {};
   _bootstrap();
 }
@@ -1394,6 +1397,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 TEMF.cleanupAudio = _cleanupAudio;
 
 if (typeof window !== 'undefined') {
+  console.log('[TEMF] runtime-webgl.js loaded, exposing globals...');
   window.setGame = setGame;
   window.fps = fps;
   window.getCanvasSize = getCanvasSize;
