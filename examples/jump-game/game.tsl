@@ -29,4 +29,4 @@ function draw():
   rect(player.x, player.y, 50, 50, "blue")
 
 fps(60)
-setGame({update: update, draw: draw})
+setGame({update, draw})
