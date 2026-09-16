@@ -1,4 +1,6 @@
-setOrientation("landscape");
+let canvasSize = getCanvasSize();
+let W = canvasSize.width;
+let H = canvasSize.height;
 let player = { x: 100, y: 400, vy: 0 };
 let JUMP_FORCE = 300;
 let GRAVITY = 800;
@@ -15,10 +17,6 @@ function update(dt) {
   }
 }
 function draw() {
-  let canvasSize = getCanvasSize();
-  let W = canvasSize.width;
-  let H = canvasSize.height;
-  GROUND = (H - 50);
   rect(0, GROUND, W, 50, "brown");
   rect(player.x, player.y, 50, 50, "blue");
   if (input.keyboard.is_down("f11")) {
