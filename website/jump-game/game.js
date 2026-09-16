@@ -1,10 +1,6 @@
-let;
 let player = { x: 100, y: 400, vy: 0 };
-let;
 let JUMP_FORCE = 300;
-let;
 let GRAVITY = 800;
-let;
 let GROUND = 400;
 function update(dt) {
   if ((input.keyboard.is_down("space") || input.pointer.clicked)) {

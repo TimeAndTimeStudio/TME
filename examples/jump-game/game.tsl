@@ -1,10 +1,10 @@
 # Jump Game — TME Example
 # Simple jumping game
 
-let player = { x: 100, y: 400, vy: 0 }
-let JUMP_FORCE = 300
-let GRAVITY = 800
-let GROUND = 400
+player = { x: 100, y: 400, vy: 0 }
+JUMP_FORCE = 300
+GRAVITY = 800
+GROUND = 400
 
 function update(dt):
   if input.keyboard.is_down("space") or input.pointer.clicked:
