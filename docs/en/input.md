@@ -2,163 +2,66 @@
 
 ## Keyboard
 
-### `key.down(key)`
-Checks whether a specific key is currently being pressed.
-
-**Signature:**
-```typescript
-key.down(key: string | number): boolean
-```
-
-**Parameters:**
-- `key` (string | number): Key identifier. Supports letters, numbers, function keys, and special keys.
-
-**Supported Keys:**
-
-| Category | Values |
-|----------|--------|
-| Letters | `'A'`–`'Z'` (case-insensitive) |
-| Numbers | `0`–`9` or `'0'`–`'9'` |
-| Function | `'F1'`–`'F12'` |
-| Special | `'SPACE'`, `'ENTER'`, `'ESC'`, `'TAB'`, `'CTRL'`, `'SHIFT'`, `'ALT'` |
-| Navigation | `'UP'`, `'DOWN'`, `'LEFT'`, `'RIGHT'`, `'HOME'`, `'END'`, `'PAGEUP'`, `'PAGEDOWN'` |
-| Editing | `'DELETE'`, `'BACKSPACE'`, `'CAPSLOCK'` |
-
-**Returns:** `boolean` — `true` if the key is currently pressed, `false` otherwise.
-
-**Example:**
 ```javascript
-function update(dt) {
-  if (key.down('A') || key.down('ArrowLeft')) {
-    player.x -= 200 * dt;
-  }
-  if (key.down('D') || key.down('ArrowRight')) {
-    player.x += 200 * dt;
-  }
-  if (key.down('SPACE')) {
-    jump();
-  }
-  if (key.down(1)) {
-    // Pressing '1' key
-    selectWeapon(1);
-  }
-}
+function update(dt):
+  # Check if a key is pressed
+  if input.keyboard.is_down("ArrowLeft"):
+    player.x -= 200 * dt
+  if input.keyboard.is_down("ArrowRight"):
+    player.x += 200 * dt
+  if input.keyboard.is_down(" "):
+    # Spacebar pressed
+    player.jumping = true
 ```
 
 ## Mouse
 
-### `mouse.x`, `mouse.y`
-Current mouse position in pixels relative to the canvas.
-
-**Type:** `number`
-
-### `mouse.click(button)`
-Returns `true` for the single frame when a mouse button is clicked. Automatically resets after being read.
-
-**Signature:**
-```typescript
-mouse.click(button?: number): boolean
-```
-
-**Parameters:**
-- `button` (number, optional): Mouse button index. Default `0`.
-  - `0` — Left button
-  - `1` — Middle button (scroll wheel)
-  - `2` — Right button
-
-**Returns:** `boolean` — `true` on the frame the click occurred, `false` otherwise.
-
-**Example:**
 ```javascript
-function update(dt) {
-  if (mouse.click(0)) {
-    selectObjectAt(mouse.x, mouse.y);
-  }
-}
+function draw():
+  # Mouse position
+  print(mouse.x, mouse.y)
+  
+  # Check for clicks
+  if mouse.down(0):  # Left button
+    # Left click
+    if mouse.x > 100 and mouse.x < 200:
+      if mouse.y > 100 and mouse.y < 150:
+        # Clicked on button
+        startGame()
 ```
-
-### `mouse.down(button)`
-Returns `true` while a mouse button is currently held down.
-
-**Signature:**
-```typescript
-mouse.down(button?: number): boolean
-```
-
-**Parameters:**
-- `button` (number, optional): Mouse button index. Default `0`.
-
-**Returns:** `boolean` — `true` if the button is currently pressed, `false` otherwise.
-
-### `mouse.drag(button)`
-Returns `true` for the single frame when the user starts dragging. Automatically resets after being read.
-
-**Signature:**
-```typescript
-mouse.drag(button?: number): boolean
-```
-
-**Parameters:**
-- `button` (number, optional): Mouse button index. Default `0`.
-
-**Returns:** `boolean` — `true` on the frame dragging started, `false` otherwise.
-
-### `mouse.up(button)`
-Returns `true` for the single frame when a mouse button is released. Automatically resets after being read.
-
-**Signature:**
-```typescript
-mouse.up(button?: number): boolean
-```
-
-**Parameters:**
-- `button` (number, optional): Mouse button index. Default `0`.
-
-**Returns:** `boolean` — `true` on the frame the button was released, `false` otherwise.
 
 ## Touch
 
-### `touch.x`, `touch.y`
-Current touch position in pixels relative to the canvas. Single touch only.
-
-**Type:** `number`
-
-### `touch.tap()`
-Returns `true` for the single frame when the user taps the screen. Automatically resets after being read.
-
-**Signature:**
-```typescript
-touch.tap(): boolean
+```javascript
+function update(dt):
+  # Check touch (supports up to 4 fingers)
+  if touch.exists(0):
+    # Finger 0 is pressed
+    player.x = touch.x(0)
+    player.y = touch.y(0)
+  
+  if touch.exists(1):
+    # Finger 1 is pressed (multi-touch)
+    fireBullet(touch.x(1), touch.y(1))
 ```
 
-**Returns:** `boolean` — `true` on the frame the tap occurred, `false` otherwise.
+### Example: On-screen buttons for mobile
 
-### `touch.down()`
-Returns `true` while the screen is currently being touched.
-
-**Signature:**
-```typescript
-touch.down(): boolean
+```javascript
+function draw():
+  # Draw left button
+  rect(50, 500, 80, 80, "rgba(255,255,255,0.3)")
+  text("◀", 60, 520)
+  
+  # Draw right button
+  rect(670, 500, 80, 80, "rgba(255,255,255,0.3)")
+  text("▶", 680, 520)
+  
+  # Check touch on button
+  if touch.exists(0):
+    tx = touch.x(0)
+    ty = touch.y(0)
+    if tx > 50 and tx < 130:
+      if ty > 500 and ty < 580:
+        player.x -= 200 * dt
 ```
-
-**Returns:** `boolean` — `true` if touching, `false` otherwise.
-
-### `touch.drag()`
-Returns `true` for the single frame when the user starts dragging. Automatically resets after being read.
-
-**Signature:**
-```typescript
-touch.drag(): boolean
-```
-
-**Returns:** `boolean` — `true` on the frame dragging started, `false` otherwise.
-
-### `touch.up()`
-Returns `true` for the single frame when the user lifts their finger from the screen. Automatically resets after being read.
-
-**Signature:**
-```typescript
-touch.up(): boolean
-```
-
-**Returns:** `boolean` — `true` on the frame the touch ended, `false` otherwise.

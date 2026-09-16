@@ -1,121 +1,58 @@
-# เสียง
+# Audio
 
-## Audio Object แบบรวม
-ฟังก์ชันเสียงทั้งหมดเข้าถึงผ่าน object `audio`
+## `audio.play(path, type, loop?)`
+
+เล่นเสียง
 
 ```javascript
-audio.play(path, type, loop?)
-audio.stop(type?)
+# เล่น SFX (เสียงสั้น)
+audio.play("assets/sfx/jump.mp3", "sfx")
+
+# เล่น BGM (เสียงพื้นหลัง)
+audio.play("assets/music/bgm.mp3", "bgm", true)  # loop=true
+audio.play("assets/music/bgm.mp3", "bgm")        # loop默认=true
+
+# เล่น BGM ไม่ loop
+audio.play("assets/music/bgm.mp3", "bgm", false)
+```
+
+## `audio.stop(type)`
+
+```javascript
+# หยุด SFX ทั้งหมด
+audio.stop("sfx")
+
+# หยุด BGM
+audio.stop("bgm")
+
+# หยุดทั้งหมด
+audio.stop()
+```
+
+## `audio.pause()` / `audio.resume()`
+
+```javascript
+# หยุดชั่วคราว
 audio.pause()
+
+# เล่นต่อ
 audio.resume()
-audio.volume = 0.7
-audio.sfxVolume = 0.8
-audio.bgmVolume = 0.9
-audio.muted = false
-audio.mutedSfx = true
-audio.mutedBgm = true
 ```
 
-## SFX (เสียงเอฟเฟกต์)
-เสียงสั้นที่สามารถทับกันได้ เล่นหลาย SFX พร้อมกันได้
+## Volume & Mute
 
-**Signature:**
-```typescript
-audio.play(path: string, type: 'sfx', loop?: boolean): void
-```
-
-**พารามิเตอร์:**
-- `path` (string): เส้นทางไปยังไฟล์เสียง (เช่น `'sfx/jump.wav'`)
-- `type` (string): ต้องเป็น `'sfx'`
-- `loop` (boolean): ไม่ใช้กับ SFX ค่าเริ่มต้น `false`
-
-**ตัวอย่าง:**
 ```javascript
-audio.play('sfx/jump.wav', 'sfx');
-audio.play('sfx/click.wav', 'sfx');
+# ตั้งค่าความดัง
+audio.volume = 0.8      # ความดังรวม (0-1)
+audio.sfxVolume = 0.6   # ความดัง SFX
+audio.bgmVolume = 0.7   # ความดัง BGM
+
+# Mute
+audio.muted = true      # mute ทั้งหมด
+audio.mutedSfx = true   # mute SFX
+audio.mutedBgm = true   # mute BGM
+
+# ตรวจสอบสถานะ
+if audio.muted:
+  print("เสียงถูก mute")
 ```
-
-## BGM (เพลงพื้นหลัง)
-เพลงยาว เล่นได้ทีละหนึ่งเพลง การเริ่ม BGM ใหม่จะหยุดเพลงเก่าอัตโนมัติ
-
-**Signature:**
-```typescript
-audio.play(path: string, type: 'bgm', loop?: boolean): void
-```
-
-**พารามิเตอร์:**
-- `path` (string): เส้นทางไปยังไฟล์เสียง (เช่น `'bgm/theme.mp3'`)
-- `type` (string): ต้องเป็น `'bgm'`
-- `loop` (boolean): ให้เล่นซ้ำ ค่าเริ่มต้น `true`
-
-**ตัวอย่าง:**
-```javascript
-audio.play('bgm/theme.mp3', 'bgm', true);
-```
-
-## การควบคุมเสียง
-
-### `audio.stop(type?)`
-หยุดการเล่นเสียง
-
-**Signature:**
-```typescript
-audio.stop(type?: 'sfx' | 'bgm'): void
-```
-
-**พารามิเตอร์:**
-- `type` (string, ไม่บังคับ): 
-  - `'sfx'` — หยุด SFX ทั้งหมด
-  - `'bgm'` — หยุด BGM และรีเซ็ตตำแหน่ง
-  - ไม่ระบุ — หยุดทั้ง SFX และ BGM
-
-### `audio.pause()`
-หยุดชั่วคราว BGM ที่กำลังเล่นอยู่ รักษาตำแหน่งการเล่นไว้
-
-**Signature:**
-```typescript
-audio.pause(): void
-```
-
-### `audio.resume()`
-เล่นต่อ BGM ที่หยุดชั่วคราวไว้
-
-**Signature:**
-```typescript
-audio.resume(): void
-```
-
-## การควบคุมระดับเสียง
-
-### `audio.volume`
-ระดับเสียงรวมสำหรับเสียงทั้งหมด
-
-**ประเภท:** `number` (0.0 ถึง 1.0, ค่าเริ่มต้น 1.0)
-
-### `audio.sfxVolume`
-ระดับเสียงเฉพาะสำหรับ SFX
-
-**ประเภท:** `number` (0.0 ถึง 1.0, ค่าเริ่มต้น 1.0)
-
-### `audio.bgmVolume`
-ระดับเสียงเฉพาะสำหรับ BGM
-
-**ประเภท:** `number` (0.0 ถึง 1.0, ค่าเริ่มต้น 1.0)
-
-## การควบคุมการปิดเสียง
-
-### `audio.muted`
-ปิดเสียงทั้งหมด
-
-**ประเภท:** `boolean`
-
-### `audio.mutedSfx`
-ปิดเสียง SFX เท่านั้น
-
-**ประเภท:** `boolean`
-
-### `audio.mutedBgm`
-ปิดเสียง BGM เท่านั้น
-
-**ประเภท:** `boolean`
-

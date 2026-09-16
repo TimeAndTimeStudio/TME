@@ -1,8 +1,6 @@
 # Fullscreen API
 
-Fullscreen mode management and exit callback system.
-
-## requestFullscreen()
+## `requestFullscreen()`
 
 Enter fullscreen mode.
 
@@ -12,7 +10,7 @@ if input.keyboard.is_down("f11"):
   requestFullscreen()
 ```
 
-## exitFullscreen()
+## `exitFullscreen()`
 
 Exit fullscreen mode.
 
@@ -23,7 +21,7 @@ if input.keyboard.is_down("escape"):
   exitFullscreen()
 ```
 
-## setFullscreenCallback()
+## `setFullscreenCallback(callback)`
 
 Register a function when exiting fullscreen.
 

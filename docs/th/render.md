@@ -1,69 +1,29 @@
 # การเรนเดอร์
 
 ## `rect(x, y, width, height, color, rotation?, scale?, alpha?)`
-วาดสี่เหลี่ยมเติมเต็มพร้อมการแปลงรูปทรงแบบเลือกได้ เรนเดอร์ผ่าน WebGPU พร้อม alpha blending
 
-**Signature:**
-```typescript
-rect(x: number, y: number, width: number, height: number, color: string, rotation?: number, scale?: number, alpha?: number): void
-```
+วาดสี่เหลี่ยมพร้อมการแปลงรูปทรง
 
-**พารามิเตอร์:**
-- `x` (number): พิกัด X ของมุมบนซ้าย
-- `y` (number): พิกัด Y ของมุมบนซ้าย
-- `width` (number): ความกว้าง
-- `height` (number): ความสูง
-- `color` (string): สีเติม รูปแบบ hex รองรับ `#RRGGBB` หรือ `#RRGGBBAA`
-- `rotation` (number, ไม่บังคับ): มุมหมุนเป็นองศา ค่าเริ่มต้น `0`
-- `scale` (number, ไม่บังคับ): อัตราส่วนขยายแบบเดียวกัน รองรับทศนิยม ค่าเริ่มต้น `1` ค่าน้อยกว่า `1` จะย่อ, มากกว่า `1` จะขยาย
-- `alpha` (number, ไม่บังคับ): ความทึบแสงจาก `0` (โปร่งใส) ถึง `1` (ทึบ) ค่าเริ่มต้นใช้ alpha ของสี
-
-**พฤติกรรมค่าเริ่มต้น:**
-หากไม่ใส่พารามิเตอร์การแปลงรูปทรง จะใช้ค่าเริ่มต้น (rotation: 0, scale: 1, alpha: alpha ของสี) สี่เหลี่ยมจะวาดด้วยความทึบเต็ม ไม่มีหมุนหรือขยาย
-
-**ตัวอย่าง:**
 ```javascript
-rect(100, 100, 64, 64, '#FF5733');
-rect(200, 200, 50, 50, '#33FF57', 45, 2, 0.5);
+rect(100, 100, 64, 64, "#FF5733")
+rect(200, 200, 50, 50, "#33FF57", 45, 2, 0.5)
+# x=200, y=200, กว้าง=50, สูง=50, สี=เขียว, หมุน=45°, ขยาย=2 เท่า, โปร่ง=50%
 ```
 
-## `image(src, x, y, width, height, rotation?, scale?, alpha?)`
-โหลดและวาดภาพแบบขอใช้เมื่อจำเป็นพร้อมการแปลงรูปทรงแบบเลือกได้ ภาพโหลดแบบ asynchronous และเก็บใน LRU cache
+## `image(src, x, y, width?, height?, rotation?, scale?, alpha?)`
 
-**Signature:**
-```typescript
-image(src: string, x: number, y: number, width?: number, height?: number, rotation?: number, scale?: number, alpha?: number): void
-```
+โหลดและวาดภาพ
 
-**พารามิเตอร์:**
-- `src` (string): เส้นทางไปยังไฟล์ภาพ (เช่น `'images/player.png'`)
-- `x` (number): พิกัด X ของมุมบนซ้าย
-- `y` (number): พิกัด Y ของมุมบนซ้าย
-- `width` (number, ไม่บังคับ): ความกว้างที่แสดง ถ้าไม่ระบุใช้ความกว้างเดิมของภาพ
-- `height` (number, ไม่บังคับ): ความสูงที่แสดง ถ้าไม่ระบุใช้ความสูงเดิมของภาพ
-- `rotation` (number, ไม่บังคับ): มุมหมุนเป็นองศา ค่าเริ่มต้น `0`
-- `scale` (number, ไม่บังคับ): อัตราส่วนขยายแบบเดียวกัน ค่าเริ่มต้น `1`
-- `alpha` (number, ไม่บังคับ): ความทึบแสงจาก `0` ถึง `1` ค่าเริ่มต้น `1`
-
-**พฤติกรรมค่าเริ่มต้น:**
-หากไม่ใส่พารามิเตอร์การแปลงรูปทรง จะใช้ค่าเริ่มต้น (rotation: 0, scale: 1, alpha: 1) ภาพจะวาดที่ขนาดเดิม ความทึบเต็ม ไม่มีหมุน
-
-**ตัวอย่าง:**
 ```javascript
-image('images/player.png', 100, 100, 64, 64);
-image('images/enemy.png', 200, 150, 90, 1.5, 0.8);
+image("assets/player.png", 100, 100, 64, 64)
+image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)
+# src="assets/player.png", x=100, y=100, กว้าง=64, สูง=64
 ```
 
 ## `getCanvasSize()`
 
-ดึงขนาดปัจจุบันของ canvas (รวม DPR)
+ดึงขนาด canvas ปัจจุบัน (รวม DPR)
 
-**Signature:**
-```typescript
-getCanvasSize(): { width: number, height: number }
-```
-
-**ตัวอย่าง:**
 ```javascript
 function draw():
   size = getCanvasSize()
@@ -71,5 +31,5 @@ function draw():
   H = size.height
   # ใช้ W, H ในการคำนวณตำแหน่ง
   rect(0, H-50, W, 50, "brown")
+  # วาดพื้นด้านล่างตามขนาดจอ
 ```
-

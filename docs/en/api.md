@@ -1,55 +1,31 @@
-# Public API
+# Game Setup
 
-## `start()`
-Initiates the game lifecycle. Before `start()`, no game loop or rendering runs. After `start()`, the engine enters the fixed-timestep update cycle.
+## `setGame({ update, draw })`
 
-**Signature:**
-```typescript
-start(game: object, fps?: number): void
-```
+Register the game object with update() and draw() functions.
 
-**Parameters:**
-- `game` (object): The game object containing `update(dt)` and `draw()` methods.
-- `fps` (number, optional): Target frames per second. Default is `60`.
-
-**Example:**
 ```javascript
-start({
-  update(dt) {
-    // Game logic here
-  },
-  draw() {
-    // Rendering here
-  }
-}, 60);
+function update(dt):
+  # dt = time elapsed per frame (seconds)
+  # Use for movement, physics calculations
+  
+  player.x += player.vx * dt
+  if player.x > 800:
+    player.x = 0
+
+function draw():
+  # Draw every frame
+  rect(0, 0, 800, 600, "#87CEEB")
+  rect(player.x, player.y, 50, 50, "#FF5733")
+
+setGame({ update, draw })
 ```
 
-## `update(dt)`
-Called every frame with delta time. Used for game logic, physics, and state updates.
+## `fps(value)`
 
-**Signature:**
-```typescript
-update(dt: number): void
+Set the framerate (default = 60).
+
+```javascript
+fps(60)  # 60 FPS (default)
+fps(30)  # 30 FPS for better performance
 ```
-
-**Parameters:**
-- `dt` (number): Time elapsed since the last frame in seconds.
-
-## `draw()`
-Called after `update()`. Queues render commands for WebGPU execution.
-
-**Signature:**
-```typescript
-draw(): void
-```
-
-## `fps(target)`
-Sets the target frame rate for the fixed timestep loop.
-
-**Signature:**
-```typescript
-fps(target: number): void
-```
-
-**Parameters:**
-- `target` (number): Target frames per second.

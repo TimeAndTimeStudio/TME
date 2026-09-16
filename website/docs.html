@@ -1,629 +1,788 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Docs — TME — Time Mini Engine</title>
-  <meta name="description" content="TME (Time Mini Engine) documentation — API reference, render, input, audio, game loop, build process, and project structure.">
-  <meta name="keywords" content="TME, Time Mini Engine, game engine, 2D game, WebGPU, API, documentation">
-  <meta name="robots" content="index, follow">
-  <meta name="author" content="TimeAndTimeStudio">
-  <link rel="canonical" href="https://tme.timeandtime.online/docs">
-  <meta name="theme-color" content="#E8751A">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  
-  <!-- Open Graph -->
-  <meta property="og:title" content="TME Documentation — Time Mini Engine">
-  <meta property="og:description" content="TME documentation — API reference, render, input, audio, game loop, build process, and project structure.">
-  <meta property="og:image" content="https://tme.timeandtime.online/og-image.png">
-  <meta property="og:url" content="https://tme.timeandtime.online/docs">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="TME">
-  <meta property="og:locale" content="th_TH">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="TME Documentation — Time Mini Engine">
-  <meta name="twitter:description" content="TME documentation — API reference, render, input, audio, game loop, build process, and project structure.">
-  <meta name="twitter:image" content="https://tme.timeandtime.online/og-image.png">
-  
-  <link rel="stylesheet" href="css/style.css">
-  
-  <!-- Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "TME Documentation",
-    "url": "https://tme.timeandtime.online/docs",
-    "description": "TME documentation — API reference, render, input, audio, game loop, build process, and project structure."
-  }
-  </script>
+  <title>TME Documentation</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --code-bg: #020617;
+      --border: #334155;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar h1 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+    .sidebar nav a {
+      display: block;
+      padding: 8px 12px;
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      transition: background 0.2s;
+    }
+    .sidebar nav a:hover {
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .sidebar nav a.active {
+      background: var(--primary);
+      color: white;
+    }
+    .lang-switcher {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .lang-switcher a {
+      display: inline-block;
+      padding: 6px 12px;
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin: 2px;
+      font-size: 0.875rem;
+    }
+    .lang-switcher a:hover {
+      border-color: var(--primary);
+    }
+    .main {
+      margin-left: 260px;
+      flex: 1;
+      padding: 40px 60px;
+    }
+    section {
+      margin-bottom: 60px;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+    }
+    h3 {
+      font-size: 1.3rem;
+      margin: 30px 0 15px;
+      color: #93c5fd;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 20px 0 10px;
+      color: #bfdbfe;
+    }
+    p {
+      margin-bottom: 15px;
+    }
+    ul, ol {
+      margin: 15px 0 15px 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 15px 0;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .api-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .api-card h4 {
+      margin-top: 0;
+    }
+    .signature {
+      font-family: 'Consolas', 'Monaco', monospace;
+      background: var(--code-bg);
+      padding: 10px 15px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin: 10px 0;
+      font-size: 0.9rem;
+    }
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    .param-table th, .param-table td {
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .param-table th {
+      background: rgba(59, 130, 246, 0.1);
+      font-weight: 600;
+    }
+    .param-name {
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: #93c5fd;
+    }
+    .param-type {
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: #86efac;
+    }
+    .lang-th, .lang-en {
+      display: none;
+    }
+    .lang-th.active, .lang-en.active {
+      display: block;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        margin-left: 0;
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-
-  <header>
-    <nav>
-      <div class="logo">T<span>M</span>E</div>
-      <button class="menu-toggle" aria-label="Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="docs.html" class="active">Docs</a></li>
-        <li><a href="https://github.com/TimeAndTimeStudio/TME" target="_blank" rel="noopener">GitHub</a></li>
-      </ul>
+  <div class="container">
+    <div class="sidebar">
+      <h1>TME Docs</h1>
+      <nav>
+        <a href="#getting-started">Getting Started</a>
+        <a href="#game-loop">Game Loop</a>
+        <a href="#render">Render</a>
+        <a href="#input">Input</a>
+        <a href="#audio">Audio</a>
+        <a href="#fullscreen">Fullscreen</a>
+        <a href="#build">Build</a>
+      </nav>
       <div class="lang-switcher">
-        <button class="lang-btn active" data-lang="th" onclick="setLang('th')">TH</button>
-        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+        <a href="#" onclick="switchLang('th'); return false;">TH</a>
+        <a href="#" onclick="switchLang('en'); return false;">EN</a>
       </div>
-    </nav>
-  </header>
+    </div>
+    <div class="main">
+      <!-- ==================== GETTING STARTED ==================== -->
+      <section id="getting-started">
+        <div class="lang-th">
+          <h2>เริ่มต้นใช้งาน</h2>
+          <p>TME (Time Mini Engine) เป็น game engine ขนาดเล็กที่ใช้ JavaScript และ WebGPU</p>
+          <h4>โครงสร้างไฟล์</h4>
+          <div class="code-block">project/
+├── game.tsl          # โค้ดเกมของคุณ
+├── index.html        # หน้าเว็บหลัก
+├── style.css         # สไตล์ของเว็บ
+└── assets/           # รูปภาพ, เสียง</div>
+          <h4>index.html</h4>
+          <div class="code-block">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;My Game&lt;/title&gt;
+  &lt;link rel="stylesheet" href="./style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="game"&gt;&lt;/canvas&gt;
+  &lt;script type="module" src="./engine.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</div>
+        </div>
+        <div class="lang-en">
+          <h2>Getting Started</h2>
+          <p>TME (Time Mini Engine) is a small game engine using JavaScript and WebGPU.</p>
+          <h4>Project Structure</h4>
+          <div class="code-block">project/
+├── game.tsl          # Your game code
+├── index.html        # Main HTML file
+├── style.css         # Web styles
+└── assets/           # Images, audio</div>
+          <h4>index.html</h4>
+          <div class="code-block">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;My Game&lt;/title&gt;
+  &lt;link rel="stylesheet" href="./style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="game"&gt;&lt;/canvas&gt;
+  &lt;script type="module" src="./engine.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</div>
+        </div>
+      </section>
 
-  <main>
-    <div class="container">
-      <div class="docs-layout">
+      <!-- ==================== GAME LOOP ==================== -->
+      <section id="game-loop">
+        <div class="lang-th">
+          <h2>Game Loop</h2>
+          <p>กำหนดฟังก์ชันหลักของเกม 2 ฟังก์ชัน</p>
 
-        <aside class="docs-sidebar">
-          <div class="lang-th">
-            <h3>Reference</h3>
-            <div class="search-box">
-              <input type="text" id="docSearch" placeholder="ค้นหาเอกสาร..." autocomplete="off">
-              <div class="search-results" id="searchResults"></div>
-            </div>
-            <ul id="docNav">
-              <li><a href="#getting-started" class="active">เริ่มต้นใช้งาน</a></li>
-              <li><a href="#project-structure">Project Structure</a></li>
-              <li><a href="#render">Render</a></li>
-              <li><a href="#input">Input</a></li>
-              <li><a href="#mouse-api">Mouse</a></li>
-              <li><a href="#touch-api">Touch</a></li>
-              <li><a href="#audio">Audio</a></li>
-              <li><a href="#game-loop">Game Loop</a></li>
-              <li><a href="#fullscreen-api">Fullscreen API</a></li>
-              <li><a href="#build">Build</a></li>
-            </ul>
-          </div>
-          <div class="lang-en">
-            <h3>Reference</h3>
-            <div class="search-box">
-              <input type="text" id="docSearch" placeholder="Search docs..." autocomplete="off">
-              <div class="search-results" id="searchResults"></div>
-            </div>
-            <ul id="docNav">
-              <li><a href="#getting-started" class="active">Getting Started</a></li>
-              <li><a href="#project-structure">Project Structure</a></li>
-              <li><a href="#render">Render</a></li>
-              <li><a href="#input">Input</a></li>
-              <li><a href="#mouse-api">Mouse</a></li>
-              <li><a href="#touch-api">Touch</a></li>
-              <li><a href="#audio">Audio</a></li>
-              <li><a href="#game-loop">Game Loop</a></li>
-              <li><a href="#fullscreen-api">Fullscreen API</a></li>
-              <li><a href="#build">Build</a></li>
-            </ul>
-          </div>
-        </aside>
+          <h3>setGame({ update, draw })</h3>
+          <p>ลงทะเบียน game object พร้อม update() และ draw()</p>
+          <div class="code-block">function update(dt):
+  # dt = เวลาที่ผ่านไปต่อเฟรม (วินาที)
+  # ใช้คำนวณ movement, physics
+  
+  player.x += player.vx * dt
+  if player.x > 800:
+    player.x = 0
 
-        <div class="docs-content">
+function draw():
+  # วาดทุกเฟรม
+  rect(0, 0, 800, 600, "#87CEEB")
+  rect(player.x, player.y, 50, 50, "#FF5733")
 
-          <section id="getting-started">
-            <div class="lang-th">
-              <h2>เริ่มต้นใช้งาน</h2>
-              <p>TME (Time Mini Engine) คือ game engine ขนาดเล็กสำหรับสร้างเกม 2D ใช้ WebGPU สำหรับ render และมี build system ที่เรียบง่าย</p>
+setGame({ update, draw })</div>
 
-              <h3>การติดตั้ง</h3>
-              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TME.git
-cd TME</div>
+          <h3>fps(value)</h3>
+          <p>กำหนด framerate (ค่าเริ่มต้น = 60)</p>
+          <div class="code-block">fps(60)  # 60 FPS (default)
+fps(30)  # 30 FPS สำหรับ performance</div>
+        </div>
+        <div class="lang-en">
+          <h2>Game Loop</h2>
+          <p>Define the two main game functions.</p>
 
-              <h3>สร้างโปรเจกต์ใหม่</h3>
-              <div class="code-block">cd examples
-mkdir my-game
-cd my-game</div>
+          <h3>setGame({ update, draw })</h3>
+          <p>Register the game object with update() and draw() functions.</p>
+          <div class="code-block">function update(dt):
+  # dt = time elapsed per frame (seconds)
+  # Use for movement, physics calculations
+  
+  player.x += player.vx * dt
+  if player.x > 800:
+    player.x = 0
 
-              <h3>Build</h3>
-              <div class="code-block">cd /path/to/TME
-node tme/bin/tme build</div>
+function draw():
+  # Draw every frame
+  rect(0, 0, 800, 600, "#87CEEB")
+  rect(player.x, player.y, 50, 50, "#FF5733")
 
-              <h3>รันเกม</h3>
-              <div class="code-block">เปิด index.html ในเบราว์เซอร์</div>
-            </div>
-            <div class="lang-en">
-              <h2>Getting Started</h2>
-              <p>TME (Time Mini Engine) is a small game engine for creating 2D games. Uses WebGPU for rendering and has a simple build system.</p>
+setGame({ update, draw })</div>
 
-              <h3>Installation</h3>
-              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TME.git
-cd TME</div>
+          <h3>fps(value)</h3>
+          <p>Set the framerate (default = 60).</p>
+          <div class="code-block">fps(60)  # 60 FPS (default)
+fps(30)  # 30 FPS for better performance</div>
+        </div>
+      </section>
 
-              <h3>Create New Project</h3>
-              <div class="code-block">cd examples
-mkdir my-game
-cd my-game</div>
+      <!-- ==================== RENDER ==================== -->
+      <section id="render">
+        <div class="lang-th">
+          <h2>Render</h2>
+          <p>ระบบเรนเดอร์ใช้ WebGPU สำหรับประสิทธิภาพสูงสุด</p>
 
-              <h3>Build</h3>
-              <div class="code-block">cd /path/to/TME
-node tme/bin/tme build</div>
+          <h3>rect(x, y, width, height, color, rotation?, scale?, alpha?)</h3>
+          <p>วาดสี่เหลี่ยมพร้อมการแปลงรูปทรง</p>
+          <div class="code-block">rect(100, 100, 64, 64, "#FF5733")
+rect(200, 200, 50, 50, "#33FF57", 45, 2, 0.5)
+# x=200, y=200, กว้าง=50, สูง=50, สี=เขียว, หมุน=45°, ขยาย=2 เท่า, โปร่ง=50%</div>
 
-              <h3>Run Game</h3>
-              <div class="code-block">Open index.html in browser</div>
-            </div>
-          </section>
+          <h3>image(src, x, y, width?, height?, rotation?, scale?, alpha?)</h3>
+          <p>โหลดและวาดภาพ</p>
+          <div class="code-block">image("assets/player.png", 100, 100, 64, 64)
+image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)
+# src="assets/player.png", x=100, y=100, กว้าง=64, สูง=64</div>
 
-          <section id="project-structure">
-            <div class="lang-th">
-              <h2>Project Structure</h2>
-
-              <h3>โครงสร้างโปรเจกต์</h3>
-              <div class="code-block">my-game/
-├── game.tsl          # Game source code
-├── index.html        # HTML page with canvas
-├── style.css         # User CSS
-├── assets/           # User assets (images, audio)
-└── dist/             # Build output</div>
-
-              <h3>ไฟล์ที่จำเป็น</h3>
-              <ul>
-                <li><code>game.tsl</code> — Game source code</li>
-                <li><code>index.html</code> — ต้องมี <code>&lt;canvas id="game"&gt;</code></li>
-                <li><code>style.css</code> — User CSS (optional)</li>
-              </ul>
-            </div>
-            <div class="lang-en">
-              <h2>Project Structure</h2>
-
-              <h3>Project Layout</h3>
-              <div class="code-block">my-game/
-├── game.tsl          # Game source code
-├── index.html        # HTML page with canvas
-├── style.css         # User CSS
-├── assets/           # User assets (images, audio)
-└── dist/             # Build output</div>
-
-              <h3>Required Files</h3>
-              <ul>
-                <li><code>game.tsl</code> — Game source code</li>
-                <li><code>index.html</code> — Must contain <code>&lt;canvas id="game"&gt;</code></li>
-                <li><code>style.css</code> — User CSS (optional)</li>
-              </ul>
-            </div>
-          </section>
-
-          <section id="render">
-            <div class="lang-th">
-              <h2>Render</h2>
-              <p>TME ใช้ WebGPU สำหรับ rendering — ไม่มี Canvas2D/WebGL fallback</p>
-
-              <h3>rect()</h3>
-              <p>วาดสี่เหลี่ยม</p>
-              <div class="code-block">rect(x, y, width, height, color)</div>
-              <table>
-                <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
-                <tbody>
-                  <tr><td>x, y</td><td>number</td><td>ตำแหน่ง</td></tr>
-                  <tr><td>width, height</td><td>number</td><td>ขนาด</td></tr>
-                  <tr><td>color</td><td>string</td><td>สี (hex, rgb, หรือชื่อสี)</td></tr>
-                </tbody>
-              </table>
-
-              <h3>image()</h3>
-              <p>วาดรูปภาพ</p>
-              <div class="code-block">image(src, x, y, width, height)</div>
-              <p>Image โหลดแบบ on-demand — โหลดเมื่อใช้เท่านั้น</p>
-
-              <h3>getCanvasSize()</h3>
-              <p>ดึงขนาดปัจจุบันของ canvas (รวม DPR)</p>
-              <div class="code-block">function draw():
+          <h3>getCanvasSize()</h3>
+          <p>ดึงขนาด canvas ปัจจุบัน (รวม DPR)</p>
+          <div class="code-block">function draw():
   size = getCanvasSize()
   W = size.width
   H = size.height
   # ใช้ W, H ในการคำนวณตำแหน่ง
-  rect(0, H-50, W, 50, "brown")</div>
-            </div>
-            <div class="lang-en">
-              <h2>Render</h2>
-              <p>TME uses WebGPU for rendering — no Canvas2D/WebGL fallback.</p>
+  rect(0, H-50, W, 50, "brown")
+  # วาดพื้นด้านล่างตามขนาดจอ</div>
+        </div>
+        <div class="lang-en">
+          <h2>Render</h2>
+          <p>Rendering system uses WebGPU for maximum performance.</p>
 
-              <h3>rect()</h3>
-              <p>Draw a rectangle.</p>
-              <div class="code-block">rect(x, y, width, height, color)</div>
-              <table>
-                <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
-                <tbody>
-                  <tr><td>x, y</td><td>number</td><td>Position</td></tr>
-                  <tr><td>width, height</td><td>number</td><td>Size</td></tr>
-                  <tr><td>color</td><td>string</td><td>Color (hex, rgb, or named)</td></tr>
-                </tbody>
-              </table>
+          <h3>rect(x, y, width, height, color, rotation?, scale?, alpha?)</h3>
+          <p>Draw a rectangle with optional transforms.</p>
+          <div class="code-block">rect(100, 100, 64, 64, "#FF5733")
+rect(200, 200, 50, 50, "#33FF57", 45, 2, 0.5)
+# x=200, y=200, width=50, height=50, color=green, rotation=45°, scale=2x, alpha=50%</div>
 
-              <h3>image()</h3>
-              <p>Draw an image.</p>
-              <div class="code-block">image(src, x, y, width, height)</div>
-              <p>Images load on-demand — only loaded when used.</p>
+          <h3>image(src, x, y, width?, height?, rotation?, scale?, alpha?)</h3>
+          <p>Load and draw an image.</p>
+          <div class="code-block">image("assets/player.png", 100, 100, 64, 64)
+image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)
+# src="assets/player.png", x=100, y=100, width=64, height=64</div>
 
-              <h3>getCanvasSize()</h3>
-              <p>Get current canvas size (including DPR).</p>
-              <div class="code-block">function draw():
+          <h3>getCanvasSize()</h3>
+          <p>Get current canvas size (including DPR).</p>
+          <div class="code-block">function draw():
   size = getCanvasSize()
   W = size.width
   H = size.height
   # Use W, H for positioning
-  rect(0, H-50, W, 50, "brown")</div>
-            </div>
-          </section>
+  rect(0, H-50, W, 50, "brown")
+  # Draw ground at bottom of screen</div>
+        </div>
+      </section>
 
-          <section id="input">
-            <div class="lang-th">
-              <h2>Input</h2>
-              <p>รองรับ keyboard, mouse, touch</p>
+      <!-- ==================== INPUT ==================== -->
+      <section id="input">
+        <div class="lang-th">
+          <h2>Input</h2>
+          <p>รองรับ keyboard, mouse และ touch</p>
 
-              <h3>keyboard.is_down()</h3>
-              <p>ตรวจสอบว่ากดปุ่มอยู่หรือไม่</p>
-              <div class="code-block">if input.keyboard.is_down("space"):
-  print("Space pressed")</div>
-            </div>
-            <div class="lang-en">
-              <h2>Input</h2>
-              <p>Supports keyboard, mouse, touch.</p>
+          <h3>Keyboard</h3>
+          <div class="code-block">function update(dt):
+  # ตรวจสอบว่ากดปุ่มหรือไม่
+  if input.keyboard.is_down("ArrowLeft"):
+    player.x -= 200 * dt
+  if input.keyboard.is_down("ArrowRight"):
+    player.x += 200 * dt
+  if input.keyboard.is_down(" "):
+    # กด spacebar
+    player.jumping = true</div>
 
-              <h3>keyboard.is_down()</h3>
-              <p>Check if a key is pressed.</p>
-              <div class="code-block">if input.keyboard.is_down("space"):
-  print("Space pressed")</div>
-            </div>
-          </section>
+          <h3>Mouse</h3>
+          <div class="code-block">function draw():
+  # ตำแหน่งเมาส์
+  print(mouse.x, mouse.y)
+  
+  # ตรวจสอบการคลิก
+  if mouse.down(0):  # ปุ่มซ้าย
+    # คลิกซ้าย
+    if mouse.x > 100 and mouse.x < 200:
+      if mouse.y > 100 and mouse.y < 150:
+        # คลิกที่ปุ่ม
+        startGame()</div>
 
-          <section id="mouse-api">
-            <div class="lang-th">
-              <h2>Mouse API</h2>
-              <p>Mouse API แบบเต็มรูปแบบ</p>
+          <h3>Touch</h3>
+          <div class="code-block">function update(dt):
+  # ตรวจสอบ touch (รองรับหลายนิ้วสูงสุด 4 นิ้ว)
+  if touch.exists(0):
+    # นิ้วที่ 0 กดอยู่
+    player.x = touch.x(0)
+    player.y = touch.y(0)
+  
+  if touch.exists(1):
+    # นิ้วที่ 1 กดอยู่ (multi-touch)
+    fireBullet(touch.x(1), touch.y(1))
 
-              <h3>mouse.x, mouse.y</h3>
-              <p>ตำแหน่งเมาส์</p>
-              <div class="code-block">print(f"Mouse at {mouse.x}, {mouse.y}")</div>
+# ตัวอย่าง: ปุ่มบนจอสำหรับ mobile
+function draw():
+  # วาดปุ่มซ้าย
+  rect(50, 500, 80, 80, "rgba(255,255,255,0.3)")
+  text("◀", 60, 520)
+  
+  # วาดปุ่มขวา
+  rect(670, 500, 80, 80, "rgba(255,255,255,0.3)")
+  text("▶", 680, 520)
+  
+  # ตรวจสอบ touch ที่ปุ่ม
+  if touch.exists(0):
+    tx = touch.x(0)
+    ty = touch.y(0)
+    if tx > 50 and tx < 130:
+      if ty > 500 and ty < 580:
+        player.x -= 200 * dt</div>
+        </div>
+        <div class="lang-en">
+          <h2>Input</h2>
+          <p>Supports keyboard, mouse, and touch input.</p>
 
-              <h3>mouse.click(btn)</h3>
-              <p>ตรวจสอบ click (btn = 0 สำหรับ left, 1 สำหรับ right)</p>
-              <div class="code-block">if mouse.click(0):
-  print("Left mouse clicked")</div>
+          <h3>Keyboard</h3>
+          <div class="code-block">function update(dt):
+  # Check if a key is pressed
+  if input.keyboard.is_down("ArrowLeft"):
+    player.x -= 200 * dt
+  if input.keyboard.is_down("ArrowRight"):
+    player.x += 200 * dt
+  if input.keyboard.is_down(" "):
+    # Spacebar pressed
+    player.jumping = true</div>
 
-              <h3>mouse.down(btn)</h3>
-              <p>ตรวจสอบว่ากดปุ่มเมาส์อยู่หรือไม่</p>
-              <div class="code-block">if mouse.down(0):
-  print("Left mouse button down")</div>
+          <h3>Mouse</h3>
+          <div class="code-block">function draw():
+  # Mouse position
+  print(mouse.x, mouse.y)
+  
+  # Check for clicks
+  if mouse.down(0):  # Left button
+    # Left click
+    if mouse.x > 100 and mouse.x < 200:
+      if mouse.y > 100 and mouse.y < 150:
+        # Clicked on button
+        startGame()</div>
 
-              <h3>mouse.drag(btn)</h3>
-              <p>ตรวจสอบ drag (auto-reset หลังอ่าน)</p>
-              <div class="code-block">if mouse.drag(0):
-  print("Mouse dragging")</div>
+          <h3>Touch</h3>
+          <div class="code-block">function update(dt):
+  # Check touch (supports up to 4 fingers)
+  if touch.exists(0):
+    # Finger 0 is pressed
+    player.x = touch.x(0)
+    player.y = touch.y(0)
+  
+  if touch.exists(1):
+    # Finger 1 is pressed (multi-touch)
+    fireBullet(touch.x(1), touch.y(1))
 
-              <h3>mouse.up(btn)</h3>
-              <p>ตรวจสอบปล่อยปุ่มเมาส์</p>
-              <div class="code-block">if mouse.up(0):
-  print("Left mouse button up")</div>
-            </div>
-            <div class="lang-en">
-              <h2>Mouse API</h2>
-              <p>Full-featured mouse API</p>
+# Example: On-screen buttons for mobile
+function draw():
+  # Draw left button
+  rect(50, 500, 80, 80, "rgba(255,255,255,0.3)")
+  text("◀", 60, 520)
+  
+  # Draw right button
+  rect(670, 500, 80, 80, "rgba(255,255,255,0.3)")
+  text("▶", 680, 520)
+  
+  # Check touch on button
+  if touch.exists(0):
+    tx = touch.x(0)
+    ty = touch.y(0)
+    if tx > 50 and tx < 130:
+      if ty > 500 and ty < 580:
+        player.x -= 200 * dt</div>
+        </div>
+      </section>
 
-              <h3>mouse.x, mouse.y</h3>
-              <p>Mouse position.</p>
-              <div class="code-block">print(f"Mouse at {mouse.x}, {mouse.y}")</div>
+      <!-- ==================== AUDIO ==================== -->
+      <section id="audio">
+        <div class="lang-th">
+          <h2>Audio</h2>
+          <p>ระบบเสียงรองรับ SFX และ BGM</p>
 
-              <h3>mouse.click(btn)</h3>
-              <p>Check click (btn = 0 for left, 1 for right).</p>
-              <div class="code-block">if mouse.click(0):
-  print("Left mouse clicked")</div>
+          <h3>audio.play(path, type, loop?)</h3>
+          <p>เล่นเสียง</p>
+          <div class="code-block"># เล่น SFX (เสียงสั้น)
+audio.play("assets/sfx/jump.mp3", "sfx")
 
-              <h3>mouse.down(btn)</h3>
-              <p>Check if mouse button is pressed.</p>
-              <div class="code-block">if mouse.down(0):
-  print("Left mouse button down")</div>
+# เล่น BGM (เสียงพื้นหลัง)
+audio.play("assets/music/bgm.mp3", "bgm", true)  # loop=true
+audio.play("assets/music/bgm.mp3", "bgm")        # loop默认=true
 
-              <h3>mouse.drag(btn)</h3>
-              <p>Check drag (auto-reset after read).</p>
-              <div class="code-block">if mouse.drag(0):
-  print("Mouse dragging")</div>
+# เล่น BGM ไม่ loop
+audio.play("assets/music/bgm.mp3", "bgm", false)</div>
 
-              <h3>mouse.up(btn)</h3>
-              <p>Check mouse button release.</p>
-              <div class="code-block">if mouse.up(0):
-  print("Left mouse button up")</div>
-            </div>
-          </section>
+          <h3>audio.stop(type)</h3>
+          <div class="code-block"># หยุด SFX ทั้งหมด
+audio.stop("sfx")
 
-          <section id="touch-api">
-            <div class="lang-th">
-              <h2>Touch API</h2>
-              <p>Touch API แบบเต็มรูปแบบ</p>
+# หยุด BGM
+audio.stop("bgm")
 
-              <h3>touch.x, touch.y</h3>
-              <p>ตำแหน่ง touch</p>
-              <div class="code-block">print(f"Touch at {touch.x}, {touch.y}")</div>
+# หยุดทั้งหมด
+audio.stop()</div>
 
-              <h3>touch.tap()</h3>
-              <p>ตรวจสอบ tap (auto-reset หลังอ่าน)</p>
-              <div class="code-block">if touch.tap():
-  print("Touch tapped")</div>
+          <h3>audio.pause()</h3>
+          <h3>audio.resume()</h3>
+          <div class="code-block"># หยุดชั่วคราว
+audio.pause()
 
-              <h3>touch.down()</h3>
-              <p>ตรวจสอบว่า touch อยู่หรือไม่</p>
-              <div class="code-block">if touch.down():
-  print("Touching screen")</div>
-
-              <h3>touch.drag()</h3>
-              <p>ตรวจสอบ drag (auto-reset หลังอ่าน)</p>
-              <div class="code-block">if touch.drag():
-  print("Touch dragging")</div>
-
-              <h3>touch.up()</h3>
-              <p>ตรวจสอบปล่อย touch</p>
-              <div class="code-block">if touch.up():
-  print("Touch released")</div>
-            </div>
-            <div class="lang-en">
-              <h2>Touch API</h2>
-              <p>Full-featured touch API</p>
-
-              <h3>touch.x, touch.y</h3>
-              <p>Touch position.</p>
-              <div class="code-block">print(f"Touch at {touch.x}, {touch.y}")</div>
-
-              <h3>touch.tap()</h3>
-              <p>Check tap (auto-reset after read).</p>
-              <div class="code-block">if touch.tap():
-  print("Touch tapped")</div>
-
-              <h3>touch.down()</h3>
-              <p>Check if touching screen.</p>
-              <div class="code-block">if touch.down():
-  print("Touching screen")</div>
-
-              <h3>touch.drag()</h3>
-              <p>Check drag (auto-reset after read).</p>
-              <div class="code-block">if touch.drag():
-  print("Touch dragging")</div>
-
-              <h3>touch.up()</h3>
-              <p>Check touch release.</p>
-              <div class="code-block">if touch.up():
-  print("Touch released")</div>
-            </div>
-          </section>
-
-          <section id="audio">
-            <div class="lang-th">
-              <h2>Audio</h2>
-              <p>ใช้ audio object เดียวสำหรับ SFX และ BGM</p>
-
-              <h3>audio.play()</h3>
-              <p>เล่นเสียง SFX หรือ BGM</p>
-              <div class="code-block">audio.play("sfx_jump", "sfx")
-audio.play("bgm_main", "bgm", true)</div>
-
-              <h3>audio.stop()</h3>
-              <p>หยุดเสียง SFX, BGM, หรือทั้งหมด</p>
-              <div class="code-block">audio.stop("sfx")  # หยุด SFX ทั้งหมด
-audio.stop("bgm")  # หยุด BGM
-audio.stop()  # หยุดทั้งหมด</div>
-
-              <h3>audio.pause(), audio.resume()</h3>
-              <p>หยุดชั่วคราว และ เล่นต่อ</p>
-              <div class="code-block">audio.pause()
+# เล่นต่อ
 audio.resume()</div>
 
-              <h3>audio.volume, audio.sfxVolume, audio.bgmVolume</h3>
-              <p>ปรับระดับเสียง (0.0 - 1.0)</p>
-              <div class="code-block">audio.volume = 0.5
-audio.sfxVolume = 0.8
-audio.bgmVolume = 0.6</div>
+          <h3>Volume & Mute</h3>
+          <div class="code-block"># ตั้งค่าความดัง
+audio.volume = 0.8      # ความดังรวม (0-1)
+audio.sfxVolume = 0.6   # ความดัง SFX
+audio.bgmVolume = 0.7   # ความดัง BGM
 
-              <h3>audio.muted, audio.mutedSfx, audio.mutedBgm</h3>
-              <p>ปิดเสียง</p>
-              <div class="code-block">audio.muted = true
-audio.mutedSfx = true
-audio.mutedBgm = true</div>
-            </div>
-            <div class="lang-en">
-              <h2>Audio</h2>
-              <p>Uses one unified audio object for SFX and BGM.</p>
+# Mute
+audio.muted = true      # mute ทั้งหมด
+audio.mutedSfx = true   # mute SFX
+audio.mutedBgm = true   # mute BGM
 
-              <h3>audio.play()</h3>
-              <p>Play SFX or BGM.</p>
-              <div class="code-block">audio.play("sfx_jump", "sfx")
-audio.play("bgm_main", "bgm", true)</div>
+# ตรวจสอบสถานะ
+if audio.muted:
+  print("เสียงถูก mute")
+</div>
+        </div>
+        <div class="lang-en">
+          <h2>Audio</h2>
+          <p>Audio system supporting SFX and BGM playback.</p>
 
-              <h3>audio.stop()</h3>
-              <p>Stop SFX, BGM, or all.</p>
-              <div class="code-block">audio.stop("sfx")  # Stop all SFX
-audio.stop("bgm")  # Stop BGM
-audio.stop()  # Stop all</div>
+          <h3>audio.play(path, type, loop?)</h3>
+          <p>Play audio.</p>
+          <div class="code-block"># Play SFX (short sound effect)
+audio.play("assets/sfx/jump.mp3", "sfx")
 
-              <h3>audio.pause(), audio.resume()</h3>
-              <p>Pause and resume BGM.</p>
-              <div class="code-block">audio.pause()
+# Play BGM (background music)
+audio.play("assets/music/bgm.mp3", "bgm", true)  # loop=true
+audio.play("assets/music/bgm.mp3", "bgm")        # loop defaults to true
+
+# Play BGM without looping
+audio.play("assets/music/bgm.mp3", "bgm", false)</div>
+
+          <h3>audio.stop(type)</h3>
+          <div class="code-block"># Stop all SFX
+audio.stop("sfx")
+
+# Stop BGM
+audio.stop("bgm")
+
+# Stop everything
+audio.stop()</div>
+
+          <h3>audio.pause()</h3>
+          <h3>audio.resume()</h3>
+          <div class="code-block"># Pause temporarily
+audio.pause()
+
+# Resume playback
 audio.resume()</div>
 
-              <h3>audio.volume, audio.sfxVolume, audio.bgmVolume</h3>
-              <p>Adjust volume (0.0 - 1.0).</p>
-              <div class="code-block">audio.volume = 0.5
-audio.sfxVolume = 0.8
-audio.bgmVolume = 0.6</div>
+          <h3>Volume & Mute</h3>
+          <div class="code-block"># Set volume levels
+audio.volume = 0.8      # Master volume (0-1)
+audio.sfxVolume = 0.6   # SFX volume
+audio.bgmVolume = 0.7   # BGM volume
 
-              <h3>audio.muted, audio.mutedSfx, audio.mutedBgm</h3>
-              <p>Mute audio.</p>
-              <div class="code-block">audio.muted = true
-audio.mutedSfx = true
-audio.mutedBgm = true</div>
-            </div>
-          </section>
+# Mute
+audio.muted = true      # Mute everything
+audio.mutedSfx = true   # Mute SFX only
+audio.mutedBgm = true   # Mute BGM only
 
-          <section id="game-loop">
-            <div class="lang-th">
-              <h2>Game Loop</h2>
-              <p>TME runtime จัดการ game loop — คุณแค่เขียน update และ draw</p>
+# Check status
+if audio.muted:
+  print("Audio is muted")
+</div>
+        </div>
+      </section>
 
-              <h3>start()</h3>
-              <p>เริ่ม game loop (auto-start แล้ว)</p>
-              <div class="code-block">start()</div>
+      <!-- ==================== FULLSCREEN ==================== -->
+      <section id="fullscreen">
+        <div class="lang-th">
+          <h2>Fullscreen API</h2>
+          <p>ระบบจัดการโหมดเต็มหน้าจอและ callback เมื่อออกจาก fullscreen</p>
 
-              <h3>setGame()</h3>
-              <p>กำหนด update และ draw functions</p>
-              <div class="code-block">function update(dt):
-  # Game logic
-
-function draw():
-  # Render
-
-setGame({update: update, draw: draw})</div>
-
-              <h3>fps()</h3>
-              <p>ปรับ framerate (default = 60)</p>
-              <div class="code-block">fps(60)</div>
-            </div>
-            <div class="lang-en">
-              <h2>Game Loop</h2>
-              <p>TME runtime manages the game loop — you just write update and draw.</p>
-
-              <h3>start()</h3>
-              <p>Start game loop (auto-start already).</p>
-              <div class="code-block">start()</div>
-
-              <h3>setGame()</h3>
-              <p>Define update and draw functions.</p>
-              <div class="code-block">function update(dt):
-  # Game logic
-
-function draw():
-  # Render
-
-setGame({update: update, draw: draw})</div>
-
-              <h3>fps()</h3>
-              <p>Adjust framerate (default = 60).</p>
-              <div class="code-block">fps(60)</div>
-            </div>
-          </section>
-
-          <section id="fullscreen-api">
-            <div class="lang-th">
-              <h2>Fullscreen API</h2>
-              <p>ระบบจัดการโหมดเต็มหน้าจอและ callback เมื่อออกจาก fullscreen</p>
-
-              <h3>requestFullscreen()</h3>
-              <p>เข้าสู่โหมดเต็มหน้าจอ</p>
-              <div class="code-block"># กดปุ่ม F11
+          <h3>requestFullscreen()</h3>
+          <p>เข้าสู่โหมดเต็มหน้าจอ</p>
+          <div class="code-block"># กดปุ่ม F11
 if input.keyboard.is_down("f11"):
   requestFullscreen()</div>
 
-              <h3>exitFullscreen()</h3>
-              <p>ออกจากโหมดเต็มหน้าจอ</p>
-              <div class="code-block"># กด ESC (browser ทำให้อัตโนมัติ)
+          <h3>exitFullscreen()</h3>
+          <p>ออกจากโหมดเต็มหน้าจอ</p>
+          <div class="code-block"># กด ESC (browser ทำให้อัตโนมัติ)
 # หรือกดปุ่มบนจอ
 if input.keyboard.is_down("escape"):
   exitFullscreen()</div>
 
-              <h3>setFullscreenCallback()</h3>
-              <p>ลงทะเบียนฟังก์ชันเมื่อออกจาก fullscreen</p>
-              <div class="code-block">function onFullscreenExit():
+          <h3>setFullscreenCallback(callback)</h3>
+          <p>ลงทะเบียนฟังก์ชันเมื่อออกจาก fullscreen</p>
+          <div class="code-block">function onFullscreenExit():
   print("ออกจาก fullscreen!")
   # ทำอย่างอื่น เช่น pause game
 
 setFullscreenCallback(onFullscreenExit)</div>
-            </div>
-            <div class="lang-en">
-              <h2>Fullscreen API</h2>
-              <p>Fullscreen mode management and exit callback system.</p>
 
-              <h3>requestFullscreen()</h3>
-              <p>Enter fullscreen mode.</p>
-              <div class="code-block"># Press F11
+          <h4>ตัวอย่าง: แสดงเมนูเมื่อออกจาก fullscreen</h4>
+          <div class="code-block">fullscreenMenu = { visible: false }
+
+function onExitFullscreen():
+  fullscreenMenu.visible = true
+
+setFullscreenCallback(onExitFullscreen)
+
+function draw():
+  if fullscreenMenu.visible:
+    # วาดเมนู
+    rect(0, 0, 800, 600, "rgba(0,0,0,0.8)")
+    text("กด Enter เพื่อกลับเข้าเกม", 100, 300)
+    
+    if input.keyboard.is_down("enter"):
+      fullscreenMenu.visible = false
+      requestFullscreen()</div>
+        </div>
+        <div class="lang-en">
+          <h2>Fullscreen API</h2>
+          <p>Fullscreen mode management and exit callback system.</p>
+
+          <h3>requestFullscreen()</h3>
+          <p>Enter fullscreen mode.</p>
+          <div class="code-block"># Press F11
 if input.keyboard.is_down("f11"):
   requestFullscreen()</div>
 
-              <h3>exitFullscreen()</h3>
-              <p>Exit fullscreen mode.</p>
-              <div class="code-block"># Press ESC (browser does automatically)
+          <h3>exitFullscreen()</h3>
+          <p>Exit fullscreen mode.</p>
+          <div class="code-block"># Press ESC (browser does automatically)
 # Or press button on screen
 if input.keyboard.is_down("escape"):
   exitFullscreen()</div>
 
-              <h3>setFullscreenCallback()</h3>
-              <p>Register a function when exiting fullscreen.</p>
-              <div class="code-block">function onFullscreenExit():
+          <h3>setFullscreenCallback(callback)</h3>
+          <p>Register a function when exiting fullscreen.</p>
+          <div class="code-block">function onFullscreenExit():
   print("Exited fullscreen!")
   # Do something: pause game, show menu, etc.
 
 setFullscreenCallback(onFullscreenExit)</div>
-            </div>
-          </section>
 
-          <section id="build">
-            <div class="lang-th">
-              <h2>Build</h2>
-              <p>Build Program orchestrate การ build ทั้งหมด</p>
+          <h4>Example: Show menu when exiting fullscreen</h4>
+          <div class="code-block">fullscreenMenu = { visible: false }
 
-              <h3>คำสั่ง</h3>
-              <div class="code-block">cd /path/to/TME
-node tme/bin/tme build</div>
+function onExitFullscreen():
+  fullscreenMenu.visible = true
 
-              <h3>Output</h3>
-              <div class="code-block">dist/
-├── index.html
-├── game.js
-├── engine.js
-├── style.css
-└── assets/</div>
+setFullscreenCallback(onExitFullscreen)
 
-              <h3>กฎสำคัญ</h3>
-              <ul>
-                <li>WebGPU เท่านั้น — ไม่มี fallback</li>
-                <li>index.html ต้องมี canvas#game</li>
-                <li>style.css เป็น user-owned — build ไม่ทับ</li>
-                <li>TSL เป็น external read-only — build ไม่แก้</li>
-              </ul>
-            </div>
-            <div class="lang-en">
-              <h2>Build</h2>
-              <p>Build Program orchestrates the entire build process.</p>
-
-              <h3>Commands</h3>
-              <div class="code-block">cd /path/to/TME
-node tme/bin/tme build</div>
-
-              <h3>Output</h3>
-              <div class="code-block">dist/
-├── index.html
-├── game.js
-├── engine.js
-├── style.css
-└── assets/</div>
-
-              <h3>Important Rules</h3>
-              <ul>
-                <li>WebGPU only — no fallback</li>
-                <li>index.html must have canvas#game</li>
-                <li>style.css is user-owned — build never overwrites</li>
-                <li>TSL is external read-only — build never modifies</li>
-              </ul>
-            </div>
-          </section>
-
+function draw():
+  if fullscreenMenu.visible:
+    # Draw menu
+    rect(0, 0, 800, 600, "rgba(0,0,0,0.8)")
+    text("Press Enter to return to game", 100, 300)
+    
+    if input.keyboard.is_down("enter"):
+      fullscreenMenu.visible = false
+      requestFullscreen()</div>
         </div>
-      </div>
+      </section>
+
+      <!-- ==================== BUILD ==================== -->
+      <section id="build">
+        <div class="lang-th">
+          <h2>Build</h2>
+          <p>Build Program orchestrate การ build ทั้งหมด</p>
+
+          <h3>คำสั่ง</h3>
+          <div class="code-block">cd /path/to/TME
+node tme/bin/tme build</div>
+
+          <h3>Output</h3>
+          <div class="code-block">dist/
+├── index.html
+├── game.js
+├── engine.js
+├── style.css
+└── assets/</div>
+
+          <h3>กฎสำคัญ</h3>
+          <ul>
+            <li>WebGPU เท่านั้น — ไม่มี fallback</li>
+            <li>index.html ต้องมี canvas#game</li>
+            <li>style.css เป็น user-owned — build ไม่ทับ</li>
+          </ul>
+        </div>
+        <div class="lang-en">
+          <h2>Build</h2>
+          <p>Build Program orchestrates the entire build process.</p>
+
+          <h3>Commands</h3>
+          <div class="code-block">cd /path/to/TME
+node tme/bin/tme build</div>
+
+          <h3>Output</h3>
+          <div class="code-block">dist/
+├── index.html
+├── game.js
+├── engine.js
+├── style.css
+└── assets/</div>
+
+          <h3>Important Rules</h3>
+          <ul>
+            <li>WebGPU only — no fallback</li>
+            <li>index.html must have canvas#game</li>
+            <li>style.css is user-owned — build does not overwrite</li>
+          </ul>
+        </div>
+      </section>
     </div>
-  </main>
+  </div>
 
-  <footer>
-    <p>
-      <span class="lang-th">TME v1.0.0 — Time Mini Engine &nbsp;|&nbsp; GPL-3.0 License</span>
-      <span class="lang-en">TME v1.0.0 — Time Mini Engine &nbsp;|&nbsp; GPL-3.0 License</span>
-    </p>
-  </footer>
-
-  <script src="js/main.js"></script>
+  <script>
+    function switchLang(lang) {
+      const thElements = document.querySelectorAll('.lang-th');
+      const enElements = document.querySelectorAll('.lang-en');
+      
+      thElements.forEach(el => el.classList.remove('active'));
+      enElements.forEach(el => el.classList.remove('active'));
+      
+      if (lang === 'th') {
+        thElements.forEach(el => el.classList.add('active'));
+      } else {
+        enElements.forEach(el => el.classList.add('active'));
+      }
+      
+      // Update active nav
+      document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+      const activeLink = document.querySelector(`.sidebar nav a[href="#${lang === 'th' ? 'getting-started' : 'getting-started'}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+    
+    // Initialize with English
+    switchLang('en');
+    
+    // Smooth scroll
+    document.querySelectorAll('.sidebar nav a').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+        // Update active
+        document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+    
+    // Highlight active section on scroll
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('section');
+      const navLinks = document.querySelectorAll('.sidebar nav a');
+      
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 100) {
+          current = section.getAttribute('id');
+        }
+      });
+      
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>

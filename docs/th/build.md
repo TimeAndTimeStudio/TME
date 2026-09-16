@@ -1,47 +1,25 @@
-# กระบวนการ Build
-
-## ข้อกำหนด
-- มีไดเรกทอรี `TSL/` โคลนจากทางการที่ `https://github.com/TimeAndTimeStudio/TSL`
-- `game.tsl` — ไฟล์แหล่งที่มาของเกม
-- `index.html` — ต้องมี `<canvas id="game"></canvas>`
-- `style.css` — CSS สำหรับผู้ใช้ (ไม่บังคับ)
+# Build
 
 ## คำสั่ง
 
-### `tme init [directory]`
-สร้างเทมเพลตเริ่มต้นในไดเรกทอรีที่ระบุ (หรือไดเรกทอรีปัจจุบันหากไม่ระบุ)
+```bash
+cd /path/to/TME
+node tme/bin/tme build
+```
 
-**สร้างไฟล์:**
-- `game.tsl` — แหล่งเกมเริ่มต้น
-- `index.html` — HTML ที่มี canvas element ที่จำเป็น
-- `style.css` — CSS เริ่มต้นว่าง
+## Output
 
-**ความปลอดภัย:** ไม่เขียนทับไฟล์ที่มีอยู่ รายงานความขัดแย้งและหยุดหากไฟล์มีอยู่แล้ว
-
-### `tme build`
-คอมไพล์ TSL แพ็กเกจรันไทม์ และส่งออกไปยัง `dist/`
-
-**ระยะการ Build:**
-1. ตรวจสอบโครงสร้างโปรเจกต์และไฟล์ที่จำเป็น
-2. ตรวจสอบว่า `<canvas id="game">` มีอยู่ใน `index.html`
-3. เรียก TSL เพื่อคอมไพล์ `game.tsl`
-4. แพ็กเกจรันไทม์ TEMF และเอนจิน TME
-5. รักษา HTML/CSS ของผู้ใช้โดยไม่แก้ไข
-6. คัดลอกไดเรกทอรีผู้ใช้แบบ recursive ไปยัง `dist/`
-7. ส่งออกไปยัง `dist/`
-
-## โครงสร้างผลลัพธ์
 ```
 dist/
-├── index.html          # ผู้ใช้เป็นเจ้าของ รักษาไว้
-├── game.js             # สร้างโดย TSL
-├── engine.js           # รันไทม์เอนจิน TME
-├── style.css           # ผู้ใช้เป็นเจ้าของ รักษาไว้
-└── <ไดเรกทอรีผู้ใช้>  # คัดลอกแบบ recursive
+├── index.html
+├── game.js
+├── engine.js
+├── style.css
+└── assets/
 ```
 
+## กฎสำคัญ
 
-## การเผยแพร่
-- อัปโหลด `dist/` ไปยังบริการโฮสติ้งแบบ static ใดๆ
-- ไม่ต้องใช้ server-side processing
-- ทำงานได้กับเบราว์เซอร์
+- WebGPU เท่านั้น — ไม่มี fallback
+- index.html ต้องมี canvas#game
+- style.css เป็น user-owned — build ไม่ทับ

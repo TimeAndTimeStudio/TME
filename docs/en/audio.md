@@ -1,121 +1,58 @@
 # Audio
 
-## Unified Audio Object
-All audio functions are accessed through the `audio` object.
+## `audio.play(path, type, loop?)`
+
+Play audio.
 
 ```javascript
-audio.play(path, type, loop?)
-audio.stop(type?)
+# Play SFX (short sound effect)
+audio.play("assets/sfx/jump.mp3", "sfx")
+
+# Play BGM (background music)
+audio.play("assets/music/bgm.mp3", "bgm", true)  # loop=true
+audio.play("assets/music/bgm.mp3", "bgm")        # loop defaults to true
+
+# Play BGM without looping
+audio.play("assets/music/bgm.mp3", "bgm", false)
+```
+
+## `audio.stop(type)`
+
+```javascript
+# Stop all SFX
+audio.stop("sfx")
+
+# Stop BGM
+audio.stop("bgm")
+
+# Stop everything
+audio.stop()
+```
+
+## `audio.pause()` / `audio.resume()`
+
+```javascript
+# Pause temporarily
 audio.pause()
+
+# Resume playback
 audio.resume()
-audio.volume = 0.7
-audio.sfxVolume = 0.8
-audio.bgmVolume = 0.9
-audio.muted = false
-audio.mutedSfx = true
-audio.mutedBgm = true
 ```
 
-## SFX (Sound Effects)
-Short sounds that can overlap. Play multiple SFX simultaneously.
+## Volume & Mute
 
-**Signature:**
-```typescript
-audio.play(path: string, type: 'sfx', loop?: boolean): void
-```
-
-**Parameters:**
-- `path` (string): Relative path to the audio file (e.g., `'sfx/jump.wav'`).
-- `type` (string): Must be `'sfx'`.
-- `loop` (boolean): Ignored for SFX. Default `false`.
-
-**Example:**
 ```javascript
-audio.play('sfx/jump.wav', 'sfx');
-audio.play('sfx/click.wav', 'sfx');
+# Set volume levels
+audio.volume = 0.8      # Master volume (0-1)
+audio.sfxVolume = 0.6   # SFX volume
+audio.bgmVolume = 0.7   # BGM volume
+
+# Mute
+audio.muted = true      # Mute everything
+audio.mutedSfx = true   # Mute SFX only
+audio.mutedBgm = true   # Mute BGM only
+
+# Check status
+if audio.muted:
+  print("Audio is muted")
 ```
-
-## BGM (Background Music)
-Longer music tracks. Only one BGM plays at a time. Starting a new BGM stops the previous one.
-
-**Signature:**
-```typescript
-audio.play(path: string, type: 'bgm', loop?: boolean): void
-```
-
-**Parameters:**
-- `path` (string): Relative path to the audio file (e.g., `'bgm/theme.mp3'`).
-- `type` (string): Must be `'bgm'`.
-- `loop` (boolean): Whether to loop. Default `true`.
-
-**Example:**
-```javascript
-audio.play('bgm/theme.mp3', 'bgm', true);
-```
-
-## Audio Control
-
-### `audio.stop(type?)`
-Stops audio playback.
-
-**Signature:**
-```typescript
-audio.stop(type?: 'sfx' | 'bgm'): void
-```
-
-**Parameters:**
-- `type` (string, optional): 
-  - `'sfx'` — Stops all SFX
-  - `'bgm'` — Stops BGM and resets position
-  - omitted — Stops both SFX and BGM
-
-### `audio.pause()`
-Pauses the current BGM playback. Preserves position.
-
-**Signature:**
-```typescript
-audio.pause(): void
-```
-
-### `audio.resume()`
-Resumes paused BGM playback.
-
-**Signature:**
-```typescript
-audio.resume(): void
-```
-
-## Volume Control
-
-### `audio.volume`
-Master volume for all audio.
-
-**Type:** `number` (0.0 to 1.0, default 1.0)
-
-### `audio.sfxVolume`
-Volume specifically for SFX playback.
-
-**Type:** `number` (0.0 to 1.0, default 1.0)
-
-### `audio.bgmVolume`
-Volume specifically for BGM playback.
-
-**Type:** `number` (0.0 to 1.0, default 1.0)
-
-## Mute Control
-
-### `audio.muted`
-Mutes all audio.
-
-**Type:** `boolean`
-
-### `audio.mutedSfx`
-Mutes only SFX playback.
-
-**Type:** `boolean`
-
-### `audio.mutedBgm`
-Mutes only BGM playback.
-
-**Type:** `boolean`
-
