@@ -362,7 +362,7 @@ audio.mutedBgm = true</div>
               <h2>Game Loop</h2>
               <p>กำหนดฟังก์ชันหลักของเกม 2 ฟังก์ชัน</p>
 
-              <h3>setGame({ update, draw })</h3>
+              <h3>setGame({ update: update, draw: draw })</h3>
               <div class="code-block">function update(dt):
   player.x += player.vx * dt
   if player.x > 800:
@@ -372,7 +372,7 @@ function draw():
   rect(0, 0, 800, 600, "#87CEEB")
   rect(player.x, player.y, 50, 50, "#FF5733")
 
-setGame({ update, draw })</div>
+setGame({ update: update, draw: draw })</div>
 
               <h3>fps(value)</h3>
               <div class="code-block">fps(60)
@@ -382,7 +382,7 @@ fps(30)</div>
               <h2>Game Loop</h2>
               <p>Define the two main game functions.</p>
 
-              <h3>setGame({ update, draw })</h3>
+              <h3>setGame({ update: update, draw: draw })</h3>
               <div class="code-block">function update(dt):
   player.x += player.vx * dt
   if player.x > 800:
@@ -392,7 +392,7 @@ function draw():
   rect(0, 0, 800, 600, "#87CEEB")
   rect(player.x, player.y, 50, 50, "#FF5733")
 
-setGame({ update, draw })</div>
+setGame({ update: update, draw: draw })</div>
 
               <h3>fps(value)</h3>
               <div class="code-block">fps(60)

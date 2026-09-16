@@ -1,6 +1,6 @@
 # Game Setup
 
-## `setGame({ update, draw })`
+## `setGame({ update: update, draw: draw })`
 
 Register the game object with update() and draw() functions.
 
@@ -18,7 +18,7 @@ function draw():
   rect(0, 0, 800, 600, "#87CEEB")
   rect(player.x, player.y, 50, 50, "#FF5733")
 
-setGame({ update, draw })
+setGame({ update: update, draw: draw })
 ```
 
 ## `fps(value)`
