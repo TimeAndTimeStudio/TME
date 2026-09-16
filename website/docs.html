@@ -471,15 +471,31 @@ setGame({update: update, draw: draw})</div>
               <h3>getCanvasSize()</h3>
               <p>ดึงขนาด canvas</p>
               <div class="code-block">const size = getCanvasSize()
-print(f"Canvas: {size.width} x {size.height}")</div>
+print(f"Canvas: {size.width} x {size.height}")
+
+# ใช้คำนวณตำแหน่งกลางจอ
+const cx = size.width / 2
+const cy = size.height / 2
+rect(cx, cy, 100, 100, "red")</div>
 
               <h3>requestFullscreen()</h3>
               <p>เข้าสู่โหมดเต็มหน้าจอ</p>
-              <div class="code-block">requestFullscreen()</div>
+              <div class="code-block"># กด F11 เพื่อเข้า fullscreen
+if input.keyboard.is_down("f11"):
+  requestFullscreen()
+
+# หรือกดปุ่มบนจอ
+if mouse.click(0):
+  if mouse.x > 100 and mouse.x < 200:
+    if mouse.y > 100 and mouse.y < 150:
+      requestFullscreen()</div>
 
               <h3>exitFullscreen()</h3>
               <p>ออกจากโหมดเต็มหน้าจอ</p>
-              <div class="code-block">exitFullscreen()</div>
+              <div class="code-block"># กด ESC ออกจาก fullscreen (browser ทำให้อัตโนมัติ)
+# หรือกดปุ่มบนจอ
+if input.keyboard.is_down("escape"):
+  exitFullscreen()</div>
             </div>
             <div class="lang-en">
               <h2>Game Loop</h2>
@@ -510,15 +526,31 @@ setGame({update: update, draw: draw})</div>
               <h3>getCanvasSize()</h3>
               <p>Get canvas size.</p>
               <div class="code-block">const size = getCanvasSize()
-print(f"Canvas: {size.width} x {size.height}")</div>
+print(f"Canvas: {size.width} x {size.height}")
+
+# Center on screen
+const cx = size.width / 2
+const cy = size.height / 2
+rect(cx, cy, 100, 100, "red")</div>
 
               <h3>requestFullscreen()</h3>
               <p>Enter fullscreen mode.</p>
-              <div class="code-block">requestFullscreen()</div>
+              <div class="code-block"># Press F11 for fullscreen
+if input.keyboard.is_down("f11"):
+  requestFullscreen()
+
+# Or button on screen
+if mouse.click(0):
+  if mouse.x > 100 and mouse.x < 200:
+    if mouse.y > 100 and mouse.y < 150:
+      requestFullscreen()</div>
 
               <h3>exitFullscreen()</h3>
               <p>Exit fullscreen mode.</p>
-              <div class="code-block">exitFullscreen()</div>
+              <div class="code-block"># ESC exits fullscreen (browser handles automatically)
+# Or button on screen
+if input.keyboard.is_down("escape"):
+  exitFullscreen()</div>
             </div>
           </section>
 
