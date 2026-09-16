@@ -123,7 +123,7 @@ function packageRuntime(projectDir) {
   const runtimeFiles = [
     { src: path.join(tmeSrcDir, 'temf', 'runtime.js'), dest: 'temf.js' },
     { src: path.join(tmeSrcDir, 'temf', 'runtime-webgpu.js'), dest: 'temf-webgpu.js' },
-    { src: path.join(tmeSrcDir, 'temf', 'runtime_webgl.js'), dest: 'temf-webgl.js' }
+    { src: path.join(tmeSrcDir, 'temf', 'runtime-webgl.js'), dest: 'temf-webgl.js' }
   ];
 
   for (const { src, dest } of runtimeFiles) {
