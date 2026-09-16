@@ -273,17 +273,8 @@ function _resize() {
   if (!TEMF._canvas || !TEMF._context) return;
 
   const dpr = window.devicePixelRatio || 1;
-  let width = TEMF._canvas.clientWidth * dpr;
-  let height = TEMF._canvas.clientHeight * dpr;
-
-  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  if (isFullscreen || (isMobile && height > width)) {
-    if (height > width) {
-      [width, height] = [height, width];
-    }
-  }
+  const width = TEMF._canvas.clientWidth * dpr;
+  const height = TEMF._canvas.clientHeight * dpr;
 
   if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
     TEMF._canvas.width = width;
@@ -1500,11 +1491,6 @@ function _bootstrap(button) {
     initWebGPU().then(() => {
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
-      window.addEventListener('orientationchange', () => {
-        setTimeout(() => {
-          resizeCanvas();
-        }, 100);
-      });
       _initKeyboard();
       _initMouse();
       _initTouch();
