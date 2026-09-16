@@ -1068,7 +1068,11 @@ const input = {
   touch: {
     get x() { return TEMF._touchX; },
     get y() { return TEMF._touchY; },
-    get tapped() { return TEMF._touchState.tapped; }
+    get tapped() {
+      const tapped = TEMF._touchState.tapped;
+      TEMF._touchState.tapped = false;
+      return tapped;
+    }
   }
 };
 
