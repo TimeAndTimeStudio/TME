@@ -1570,19 +1570,12 @@ function exitFullscreen() {
   }
 }
 
-function isFullscreen() {
-  return !!(document.fullscreenElement || 
-            document.webkitFullscreenElement || 
-            document.msFullscreenElement ||
-            document.fullscreen);
-}
-
 function setFullscreenCallback(callback) {
   TEMF._fullscreenCallback = callback;
 }
 
 function _handleFullscreenChange() {
-  if (!isFullscreen() && TEMF._fullscreenCallback) {
+  if (TEMF._fullscreenCallback) {
     TEMF._fullscreenCallback();
   }
 }
@@ -1599,7 +1592,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, isFullscreen, setFullscreenCallback, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, setFullscreenCallback, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -1608,7 +1601,6 @@ if (typeof window !== 'undefined') {
   window.getCanvasSize = getCanvasSize;
   window.requestFullscreen = requestFullscreen;
   window.exitFullscreen = exitFullscreen;
-  window.isFullscreen = isFullscreen;
   window.setFullscreenCallback = setFullscreenCallback;
   window.TEMF = TEMF;
   window.rect = _rect;

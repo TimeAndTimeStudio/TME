@@ -4,6 +4,12 @@ player = { x: 100, y: 400, vy: 0 }
 JUMP_FORCE = 300
 GRAVITY = 800
 GROUND = 400
+W = 1920
+
+function handleFullscreenExit():
+  print("Exited fullscreen!")
+
+setFullscreenCallback(handleFullscreenExit)
 
 function update(dt):
   if input.keyboard.is_down("space") or touch.tap():

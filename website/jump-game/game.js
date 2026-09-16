@@ -2,6 +2,11 @@ let player = { x: 100, y: 400, vy: 0 };
 let JUMP_FORCE = 300;
 let GRAVITY = 800;
 let GROUND = 400;
+let W = 1920;
+function handleFullscreenExit() {
+  print("Exited fullscreen!");
+}
+setFullscreenCallback(handleFullscreenExit);
 function update(dt) {
   if ((input.keyboard.is_down("space") || touch.tap())) {
     player.vy = (0 - JUMP_FORCE);
@@ -15,7 +20,7 @@ function update(dt) {
 }
 function draw() {
   let canvasSize = getCanvasSize();
-  let W = canvasSize.width;
+  W = canvasSize.width;
   rect(0, GROUND, W, 50, "brown");
   rect(player.x, player.y, 50, 50, "blue");
 }
