@@ -1493,6 +1493,9 @@ function _bootstrap(button) {
     initWebGPU().then(() => {
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(checkOrientation, 100);
+      });
       _initKeyboard();
       _initMouse();
       _initTouch();
@@ -1501,6 +1504,25 @@ function _bootstrap(button) {
     }).catch(err => {
       console.error('TEMF initialization failed:', err);
     });
+  }
+
+  function checkOrientation() {
+    if (!TEMF._requireOrientation || !TEMF._started) return;
+    
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isCorrectOrientation = (TEMF._requireOrientation === 'landscape' && isLandscape) ||
+                                 (TEMF._requireOrientation === 'portrait' && isPortrait);
+    
+    if (!isCorrectOrientation) {
+      TEMF._started = false;
+      const overlay = document.getElementById('temf-fullscreen-overlay');
+      if (overlay) overlay.remove();
+      _showOrientationOverlay(() => {
+        TEMF._started = false;
+        _bootstrap();
+      });
+    }
   }
 
   if (button) {
