@@ -6,7 +6,7 @@ Enter fullscreen mode.
 
 ```javascript
 # Press F11
-if input.keyboard.is_down("f11"):
+if key("f11"):
   requestFullscreen()
 ```
 
@@ -17,7 +17,7 @@ Exit fullscreen mode.
 ```javascript
 # Press ESC (browser does automatically)
 # Or press button on screen
-if input.keyboard.is_down("escape"):
+if key("escape"):
   exitFullscreen()
 ```
 
@@ -48,8 +48,8 @@ function draw():
     # Draw menu
     rect(0, 0, 800, 600, "rgba(0,0,0,0.8)")
     text("Press Enter to return to game", 100, 300)
-    
-    if input.keyboard.is_down("enter"):
+
+    if key("enter"):
       fullscreenMenu.visible = false
       requestFullscreen()
 ```

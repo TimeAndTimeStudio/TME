@@ -97,7 +97,7 @@
         <div class="code-block">
           <span class="comment"># ตัวอย่าง</span><br>
           <span class="keyword">function</span> update(dt):<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> input.keyboard.is_down("space") or input.touch.tapped:<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> key("space") or touch.down(0):<br>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;player.vy = -300<br>
           <br>
           <span class="keyword">function</span> draw():<br>
@@ -204,7 +204,7 @@
           </h3>
           <div class="code-block" style="font-size: 0.85rem;">
 <span class="keyword">function</span> update(dt):<br>
-&nbsp;&nbsp;<span class="keyword">if</span> input.keyboard.is_down("space") or input.touch.tapped:<br>
+&nbsp;&nbsp;<span class="keyword">if</span> key("space") or touch.down(0):<br>
 &nbsp;&nbsp;&nbsp;&nbsp;player.vy = -300<br>
 &nbsp;&nbsp;player.y = (player.y + (player.vy * dt))<br>
 &nbsp;&nbsp;<span class="keyword">if</span> (player.y > 400):<br>

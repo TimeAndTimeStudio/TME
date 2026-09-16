@@ -6,7 +6,7 @@
 
 ```javascript
 # กดปุ่ม F11
-if input.keyboard.is_down("f11"):
+if key("f11"):
   requestFullscreen()
 ```
 
@@ -17,7 +17,7 @@ if input.keyboard.is_down("f11"):
 ```javascript
 # กด ESC (browser ทำให้อัตโนมัติ)
 # หรือกดปุ่มบนจอ
-if input.keyboard.is_down("escape"):
+if key("escape"):
   exitFullscreen()
 ```
 
@@ -48,8 +48,8 @@ function draw():
     # วาดเมนู
     rect(0, 0, 800, 600, "rgba(0,0,0,0.8)")
     text("กด Enter เพื่อกลับเข้าเกม", 100, 300)
-    
-    if input.keyboard.is_down("enter"):
+
+    if key("enter"):
       fullscreenMenu.visible = false
       requestFullscreen()
 ```

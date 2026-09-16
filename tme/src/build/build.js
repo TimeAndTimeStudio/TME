@@ -121,7 +121,9 @@ function packageRuntime(projectDir) {
   const tmeSrcDir = path.join(TME_ROOT, 'tme', 'src');
 
   const runtimeFiles = [
-    { src: path.join(tmeSrcDir, 'temf', 'runtime.js'), dest: 'engine.js' }
+    { src: path.join(tmeSrcDir, 'temf', 'runtime.js'), dest: 'temf.js' },
+    { src: path.join(tmeSrcDir, 'temf', 'runtime-webgpu.js'), dest: 'temf-webgpu.js' },
+    { src: path.join(tmeSrcDir, 'temf', 'runtime_webgl.js'), dest: 'temf-webgl.js' }
   ];
 
   for (const { src, dest } of runtimeFiles) {
@@ -135,7 +137,7 @@ function packageRuntime(projectDir) {
 function verifyBuildOutput(projectDir) {
   const distDir = path.join(projectDir, 'dist');
 
-  const required = [...REQUIRED_DIST_FILES, 'index.html', 'style.css'];
+  const required = ['game.js', 'temf.js', 'index.html', 'style.css'];
   const missing = [];
 
   for (const filename of required) {

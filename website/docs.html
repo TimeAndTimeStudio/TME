@@ -243,12 +243,13 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
               <p>รองรับ keyboard, mouse และ touch</p>
 
               <h3>Keyboard</h3>
+              <p>ใช้ฟังก์ชัน <code>key(key)</code> ตรวจสอบว่ากดปุ่มอยู่หรือไม่</p>
               <div class="code-block">function update(dt):
-  if input.keyboard.is_down("ArrowLeft"):
+  if key("ArrowLeft"):
     player.x -= 200 * dt
-  if input.keyboard.is_down("ArrowRight"):
+  if key("ArrowRight"):
     player.x += 200 * dt
-  if input.keyboard.is_down(" "):
+  if key(" "):
     player.jumping = true</div>
 
               <h3>Mouse</h3>
@@ -272,17 +273,17 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
               <h3>Touch</h3>
               <p>รองรับสูงสุด 4 นิ้ว พร้อมกัน (Multi-Touch)</p>
               <ul>
-                <li><code>touch.exists(0)</code> — นิ้วที่ 0 กดอยู่</li>
-                <li><code>touch.exists(1)</code> — นิ้วที่ 1 กดอยู่</li>
-                <li><code>touch.exists(2)</code> — นิ้วที่ 2 กดอยู่</li>
-                <li><code>touch.exists(3)</code> — นิ้วที่ 3 กดอยู่</li>
+                <li><code>touch.down(0)</code> — นิ้วที่ 0 กดอยู่</li>
+                <li><code>touch.down(1)</code> — นิ้วที่ 1 กดอยู่</li>
+                <li><code>touch.down(2)</code> — นิ้วที่ 2 กดอยู่</li>
+                <li><code>touch.down(3)</code> — นิ้วที่ 3 กดอยู่</li>
               </ul>
               <div class="code-block">function update(dt):
-  if touch.exists(0):  # นิ้วแรก
+  if touch.down(0):  # นิ้วแรก
     player.x = touch.x(0)
     player.y = touch.y(0)
   
-  if touch.exists(1):  # นิ้วสอง (Multi-Touch)
+  if touch.down(1):  # นิ้วสอง (Multi-Touch)
     fireBullet(touch.x(1), touch.y(1))</div>
             </div>
             <div class="lang-en">
@@ -290,12 +291,13 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
               <p>Supports keyboard, mouse, and touch input.</p>
 
               <h3>Keyboard</h3>
+              <p>Use the <code>key(key)</code> function to check if a key is pressed.</p>
               <div class="code-block">function update(dt):
-  if input.keyboard.is_down("ArrowLeft"):
+  if key("ArrowLeft"):
     player.x -= 200 * dt
-  if input.keyboard.is_down("ArrowRight"):
+  if key("ArrowRight"):
     player.x += 200 * dt
-  if input.keyboard.is_down(" "):
+  if key(" "):
     player.jumping = true</div>
 
               <h3>Mouse</h3>
@@ -319,17 +321,17 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
               <h3>Touch</h3>
               <p>รองรับสูงสุด 4 นิ้ว พร้อมกัน (Multi-Touch)</p>
               <ul>
-                <li><code>touch.exists(0)</code> — นิ้วที่ 0 กดอยู่</li>
-                <li><code>touch.exists(1)</code> — นิ้วที่ 1 กดอยู่</li>
-                <li><code>touch.exists(2)</code> — นิ้วที่ 2 กดอยู่</li>
-                <li><code>touch.exists(3)</code> — นิ้วที่ 3 กดอยู่</li>
+                <li><code>touch.down(0)</code> — นิ้วที่ 0 กดอยู่</li>
+                <li><code>touch.down(1)</code> — นิ้วที่ 1 กดอยู่</li>
+                <li><code>touch.down(2)</code> — นิ้วที่ 2 กดอยู่</li>
+                <li><code>touch.down(3)</code> — นิ้วที่ 3 กดอยู่</li>
               </ul>
               <div class="code-block">function update(dt):
-  if touch.exists(0):  # นิ้วแรก
+  if touch.down(0):  # นิ้วแรก
     player.x = touch.x(0)
     player.y = touch.y(0)
   
-  if touch.exists(1):  # นิ้วสอง (Multi-Touch)
+  if touch.down(1):  # นิ้วสอง (Multi-Touch)
     fireBullet(touch.x(1), touch.y(1))</div>
             </div>
           </section>
@@ -438,11 +440,11 @@ fps(30)</div>
               <p>ระบบจัดการโหมดเต็มหน้าจอและ callback เมื่อออกจาก fullscreen</p>
 
               <h3>requestFullscreen()</h3>
-              <div class="code-block">if input.keyboard.is_down("f11"):
+              <div class="code-block">if key("f11"):
   requestFullscreen()</div>
 
               <h3>exitFullscreen()</h3>
-              <div class="code-block">if input.keyboard.is_down("escape"):
+              <div class="code-block">if key("escape"):
   exitFullscreen()</div>
 
               <h3>setFullscreenCallback(callback)</h3>
@@ -456,11 +458,11 @@ setFullscreenCallback(onFullscreenExit)</div>
               <p>Fullscreen mode management and exit callback system.</p>
 
               <h3>requestFullscreen()</h3>
-              <div class="code-block">if input.keyboard.is_down("f11"):
+              <div class="code-block">if key("f11"):
   requestFullscreen()</div>
 
               <h3>exitFullscreen()</h3>
-              <div class="code-block">if input.keyboard.is_down("escape"):
+              <div class="code-block">if key("escape"):
   exitFullscreen()</div>
 
               <h3>setFullscreenCallback(callback)</h3>
@@ -481,12 +483,14 @@ setFullscreenCallback(onFullscreenExit)</div>
 node tme/bin/tme build</div>
 
               <h3>Output</h3>
-              <div class="code-block">dist/
+              <div class="code-block">my-game/
 ├── index.html
 ├── game.js
-├── engine.js
+├── temf.js
+├── temf-webgpu.js
+├── temf-webgl.js
 ├── style.css
-└── assets/</div>
+└── assets/ (หรือชื่ออื่น)</div>
 
               <h3>กฎสำคัญ</h3>
               <ul>
@@ -504,12 +508,14 @@ node tme/bin/tme build</div>
 node tme/bin/tme build</div>
 
               <h3>Output</h3>
-              <div class="code-block">dist/
+              <div class="code-block">my-game/
 ├── index.html
 ├── game.js
-├── engine.js
+├── temf.js
+├── temf-webgpu.js
+├── temf-webgl.js
 ├── style.css
-└── assets/</div>
+└── assets/ (or any name)</div>
 
               <h3>Important Rules</h3>
               <ul>

@@ -8,7 +8,7 @@ function handleFullscreenExit() {
 }
 setFullscreenCallback(handleFullscreenExit);
 function update(dt) {
-  if ((input.keyboard.is_down("space") || touch.tap())) {
+  if ((key("space") || touch.down(0))) {
     player.vy = (0 - JUMP_FORCE);
   }
   player.vy = (player.vy + (GRAVITY * dt));
