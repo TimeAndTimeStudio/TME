@@ -360,7 +360,7 @@ function _createRenderer() {
   TEMF._imageBuffer = gl.createBuffer();
 }
 
-function initWebGL() {
+async function initWebGL() {
   const canvas = document.getElementById('game');
   if (!canvas) {
     throw new Error('Canvas #game not found in DOM.');
