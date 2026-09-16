@@ -240,41 +240,55 @@ node tme/bin/tme build</div>
               <h2>Input</h2>
               <p>รองรับ keyboard, mouse, touch</p>
 
-              <h3>Keyboard</h3>
+              <h3>keyboard.is_down()</h3>
+              <p>ตรวจสอบว่ากดปุ่มอยู่หรือไม่</p>
               <div class="code-block">if input.keyboard.is_down("space"):
   print("Space pressed")</div>
 
-              <h3>Mouse</h3>
+              <h3>input.mouse.x, input.mouse.y</h3>
+              <p>ตำแหน่งเมาส์</p>
+              <div class="code-block">print(f"Mouse at {input.mouse.x}, {input.mouse.y}")</div>
+
+              <h3>input.mouse.is_down()</h3>
+              <p>ตรวจสอบว่ากดปุ่มเมาส์อยู่หรือไม่</p>
               <div class="code-block">if input.mouse.is_down(0):
-  print(f"Mouse at {input.mouse.x}, {input.mouse.y}")</div>
+  print("Left mouse button pressed")</div>
 
-              <h3>Touch</h3>
+              <h3>input.touch.x, input.touch.y</h3>
+              <p>ตำแหน่ง touch</p>
+              <div class="code-block">print(f"Touch at {input.touch.x}, {input.touch.y}")</div>
+
+              <h3>input.touch.tapped</h3>
+              <p>ตรวจสอบว่า touch แล้ว (auto-reset หลังอ่าน)</p>
               <div class="code-block">if input.touch.tapped:
-  print(f"Touch at {input.touch.x}, {input.touch.y}")</div>
-
-              <h3>Pointer</h3>
-              <div class="code-block">if input.pointer.is_touch:
-  print(f"Pointer at {input.pointer.x}, {input.pointer.y}")</div>
+  print("Touch tapped")</div>
             </div>
             <div class="lang-en">
               <h2>Input</h2>
               <p>Supports keyboard, mouse, touch.</p>
 
-              <h3>Keyboard</h3>
+              <h3>keyboard.is_down()</h3>
+              <p>Check if a key is pressed.</p>
               <div class="code-block">if input.keyboard.is_down("space"):
   print("Space pressed")</div>
 
-              <h3>Mouse</h3>
+              <h3>input.mouse.x, input.mouse.y</h3>
+              <p>Mouse position.</p>
+              <div class="code-block">print(f"Mouse at {input.mouse.x}, {input.mouse.y}")</div>
+
+              <h3>input.mouse.is_down()</h3>
+              <p>Check if a mouse button is pressed.</p>
               <div class="code-block">if input.mouse.is_down(0):
-  print(f"Mouse at {input.mouse.x}, {input.mouse.y}")</div>
+  print("Left mouse button pressed")</div>
 
-              <h3>Touch</h3>
+              <h3>input.touch.x, input.touch.y</h3>
+              <p>Touch position.</p>
+              <div class="code-block">print(f"Touch at {input.touch.x}, {input.touch.y}")</div>
+
+              <h3>input.touch.tapped</h3>
+              <p>Check if touch happened (auto-reset after read).</p>
               <div class="code-block">if input.touch.tapped:
-  print(f"Touch at {input.touch.x}, {input.touch.y}")</div>
-
-              <h3>Pointer</h3>
-              <div class="code-block">if input.pointer.is_touch:
-  print(f"Pointer at {input.pointer.x}, {input.pointer.y}")</div>
+  print("Touch tapped")</div>
             </div>
           </section>
 
@@ -283,29 +297,57 @@ node tme/bin/tme build</div>
               <h2>Mouse API</h2>
               <p>Mouse API แบบเต็มรูปแบบ</p>
 
-              <h3>properties</h3>
-              <div class="code-block">mouse.x  # ตำแหน่ง X
-mouse.y  # ตำแหน่ง Y</div>
+              <h3>mouse.x, mouse.y</h3>
+              <p>ตำแหน่งเมาส์</p>
+              <div class="code-block">print(f"Mouse at {mouse.x}, {mouse.y}")</div>
 
-              <h3>methods</h3>
-              <div class="code-block">mouse.click(0)  # ตรวจสอบ click
-mouse.down(0)   # ตรวจสอบ down
-mouse.drag(0)   # ตรวจสอบ drag
-mouse.up(0)     # ตรวจสอบ up</div>
+              <h3>mouse.click(btn)</h3>
+              <p>ตรวจสอบ click (btn = 0 สำหรับ left, 1 สำหรับ right)</p>
+              <div class="code-block">if mouse.click(0):
+  print("Left mouse clicked")</div>
+
+              <h3>mouse.down(btn)</h3>
+              <p>ตรวจสอบว่ากดปุ่มเมาส์อยู่หรือไม่</p>
+              <div class="code-block">if mouse.down(0):
+  print("Left mouse button down")</div>
+
+              <h3>mouse.drag(btn)</h3>
+              <p>ตรวจสอบ drag (auto-reset หลังอ่าน)</p>
+              <div class="code-block">if mouse.drag(0):
+  print("Mouse dragging")</div>
+
+              <h3>mouse.up(btn)</h3>
+              <p>ตรวจสอบปล่อยปุ่มเมาส์</p>
+              <div class="code-block">if mouse.up(0):
+  print("Left mouse button up")</div>
             </div>
             <div class="lang-en">
               <h2>Mouse API</h2>
               <p>Full-featured mouse API</p>
 
-              <h3>properties</h3>
-              <div class="code-block">mouse.x  # X position
-mouse.y  # Y position</div>
+              <h3>mouse.x, mouse.y</h3>
+              <p>Mouse position.</p>
+              <div class="code-block">print(f"Mouse at {mouse.x}, {mouse.y}")</div>
 
-              <h3>methods</h3>
-              <div class="code-block">mouse.click(0)  # Check click
-mouse.down(0)   # Check down
-mouse.drag(0)   # Check drag
-mouse.up(0)     # Check up</div>
+              <h3>mouse.click(btn)</h3>
+              <p>Check click (btn = 0 for left, 1 for right).</p>
+              <div class="code-block">if mouse.click(0):
+  print("Left mouse clicked")</div>
+
+              <h3>mouse.down(btn)</h3>
+              <p>Check if mouse button is pressed.</p>
+              <div class="code-block">if mouse.down(0):
+  print("Left mouse button down")</div>
+
+              <h3>mouse.drag(btn)</h3>
+              <p>Check drag (auto-reset after read).</p>
+              <div class="code-block">if mouse.drag(0):
+  print("Mouse dragging")</div>
+
+              <h3>mouse.up(btn)</h3>
+              <p>Check mouse button release.</p>
+              <div class="code-block">if mouse.up(0):
+  print("Left mouse button up")</div>
             </div>
           </section>
 
@@ -314,29 +356,57 @@ mouse.up(0)     # Check up</div>
               <h2>Touch API</h2>
               <p>Touch API แบบเต็มรูปแบบ</p>
 
-              <h3>properties</h3>
-              <div class="code-block">touch.x  # ตำแหน่ง X
-touch.y  # ตำแหน่ง Y</div>
+              <h3>touch.x, touch.y</h3>
+              <p>ตำแหน่ง touch</p>
+              <div class="code-block">print(f"Touch at {touch.x}, {touch.y}")</div>
 
-              <h3>methods</h3>
-              <div class="code-block">touch.tap()   # ตรวจสอบ tap
-touch.down()  # ตรวจสอบ down
-touch.drag()  # ตรวจสอบ drag
-touch.up()    # ตรวจสอบ up</div>
+              <h3>touch.tap()</h3>
+              <p>ตรวจสอบ tap (auto-reset หลังอ่าน)</p>
+              <div class="code-block">if touch.tap():
+  print("Touch tapped")</div>
+
+              <h3>touch.down()</h3>
+              <p>ตรวจสอบว่า touch อยู่หรือไม่</p>
+              <div class="code-block">if touch.down():
+  print("Touching screen")</div>
+
+              <h3>touch.drag()</h3>
+              <p>ตรวจสอบ drag (auto-reset หลังอ่าน)</p>
+              <div class="code-block">if touch.drag():
+  print("Touch dragging")</div>
+
+              <h3>touch.up()</h3>
+              <p>ตรวจสอบปล่อย touch</p>
+              <div class="code-block">if touch.up():
+  print("Touch released")</div>
             </div>
             <div class="lang-en">
               <h2>Touch API</h2>
               <p>Full-featured touch API</p>
 
-              <h3>properties</h3>
-              <div class="code-block">touch.x  # X position
-touch.y  # Y position</div>
+              <h3>touch.x, touch.y</h3>
+              <p>Touch position.</p>
+              <div class="code-block">print(f"Touch at {touch.x}, {touch.y}")</div>
 
-              <h3>methods</h3>
-              <div class="code-block">touch.tap()   # Check tap
-touch.down()  # Check down
-touch.drag()  # Check drag
-touch.up()    # Check up</div>
+              <h3>touch.tap()</h3>
+              <p>Check tap (auto-reset after read).</p>
+              <div class="code-block">if touch.tap():
+  print("Touch tapped")</div>
+
+              <h3>touch.down()</h3>
+              <p>Check if touching screen.</p>
+              <div class="code-block">if touch.down():
+  print("Touching screen")</div>
+
+              <h3>touch.drag()</h3>
+              <p>Check drag (auto-reset after read).</p>
+              <div class="code-block">if touch.drag():
+  print("Touch dragging")</div>
+
+              <h3>touch.up()</h3>
+              <p>Check touch release.</p>
+              <div class="code-block">if touch.up():
+  print("Touch released")</div>
             </div>
           </section>
 
@@ -345,31 +415,65 @@ touch.up()    # Check up</div>
               <h2>Audio</h2>
               <p>ใช้ audio object เดียวสำหรับ SFX และ BGM</p>
 
-              <h3>Sound Effects</h3>
-              <div class="code-block">audio.play("sfx_jump")</div>
+              <h3>audio.play()</h3>
+              <p>เล่นเสียง SFX หรือ BGM</p>
+              <div class="code-block">audio.play("sfx_jump", "sfx")
+audio.play("bgm_main", "bgm", true)</div>
 
-              <h3>Background Music</h3>
-              <div class="code-block">audio.play("bgm_main", true)  # loop</div>
+              <h3>audio.stop()</h3>
+              <p>หยุดเสียง SFX, BGM, หรือทั้งหมด</p>
+              <div class="code-block">audio.stop("sfx")  # หยุด SFX ทั้งหมด
+audio.stop("bgm")  # หยุด BGM
+audio.stop()  # หยุดทั้งหมด</div>
 
-              <h3>Control</h3>
-              <div class="code-block">audio.volume = 0.5
-audio.pause()
+              <h3>audio.pause(), audio.resume()</h3>
+              <p>หยุดชั่วคราว และ เล่นต่อ</p>
+              <div class="code-block">audio.pause()
 audio.resume()</div>
+
+              <h3>audio.volume, audio.sfxVolume, audio.bgmVolume</h3>
+              <p>ปรับระดับเสียง (0.0 - 1.0)</p>
+              <div class="code-block">audio.volume = 0.5
+audio.sfxVolume = 0.8
+audio.bgmVolume = 0.6</div>
+
+              <h3>audio.muted, audio.mutedSfx, audio.mutedBgm</h3>
+              <p>ปิดเสียง</p>
+              <div class="code-block">audio.muted = true
+audio.mutedSfx = true
+audio.mutedBgm = true</div>
             </div>
             <div class="lang-en">
               <h2>Audio</h2>
               <p>Uses one unified audio object for SFX and BGM.</p>
 
-              <h3>Sound Effects</h3>
-              <div class="code-block">audio.play("sfx_jump")</div>
+              <h3>audio.play()</h3>
+              <p>Play SFX or BGM.</p>
+              <div class="code-block">audio.play("sfx_jump", "sfx")
+audio.play("bgm_main", "bgm", true)</div>
 
-              <h3>Background Music</h3>
-              <div class="code-block">audio.play("bgm_main", true)  # loop</div>
+              <h3>audio.stop()</h3>
+              <p>Stop SFX, BGM, or all.</p>
+              <div class="code-block">audio.stop("sfx")  # Stop all SFX
+audio.stop("bgm")  # Stop BGM
+audio.stop()  # Stop all</div>
 
-              <h3>Control</h3>
-              <div class="code-block">audio.volume = 0.5
-audio.pause()
+              <h3>audio.pause(), audio.resume()</h3>
+              <p>Pause and resume BGM.</p>
+              <div class="code-block">audio.pause()
 audio.resume()</div>
+
+              <h3>audio.volume, audio.sfxVolume, audio.bgmVolume</h3>
+              <p>Adjust volume (0.0 - 1.0).</p>
+              <div class="code-block">audio.volume = 0.5
+audio.sfxVolume = 0.8
+audio.bgmVolume = 0.6</div>
+
+              <h3>audio.muted, audio.mutedSfx, audio.mutedBgm</h3>
+              <p>Mute audio.</p>
+              <div class="code-block">audio.muted = true
+audio.mutedSfx = true
+audio.mutedBgm = true</div>
             </div>
           </section>
 
@@ -378,45 +482,53 @@ audio.resume()</div>
               <h2>Game Loop</h2>
               <p>TME runtime จัดการ game loop — คุณแค่เขียน update และ draw</p>
 
-              <h3>โครงสร้าง</h3>
+              <h3>start()</h3>
+              <p>เริ่ม game loop (auto-start แล้ว)</p>
+              <div class="code-block">start()</div>
+
+              <h3>setGame()</h3>
+              <p>กำหนด update และ draw functions</p>
               <div class="code-block">function update(dt):
-  # Game logic — เรียกทุก frame
+  # Game logic
 
 function draw():
-  # Render — เรียกหลัง update
+  # Render
 
-fps(60)
 setGame({update: update, draw: draw})</div>
 
-              <h3>Fixed Timestep</h3>
-              <p>update(dt) ใช้ fixed timestep — dt มีค่าคงที่ทุก frame</p>
+              <h3>fps()</h3>
+              <p>ปรับ framerate (default = 60)</p>
+              <div class="code-block">fps(60)</div>
 
-              <h3>ปรับ FPS</h3>
-              <p>ใช้ fps() เพื่อปรับ framerate</p>
-              <div class="code-block">fps(30)  # 30 FPS
-fps(60)  # 60 FPS (default)</div>
+              <h3>TEMF</h3>
+              <p>Internal object สำหรับ advanced users</p>
+              <div class="code-block">print(TEMF._fps)</div>
             </div>
             <div class="lang-en">
               <h2>Game Loop</h2>
               <p>TME runtime manages the game loop — you just write update and draw.</p>
 
-              <h3>Structure</h3>
+              <h3>start()</h3>
+              <p>Start game loop (auto-start already).</p>
+              <div class="code-block">start()</div>
+
+              <h3>setGame()</h3>
+              <p>Define update and draw functions.</p>
               <div class="code-block">function update(dt):
-  # Game logic — called every frame
+  # Game logic
 
 function draw():
-  # Render — called after update
+  # Render
 
-fps(60)
 setGame({update: update, draw: draw})</div>
 
-              <h3>Fixed Timestep</h3>
-              <p>update(dt) uses fixed timestep — dt is constant every frame.</p>
+              <h3>fps()</h3>
+              <p>Adjust framerate (default = 60).</p>
+              <div class="code-block">fps(60)</div>
 
-              <h3>Set FPS</h3>
-              <p>Use fps() to adjust framerate</p>
-              <div class="code-block">fps(30)  # 30 FPS
-fps(60)  # 60 FPS (default)</div>
+              <h3>TEMF</h3>
+              <p>Internal object for advanced users.</p>
+              <div class="code-block">print(TEMF._fps)</div>
             </div>
           </section>
 
