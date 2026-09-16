@@ -634,65 +634,46 @@ function _draw() {
 
   let batchType = null;
   let batchTexture = null;
-  let batchStart = 0;
+  let batch = [];
 
   const flushBatch = () => {
-    if (batchStart >= TEMF._drawList.length) return;
-    let end = batchStart;
-    while (end < TEMF._drawList.length) {
-      const item = TEMF._drawList[end];
-      if (item.type === 'rect') {
-        if (batchType !== 'rect') break;
-        end++;
-      } else if (item.type === 'image') {
-        const texEntry = _getOrCreateTexture(item.path);
-        if (!texEntry || texEntry.status !== 'loaded') {
-          if (texEntry && texEntry.status === 'pending') {
-            TEMF._pendingImageDraws.push(item);
-          }
-          break;
-        }
-        if (batchType !== 'image' || batchTexture !== texEntry.texture) break;
-        end++;
-      }
+    if (batch.length === 0) return;
+    if (batchType === 'rect') {
+      _drawRects(batch, TEMF._rectLocs);
+    } else if (batchType === 'image') {
+      _drawImageBatch(batchTexture, batch, TEMF._imageLocs);
     }
-
-    const count = end - batchStart;
-    if (count > 0) {
-      if (batchType === 'rect') {
-        _drawRects(TEMF._drawList.slice(batchStart, end), TEMF._rectLocs);
-      } else if (batchType === 'image') {
-        _drawImageBatch(batchTexture, TEMF._drawList.slice(batchStart, end), TEMF._imageLocs);
-      }
-    }
-    batchStart = end;
+    batch = [];
   };
 
-  let i = 0;
-  while (i < TEMF._drawList.length) {
+  for (let i = 0; i < TEMF._drawList.length; i++) {
     const item = TEMF._drawList[i];
-    batchStart = i;
 
     if (item.type === 'rect') {
-      batchType = 'rect';
-      batchTexture = null;
-      flushBatch();
+      if (batchType !== 'rect') {
+        flushBatch();
+        batchType = 'rect';
+        batchTexture = null;
+      }
+      batch.push(item);
     } else if (item.type === 'image') {
       const texEntry = _getOrCreateTexture(item.path);
       if (!texEntry || texEntry.status !== 'loaded') {
         if (texEntry && texEntry.status === 'pending') {
           TEMF._pendingImageDraws.push(item);
         }
-        i++;
         continue;
       }
-      batchType = 'image';
-      batchTexture = texEntry.texture;
-      flushBatch();
+      if (batchType !== 'image' || batchTexture !== texEntry.texture) {
+        flushBatch();
+        batchType = 'image';
+        batchTexture = texEntry.texture;
+      }
+      batch.push(item);
     }
-    i = batchStart;
   }
 
+  flushBatch();
   TEMF._drawList.length = 0;
 }
 
