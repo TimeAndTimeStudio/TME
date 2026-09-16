@@ -1,8 +1,11 @@
+let;
 let player = { x: 100, y: 400, vy: 0 };
+let;
 let JUMP_FORCE = 300;
+let;
 let GRAVITY = 800;
+let;
 let GROUND = 400;
-
 function update(dt) {
   if (input.keyboard.is_down("space")) {
     player.vy = (0 - JUMP_FORCE);
@@ -14,10 +17,10 @@ function update(dt) {
     player.vy = 0;
   }
 }
-
 function draw() {
   rect(0, GROUND, 800, 50, "brown");
   rect(player.x, player.y, 50, 50, "blue");
 }
-
 fps(60);
+setGame({ update: update, draw: draw });
+start("startBtn");
