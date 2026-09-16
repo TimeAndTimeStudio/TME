@@ -1503,20 +1503,25 @@ function _bootstrap(button) {
     });
   }
 
-  if (TEMF._requireOrientation) {
-    _showOrientationOverlay(initAndStart);
-    return;
-  }
-
   if (button) {
     const btn = typeof button === 'string' ? document.getElementById(button) : button;
     if (btn) {
-      btn.addEventListener('click', () => initAndStart());
+      btn.addEventListener('click', () => {
+        if (TEMF._requireOrientation) {
+          _showOrientationOverlay(initAndStart);
+        } else {
+          initAndStart();
+        }
+      });
       return;
     }
   }
 
-  initAndStart();
+  if (TEMF._requireOrientation) {
+    _showOrientationOverlay(initAndStart);
+  } else {
+    initAndStart();
+  }
 }
 
 function _showOrientationOverlay(callback) {
@@ -1661,4 +1666,8 @@ if (typeof window !== 'undefined') {
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;
+
+  // Auto-start: no need for game code to call start() manually.
+  // (window.start is still exposed above in case manual control is ever needed.)
+  start();
 }
