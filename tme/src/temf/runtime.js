@@ -21,6 +21,7 @@ const TEMF = {
   _lastTime: 0,
   _step: 0,
   _game: null,
+  _fullscreenCallback: null,
   _rectPipeline: null,
   _rectBindGroupLayout: null,
   _rectUniformBuffer: null,
@@ -1576,6 +1577,20 @@ function isFullscreen() {
             document.fullscreen);
 }
 
+function setFullscreenCallback(callback) {
+  TEMF._fullscreenCallback = callback;
+}
+
+function _handleFullscreenChange() {
+  if (!isFullscreen() && TEMF._fullscreenCallback) {
+    TEMF._fullscreenCallback();
+  }
+}
+
+document.addEventListener('fullscreenchange', _handleFullscreenChange);
+document.addEventListener('webkitfullscreenchange', _handleFullscreenChange);
+document.addEventListener('msfullscreenchange', _handleFullscreenChange);
+
 // ============================================================
 // Public API / global exports
 // ============================================================
@@ -1584,7 +1599,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, isFullscreen, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, isFullscreen, setFullscreenCallback, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -1594,6 +1609,7 @@ if (typeof window !== 'undefined') {
   window.requestFullscreen = requestFullscreen;
   window.exitFullscreen = exitFullscreen;
   window.isFullscreen = isFullscreen;
+  window.setFullscreenCallback = setFullscreenCallback;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
