@@ -38,7 +38,6 @@ async function initProject(projectDir) {
 </head>
 <body>
     <canvas id="game"></canvas>
-    <button id="startBtn">Start Game</button>
 
     <script type="module" src="./engine.js"></script>
     <script type="module" src="./game.js"></script>
@@ -53,31 +52,13 @@ async function initProject(projectDir) {
 
 body {
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    background: #87CEEB;
 }
 
 #game {
     display: block;
-    width: 800px;
-    height: 600px;
-}
-
-#startBtn {
-    margin-top: 20px;
-    padding: 12px 24px;
-    font-size: 18px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-#startBtn:hover {
-    background: #45a049;
+    width: 100vw;
+    height: 100vh;
 }
 `
   };
