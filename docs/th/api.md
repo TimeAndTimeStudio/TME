@@ -1,6 +1,6 @@
 # การตั้งค่าเกม
 
-## `setGame({ update, draw })`
+## `setGame({ update: update, draw: draw })`
 
 ลงทะเบียน game object พร้อม update() และ draw()
 
@@ -18,7 +18,7 @@ function draw():
   rect(0, 0, 800, 600, "#87CEEB")
   rect(player.x, player.y, 50, 50, "#FF5733")
 
-setGame({ update, draw })
+setGame({ update: update, draw: draw })
 ```
 
 ## `fps(value)`

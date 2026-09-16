@@ -16,6 +16,57 @@ function update(dt):
     player.jumping = true
 ```
 
+### List of Keys
+
+| Key Name | Description |
+|----------|-------------|
+| `A-Z` | ตัวอักษร A ถึง Z |
+| `0-9` | ตัวเลข 0 ถึง 9 |
+| `Space` | Spacebar |
+| `Enter` | Enter |
+| `Escape` | Esc |
+| `Backspace` | Backspace |
+| `Tab` | Tab |
+| `ArrowUp` | ลูกศรขึ้น |
+| `ArrowDown` | ลูกศรลง |
+| `ArrowLeft` | ลูกศรซ้าย |
+| `ArrowRight` | ลูกศรขวา |
+| `Home` | Home |
+| `End` | End |
+| `PageUp` | Page Up |
+| `PageDown` | Page Down |
+| `Insert` | Insert |
+| `Delete` | Delete |
+| `CapsLock` | Caps Lock |
+| `NumLock` | Num Lock |
+| `ScrollLock` | Scroll Lock |
+| `Pause` | Pause |
+| `PrintScreen` | Print Screen |
+| `Control` or `Ctrl` | Ctrl |
+| `Shift` | Shift |
+| `Alt` | Alt |
+| `Meta` | Meta (Win/Cmd) |
+| `Fn` | Fn |
+| `Numpad0`-`Numpad9` | ปุ่มตัวเลขบน Keypad |
+| `NumpadAdd` | + บน Keypad |
+| `NumpadSubtract` | - บน Keypad |
+| `NumpadMultiply` | * บน Keypad |
+| `NumpadDivide` | / บน Keypad |
+| `NumpadDecimal` | . บน Keypad |
+| `NumpadEnter` | Enter บน Keypad |
+
+```javascript
+function update(dt):
+  # ตรวจสอบว่ากดปุ่มหรือไม่
+  if key("ArrowLeft"):
+    player.x -= 200 * dt
+  if key("ArrowRight"):
+    player.x += 200 * dt
+  if key(" "):
+    # กด spacebar
+    player.jumping = true
+```
+
 ### ตัวอย่าง: ย้ายตัวละครด้วย keyboard
 
 ```javascript
