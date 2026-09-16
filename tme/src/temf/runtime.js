@@ -1548,6 +1548,10 @@ function getCanvasSize() {
 function requestFullscreen() {
   const canvas = TEMF._canvas || document.getElementById('game');
   if (!canvas) return;
+  
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  
   if (canvas.requestFullscreen) {
     canvas.requestFullscreen();
   } else if (canvas.webkitRequestFullscreen) {
@@ -1555,6 +1559,12 @@ function requestFullscreen() {
   } else if (canvas.msRequestFullscreen) {
     canvas.msRequestFullscreen();
   }
+}
+
+function handleFullscreenChange() {
+  setTimeout(() => {
+    resizeCanvas();
+  }, 100);
 }
 
 function exitFullscreen() {
