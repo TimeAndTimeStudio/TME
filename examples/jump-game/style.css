@@ -28,21 +28,3 @@ canvas {
 #startBtn:hover {
   background: #45a049;
 }
-#jumpBtn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  border: 2px solid rgba(0, 0, 0, 0.3);
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 10;
-  display: none;
-}
-#jumpBtn:active {
-  background: rgba(255, 255, 255, 0.8);
-}
