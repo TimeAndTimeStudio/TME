@@ -1569,6 +1569,13 @@ function exitFullscreen() {
   }
 }
 
+function isFullscreen() {
+  return !!(document.fullscreenElement || 
+            document.webkitFullscreenElement || 
+            document.msFullscreenElement ||
+            document.fullscreen);
+}
+
 // ============================================================
 // Public API / global exports
 // ============================================================
@@ -1577,7 +1584,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, isFullscreen, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -1586,6 +1593,7 @@ if (typeof window !== 'undefined') {
   window.getCanvasSize = getCanvasSize;
   window.requestFullscreen = requestFullscreen;
   window.exitFullscreen = exitFullscreen;
+  window.isFullscreen = isFullscreen;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
