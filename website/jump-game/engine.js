@@ -1063,8 +1063,12 @@ const input = {
   pointer: {
     get x() { return TEMF._mouseX; },
     get y() { return TEMF._mouseY; },
-    get is_touch() { return TEMF._touchState.down; },
-    get clicked() { return TEMF._mouseButtons.get('0').clicked; }
+    get is_touch() { return TEMF._touchState.down; }
+  },
+  touch: {
+    get x() { return TEMF._touchX; },
+    get y() { return TEMF._touchY; },
+    get tapped() { return TEMF._touchState.tapped; }
   }
 };
 
