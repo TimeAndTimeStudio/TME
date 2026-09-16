@@ -1,14 +1,11 @@
 # Jump Game — TME Example
-# Simple jumping game with fullscreen support
-
-canvasSize = getCanvasSize()
-W = canvasSize.width
-H = canvasSize.height
 
 player = { x: 100, y: 400, vy: 0 }
 JUMP_FORCE = 300
 GRAVITY = 800
 GROUND = 400
+W = 1920
+H = 1080
 
 function update(dt):
   if input.keyboard.is_down("space") or touch.tap():
@@ -24,9 +21,6 @@ function update(dt):
 function draw():
   rect(0, GROUND, W, 50, "brown")
   rect(player.x, player.y, 50, 50, "blue")
-  
-  if input.keyboard.is_down("f11"):
-    requestFullscreen()
 
 fps(60)
 setGame({update: update, draw: draw})
