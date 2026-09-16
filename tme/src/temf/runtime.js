@@ -1054,20 +1054,6 @@ function _initTouch() {
        const normalized = _normalizeKey(key);
        return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
      }
-   },
-   mouse: {
-     get x() { return TEMF._mouseX; },
-     get y() { return TEMF._mouseY; },
-     is_down: (btn) => _getMouseState(String(btn)).down
-   },
-   touch: {
-     get x() { return TEMF._touchX; },
-     get y() { return TEMF._touchY; },
-     get tapped() {
-       const tapped = TEMF._touchState.tapped;
-       TEMF._touchState.tapped = false;
-       return tapped;
-     }
    }
  };
 
