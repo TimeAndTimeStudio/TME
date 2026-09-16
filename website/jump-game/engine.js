@@ -20,14 +20,17 @@ const TEMF = {
   _accumulator: 0,
   _lastTime: 0,
   _step: 0,
+  _animationFrameId: null,
   _game: null,
   _rectPipeline: null,
   _rectBindGroupLayout: null,
   _rectUniformBuffer: null,
+  _rectVertexBuffer: null,
   _rectBindGroup: null,
   _canvasSizeBuffer: null,
   _imagePipeline: null,
   _imageBindGroupLayout: null,
+  _imageVertexBuffer: null,
   _imageSampler: null,
   _drawList: [],
   _rectMax: 1024,
@@ -39,6 +42,8 @@ const TEMF = {
   _mouseX: 0,
   _mouseY: 0,
   _mouseButtons: new Map(),
+  _mouseClicks: new Map(),
+  _mouseDragging: false,
   _touchX: 0,
   _touchY: 0,
   _touchState: { down: false, tapped: false, dragging: false },
@@ -60,9 +65,31 @@ const TEMF = {
   _audioMutedBgm: false,
 };
 
-// ============================================================
-// Utilities
-// ============================================================
+const RECT_VERTEX_SIZE = 8; // x, y, w, h, r, g, b, a
+const IMAGE_VERT_SIZE = 48; // 6 vertices * 8 floats (quad with UV + padding)
+
+const IMAGE_QUAD = new Float32Array([
+  // pos(2) + padding(2) + uv(2) + padding(2) per vertex
+  0, 0, 0, 0,  0, 0, 0, 0,
+  1, 0, 0, 0,  1, 0, 0, 0,
+  0, 1, 0, 0,  0, 1, 0, 0,
+  0, 1, 0, 0,  0, 1, 0, 0,
+  1, 0, 0, 0,  1, 0, 0, 0,
+  1, 1, 0, 0,  1, 1, 0, 0,
+]);
+
+function _resize() {
+  if (!TEMF._canvas || !TEMF._context) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const width = TEMF._canvas.clientWidth * dpr;
+  const height = TEMF._canvas.clientHeight * dpr;
+
+  if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
+    TEMF._canvas.width = width;
+    TEMF._canvas.height = height;
+  }
+}
 
 function _parseColor(color) {
   if (!color || typeof color !== 'string') {
@@ -119,10 +146,6 @@ function _getBasePath() {
   }
   return '';
 }
-
-// ============================================================
-// Rendering: texture loading & caching
-// ============================================================
 
 async function _loadImage(path) {
   if (TEMF._imageElements.has(path)) {
@@ -252,36 +275,6 @@ function _getOrCreateTexture(path) {
   return null;
 }
 
-function _cleanupTextures() {
-  for (const [, entry] of TEMF._textureCache) {
-    if (entry.texture) {
-      entry.texture.destroy();
-      entry.texture = null;
-    }
-  }
-  TEMF._textureCache.clear();
-  if (TEMF._imageBindGroups) {
-    TEMF._imageBindGroups.clear();
-  }
-}
-
-// ============================================================
-// Rendering: WebGPU setup & pipelines
-// ============================================================
-
-function _resize() {
-  if (!TEMF._canvas || !TEMF._context) return;
-
-  const dpr = window.devicePixelRatio || 1;
-  const width = TEMF._canvas.clientWidth * dpr;
-  const height = TEMF._canvas.clientHeight * dpr;
-
-  if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
-    TEMF._canvas.width = width;
-    TEMF._canvas.height = height;
-  }
-}
-
 function _createRenderer() {
   const device = TEMF._device;
   const format = TEMF._canvasFormat;
@@ -383,6 +376,17 @@ function _createRenderer() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  const vertexBuffer = device.createBuffer({
+    size: 6 * 4 * 4,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+
+  const quadVerts = new Float32Array([
+    0, 0,  1, 0,  0, 1,
+    0, 1,  1, 0,  1, 1,
+  ]);
+  device.queue.writeBuffer(vertexBuffer, 0, quadVerts);
+
   const rectBindGroupLayout = rectPipeline.getBindGroupLayout(0);
   const canvasSizeBuffer = device.createBuffer({
     size: 8,
@@ -403,6 +407,7 @@ function _createRenderer() {
   TEMF._rectPipeline = rectPipeline;
   TEMF._rectBindGroupLayout = rectBindGroupLayout;
   TEMF._rectUniformBuffer = uniformBuffer;
+  TEMF._rectVertexBuffer = vertexBuffer;
   TEMF._rectBindGroup = rectBindGroup;
   TEMF._canvasSizeBuffer = canvasSizeBuffer;
 
@@ -507,6 +512,12 @@ function _createRenderer() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  const imageVertexBuffer = device.createBuffer({
+    size: IMAGE_QUAD.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(imageVertexBuffer, 0, IMAGE_QUAD);
+
   const imageBindGroupLayout = imagePipeline.getBindGroupLayout(0);
 
   const sampler = device.createSampler({
@@ -517,73 +528,19 @@ function _createRenderer() {
   TEMF._imagePipeline = imagePipeline;
   TEMF._imageBindGroupLayout = imageBindGroupLayout;
   TEMF._imageUniformBuffer = imageUniformBuffer;
+  TEMF._imageVertexBuffer = imageVertexBuffer;
   TEMF._imageSampler = sampler;
   TEMF._imageBindGroups = new Map();
 }
 
-async function initWebGPU() {
-  if (!navigator.gpu) {
-    throw new Error('WebGPU is not supported by this browser. Please use a browser with WebGPU support.');
-  }
-
-  const adapter = await navigator.gpu.requestAdapter();
-  if (!adapter) {
-    const isFileProtocol = location.protocol === 'file:';
-    if (isFileProtocol) {
-      throw new Error('WebGPU requires a local server. Run: npx serve . or python -m http.server');
-    }
-    throw new Error('WebGPU: Failed to request adapter. Check browser compatibility and permissions.');
-  }
-
-  TEMF._device = await adapter.requestDevice();
-  if (!TEMF._device) {
-    throw new Error('WebGPU: Failed to request device.');
-  }
-
-  TEMF._canvas = document.getElementById('game');
-  if (!TEMF._canvas) {
-    throw new Error('Canvas #game not found in DOM.');
-  }
-
-  TEMF._context = TEMF._canvas.getContext('webgpu');
-  if (!TEMF._context) {
-    throw new Error('WebGPU: Failed to get canvas context.');
-  }
-
-  TEMF._canvasFormat = navigator.gpu.getPreferredCanvasFormat();
-  TEMF._context.configure({
-    device: TEMF._device,
-    format: TEMF._canvasFormat,
-    alphaMode: 'premultiplied',
-  });
-
-  _resize();
-  _createRenderer();
-}
-
-function resizeCanvas() {
-  if (TEMF._canvas && TEMF._context) {
-    _resize();
-  }
-}
-
-function createResizeObserver() {
-  if (typeof ResizeObserver !== 'undefined') {
-    const observer = new ResizeObserver(() => {
-      resizeCanvas();
-    });
-    observer.observe(document.body);
-  }
-}
-
-// ============================================================
-// Rendering: draw API (rect/image) & per-frame draw calls
-// ============================================================
-
 function _rect(x, y, width, height, color, rotation, scale, alpha) {
-  if (TEMF._drawList.length >= TEMF._rectMax) return;
-
+  console.log('_rect called:', x, y, width, height, color);
+  if (TEMF._drawList.length >= TEMF._rectMax) {
+    console.log('_drawList is full');
+    return;
+  }
   const [r, g, b, a] = _parseColor(color);
+  console.log('Parsed color:', r, g, b, a);
   const optRotation = (typeof rotation === 'number') ? rotation : 0;
   const optScale = (typeof scale === 'number') ? scale : 1;
   const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : a;
@@ -593,6 +550,7 @@ function _rect(x, y, width, height, color, rotation, scale, alpha) {
     rotation: optRotation,
     scale: optScale,
   });
+  console.log('Rect added, _drawList length:', TEMF._drawList.length);
 }
 
 function _image(path, x, y, width, height, rotation, scale, alpha) {
@@ -657,210 +615,60 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
   });
 }
 
-function _getOrCreateImageBindGroup(texture) {
-  if (!texture) return null;
-
-  if (TEMF._imageBindGroups.has(texture)) {
-    return TEMF._imageBindGroups.get(texture);
+async function initWebGPU() {
+  if (!navigator.gpu) {
+    throw new Error('WebGPU is not supported by this browser. Please use a browser with WebGPU support.');
   }
 
-  const bindGroup = TEMF._device.createBindGroup({
-    layout: TEMF._imageBindGroupLayout,
-    entries: [
-      {
-        binding: 1,
-        resource: { buffer: TEMF._imageUniformBuffer },
-      },
-      {
-        binding: 2,
-        resource: TEMF._imageSampler,
-      },
-      {
-        binding: 3,
-        resource: texture.createView(),
-      },
-    ],
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) {
+    const isFileProtocol = location.protocol === 'file:';
+    if (isFileProtocol) {
+      throw new Error('WebGPU requires a local server. Run: npx serve . or python -m http.server');
+    }
+    throw new Error('WebGPU: Failed to request adapter. Check browser compatibility and permissions.');
+  }
+
+  TEMF._device = await adapter.requestDevice();
+  if (!TEMF._device) {
+    throw new Error('WebGPU: Failed to request device.');
+  }
+
+  TEMF._canvas = document.getElementById('game');
+  if (!TEMF._canvas) {
+    throw new Error('Canvas #game not found in DOM.');
+  }
+
+  TEMF._context = TEMF._canvas.getContext('webgpu');
+  if (!TEMF._context) {
+    throw new Error('WebGPU: Failed to get canvas context.');
+  }
+
+  TEMF._canvasFormat = navigator.gpu.getPreferredCanvasFormat();
+  TEMF._context.configure({
+    device: TEMF._device,
+    format: TEMF._canvasFormat,
+    alphaMode: 'premultiplied',
   });
 
-  TEMF._imageBindGroups.set(texture, bindGroup);
-  return bindGroup;
+  _resize();
+  _createRenderer();
 }
 
-function _drawRects(rects, rp) {
-  const device = TEMF._device;
-  if (!device || rects.length === 0) return;
-
-  const data = new Float32Array(rects.length * 3 * 4);
-  for (let i = 0; i < rects.length; i++) {
-    const r = rects[i];
-    data[i * 12 + 0] = r.x;
-    data[i * 12 + 1] = r.y;
-    data[i * 12 + 2] = r.width;
-    data[i * 12 + 3] = r.height;
-    data[i * 12 + 4] = r.r;
-    data[i * 12 + 5] = r.g;
-    data[i * 12 + 6] = r.b;
-    data[i * 12 + 7] = r.a;
-    data[i * 12 + 8] = r.rotation || 0;
-    data[i * 12 + 9] = r.scale || 1;
-    data[i * 12 + 10] = 0;
-    data[i * 12 + 11] = 0;
+function resizeCanvas() {
+  if (TEMF._canvas && TEMF._context) {
+    _resize();
   }
-
-  device.queue.writeBuffer(
-    TEMF._rectUniformBuffer,
-    0,
-    data.buffer,
-    0,
-    rects.length * 3 * 16
-  );
-
-  const canvasSizeData = new Float32Array([TEMF._canvas.width, TEMF._canvas.height]);
-  device.queue.writeBuffer(TEMF._canvasSizeBuffer, 0, canvasSizeData);
-
-  rp.setPipeline(TEMF._rectPipeline);
-  rp.setBindGroup(0, TEMF._rectBindGroup);
-  rp.draw(rects.length * 6, 1, 0, 0);
 }
 
-function _queueImageDraw(imgDraw) {
-  const texEntry = _getOrCreateTexture(imgDraw.path);
-  if (!texEntry || texEntry.status !== 'loaded') {
-    if (texEntry && texEntry.status === 'pending') {
-      if (!TEMF._pendingImageDraws) TEMF._pendingImageDraws = [];
-      TEMF._pendingImageDraws.push(imgDraw);
-    }
-    return;
+function createResizeObserver() {
+  if (typeof ResizeObserver !== 'undefined') {
+    const observer = new ResizeObserver(() => {
+      resizeCanvas();
+    });
+    observer.observe(document.body);
   }
-
-  const texture = texEntry.texture;
-  if (!TEMF._imageTextureGroups) TEMF._imageTextureGroups = new Map();
-  if (!TEMF._imageTextureOrder) TEMF._imageTextureOrder = [];
-
-  if (!TEMF._imageTextureGroups.has(texture)) {
-    TEMF._imageTextureGroups.set(texture, []);
-    TEMF._imageTextureOrder.push(texture);
-  }
-  TEMF._imageTextureGroups.get(texture).push(imgDraw);
 }
-
-function _drawImages(rp) {
-  const device = TEMF._device;
-  if (!device || !TEMF._imageTextureGroups || TEMF._imageTextureGroups.size === 0) return;
-
-  for (const texture of TEMF._imageTextureOrder) {
-    const items = TEMF._imageTextureGroups.get(texture);
-    if (!items || items.length === 0) continue;
-
-    const bindGroup = _getOrCreateImageBindGroup(texture);
-    if (!bindGroup) continue;
-
-    const uniformData = new Float32Array(items.length * 12);
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      uniformData[i * 12 + 0] = item.x;
-      uniformData[i * 12 + 1] = item.y;
-      uniformData[i * 12 + 2] = item.width;
-      uniformData[i * 12 + 3] = item.height;
-      uniformData[i * 12 + 4] = item.u0 || 0;
-      uniformData[i * 12 + 5] = item.v0 || 0;
-      uniformData[i * 12 + 6] = item.u1 || 1;
-      uniformData[i * 12 + 7] = item.v1 || 1;
-      uniformData[i * 12 + 8] = item.rotation || 0;
-      uniformData[i * 12 + 9] = item.scale || 1;
-      uniformData[i * 12 + 10] = item.alpha || 1;
-      uniformData[i * 12 + 11] = 0; // padding to match WGSL struct's 48-byte stride
-    }
-
-    device.queue.writeBuffer(
-      TEMF._imageUniformBuffer,
-      0,
-      uniformData.buffer,
-      0,
-      items.length * 48
-    );
-
-    rp.setPipeline(TEMF._imagePipeline);
-    rp.setBindGroup(0, bindGroup);
-    rp.draw(items.length * 6, 1, 0, 0);
-  }
-
-  TEMF._imageTextureGroups.clear();
-  TEMF._imageTextureOrder.length = 0;
-}
-
-function _draw() {
-  const device = TEMF._device;
-  const context = TEMF._context;
-
-  if (!device || !context) return;
-
-  if (TEMF._drawList.length === 0) {
-    const commandEncoder = device.createCommandEncoder();
-    const textureView = context.getCurrentTexture().createView();
-    const renderPassDescriptor = {
-      colorAttachments: [{
-        view: textureView,
-        clearValue: { r: 0, g: 0, b: 0, a: 1 },
-        loadOp: 'clear',
-        storeOp: 'store',
-      }],
-    };
-    const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
-    renderPass.end();
-    device.queue.submit([commandEncoder.finish()]);
-    TEMF._drawList.length = 0;
-    return;
-  }
-
-  const commandEncoder = device.createCommandEncoder();
-  const textureView = context.getCurrentTexture().createView();
-
-  const renderPassDescriptor = {
-    colorAttachments: [{
-      view: textureView,
-      clearValue: { r: 0, g: 0, b: 0, a: 1 },
-      loadOp: 'clear',
-      storeOp: 'store',
-    }],
-  };
-
-  const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
-
-  const currentRects = [];
-
-  for (let i = 0; i < TEMF._drawList.length; i++) {
-    const item = TEMF._drawList[i];
-    if (item.type === 'rect') {
-      currentRects.push(item);
-    } else if (item.type === 'image') {
-      if (currentRects.length > 0) {
-        _drawRects(currentRects, renderPass);
-        currentRects.length = 0;
-      }
-      if (!TEMF._imageTextureGroups) {
-        TEMF._imageTextureGroups = new Map();
-        TEMF._imageTextureOrder = [];
-      }
-      _queueImageDraw(item);
-    }
-  }
-
-  if (currentRects.length > 0) {
-    _drawRects(currentRects, renderPass);
-  }
-
-  _drawImages(renderPass);
-
-  renderPass.end();
-  device.queue.submit([commandEncoder.finish()]);
-
-  TEMF._drawList.length = 0;
-}
-
-// ============================================================
-// Input: keyboard
-// ============================================================
 
 function _initKeyboard() {
   if (typeof window === 'undefined') return;
@@ -909,10 +717,6 @@ function _keyDown(key) {
   const normalized = _normalizeKey(key);
   return TEMF._keyPressed.has(normalized);
 }
-
-// ============================================================
-// Input: mouse
-// ============================================================
 
 function _initMouse() {
   if (typeof window === 'undefined') return;
@@ -989,10 +793,6 @@ function _getMouseState(btn) {
   return TEMF._mouseButtons.get(btn);
 }
 
-// ============================================================
-// Input: touch
-// ============================================================
-
 function _initTouch() {
   if (typeof window === 'undefined') return;
 
@@ -1043,81 +843,6 @@ function _initTouch() {
     }
   });
 }
-
-// ============================================================
-// Input: public API objects
-// ============================================================
-
-const input = {
-  keyboard: {
-    is_down: (key) => {
-      const normalized = _normalizeKey(key);
-      return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
-    }
-  },
-  mouse: {
-    get x() { return TEMF._mouseX; },
-    get y() { return TEMF._mouseY; },
-    is_down: (btn) => _getMouseState(String(btn)).down
-  },
-  pointer: {
-    get x() { return TEMF._mouseX; },
-    get y() { return TEMF._mouseY; },
-    get is_touch() { return TEMF._touchState.down; }
-  }
-};
-
-const mouse = {
-  get x() { return TEMF._mouseX; },
-  get y() { return TEMF._mouseY; },
-  click(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    return state.clicked;
-  },
-  down(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    return state.down;
-  },
-  drag(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    const dragging = state.dragging;
-    state.dragging = false;
-    return dragging;
-  },
-  up(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    return !state.down && !state.clicked;
-  },
-};
-
-const touch = {
-  get x() { return TEMF._touchX; },
-  get y() { return TEMF._touchY; },
-  tap() {
-    const tapped = TEMF._touchState.tapped;
-    TEMF._touchState.tapped = false;
-    return tapped;
-  },
-  down() {
-    return TEMF._touchState.down;
-  },
-  drag() {
-    const dragging = TEMF._touchState.dragging;
-    TEMF._touchState.dragging = false;
-    return dragging;
-  },
-  up() {
-    return !TEMF._touchState.down && TEMF._touchState.tapped;
-  },
-};
-
-// ============================================================
-// Audio
-// ============================================================
 
 function _initAudio() {
   if (TEMF._audioInitialized) return;
@@ -1390,6 +1115,19 @@ function _cleanupSfxNodes() {
   }
 }
 
+function _cleanupTextures() {
+  for (const [, entry] of TEMF._textureCache) {
+    if (entry.texture) {
+      entry.texture.destroy();
+      entry.texture = null;
+    }
+  }
+  TEMF._textureCache.clear();
+  if (TEMF._imageBindGroups) {
+    TEMF._imageBindGroups.clear();
+  }
+}
+
 const audio = {
   play(path, type, loop) {
     if (!path || !type) return;
@@ -1463,9 +1201,282 @@ const audio = {
   },
 };
 
-// ============================================================
-// Game loop & bootstrap
-// ============================================================
+function _getOrCreateImageBindGroup(texture) {
+  if (!texture) return null;
+
+  if (TEMF._imageBindGroups.has(texture)) {
+    return TEMF._imageBindGroups.get(texture);
+  }
+
+  const bindGroup = TEMF._device.createBindGroup({
+    layout: TEMF._imageBindGroupLayout,
+    entries: [
+      {
+        binding: 1,
+        resource: { buffer: TEMF._imageUniformBuffer },
+      },
+      {
+        binding: 2,
+        resource: TEMF._imageSampler,
+      },
+      {
+        binding: 3,
+        resource: texture.createView(),
+      },
+    ],
+  });
+
+  TEMF._imageBindGroups.set(texture, bindGroup);
+  return bindGroup;
+}
+
+function _drawRects(rects, rp) {
+  const device = TEMF._device;
+  console.log('_drawRects: device=', !!device, 'rects=', rects.length, 'pipeline=', !!TEMF._rectPipeline);
+  if (!device || rects.length === 0) return;
+
+  const data = new Float32Array(rects.length * 3 * 4);
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i];
+    data[i * 12 + 0] = r.x;
+    data[i * 12 + 1] = r.y;
+    data[i * 12 + 2] = r.width;
+    data[i * 12 + 3] = r.height;
+    data[i * 12 + 4] = r.r;
+    data[i * 12 + 5] = r.g;
+    data[i * 12 + 6] = r.b;
+    data[i * 12 + 7] = r.a;
+    data[i * 12 + 8] = r.rotation || 0;
+    data[i * 12 + 9] = r.scale || 1;
+    data[i * 12 + 10] = 0;
+    data[i * 12 + 11] = 0;
+  }
+
+  device.queue.writeBuffer(
+    TEMF._rectUniformBuffer,
+    0,
+    data.buffer,
+    0,
+    rects.length * 3 * 16
+  );
+
+  const canvasSizeData = new Float32Array([TEMF._canvas.width, TEMF._canvas.height]);
+  console.log('Canvas size:', TEMF._canvas.width, TEMF._canvas.height);
+  device.queue.writeBuffer(TEMF._canvasSizeBuffer, 0, canvasSizeData);
+
+  rp.setPipeline(TEMF._rectPipeline);
+  rp.setBindGroup(0, TEMF._rectBindGroup);
+  rp.draw(rects.length * 6, 1, 0, 0);
+}
+
+function _queueImageDraw(imgDraw) {
+  const texEntry = _getOrCreateTexture(imgDraw.path);
+  if (!texEntry || texEntry.status !== 'loaded') {
+    if (texEntry && texEntry.status === 'pending') {
+      if (!TEMF._pendingImageDraws) TEMF._pendingImageDraws = [];
+      TEMF._pendingImageDraws.push(imgDraw);
+    }
+    return;
+  }
+
+  const texture = texEntry.texture;
+  if (!TEMF._imageTextureGroups) TEMF._imageTextureGroups = new Map();
+  if (!TEMF._imageTextureOrder) TEMF._imageTextureOrder = [];
+
+  if (!TEMF._imageTextureGroups.has(texture)) {
+    TEMF._imageTextureGroups.set(texture, []);
+    TEMF._imageTextureOrder.push(texture);
+  }
+  TEMF._imageTextureGroups.get(texture).push(imgDraw);
+}
+
+function _drawImages(rp) {
+  const device = TEMF._device;
+  if (!device || !TEMF._imageTextureGroups || TEMF._imageTextureGroups.size === 0) return;
+
+  for (const texture of TEMF._imageTextureOrder) {
+    const items = TEMF._imageTextureGroups.get(texture);
+    if (!items || items.length === 0) continue;
+
+    const bindGroup = _getOrCreateImageBindGroup(texture);
+    if (!bindGroup) continue;
+
+    const uniformData = new Float32Array(items.length * 12);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      uniformData[i * 12 + 0] = item.x;
+      uniformData[i * 12 + 1] = item.y;
+      uniformData[i * 12 + 2] = item.width;
+      uniformData[i * 12 + 3] = item.height;
+      uniformData[i * 12 + 4] = item.u0 || 0;
+      uniformData[i * 12 + 5] = item.v0 || 0;
+      uniformData[i * 12 + 6] = item.u1 || 1;
+      uniformData[i * 12 + 7] = item.v1 || 1;
+      uniformData[i * 12 + 8] = item.rotation || 0;
+      uniformData[i * 12 + 9] = item.scale || 1;
+      uniformData[i * 12 + 10] = item.alpha || 1;
+      uniformData[i * 12 + 11] = 0; // padding to match WGSL struct's 48-byte stride
+    }
+
+    device.queue.writeBuffer(
+      TEMF._imageUniformBuffer,
+      0,
+      uniformData.buffer,
+      0,
+      items.length * 48
+    );
+
+    rp.setPipeline(TEMF._imagePipeline);
+    rp.setBindGroup(0, bindGroup);
+    rp.draw(items.length * 6, 1, 0, 0);
+  }
+
+  TEMF._imageTextureGroups.clear();
+  TEMF._imageTextureOrder.length = 0;
+}
+
+function _draw() {
+  const device = TEMF._device;
+  const context = TEMF._context;
+
+  console.log('_draw: device=', !!device, 'context=', !!context, 'drawList=', TEMF._drawList.length);
+
+  if (!device || !context) return;
+
+  console.log('Drawing', TEMF._drawList.length, 'items');
+
+  if (TEMF._drawList.length === 0) {
+    const commandEncoder = device.createCommandEncoder();
+    const textureView = context.getCurrentTexture().createView();
+    const renderPassDescriptor = {
+      colorAttachments: [{
+        view: textureView,
+        clearValue: { r: 0, g: 0, b: 0, a: 1 },
+        loadOp: 'clear',
+        storeOp: 'store',
+      }],
+    };
+    const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+    renderPass.end();
+    device.queue.submit([commandEncoder.finish()]);
+    TEMF._drawList.length = 0;
+    return;
+  }
+
+  const commandEncoder = device.createCommandEncoder();
+  const textureView = context.getCurrentTexture().createView();
+
+  const renderPassDescriptor = {
+    colorAttachments: [{
+      view: textureView,
+      clearValue: { r: 0, g: 0, b: 0, a: 1 },
+      loadOp: 'clear',
+      storeOp: 'store',
+    }],
+  };
+
+  const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+  console.log('RenderPass started');
+
+  const currentRects = [];
+
+  for (let i = 0; i < TEMF._drawList.length; i++) {
+    const item = TEMF._drawList[i];
+    if (item.type === 'rect') {
+      currentRects.push(item);
+    } else if (item.type === 'image') {
+      if (currentRects.length > 0) {
+        _drawRects(currentRects, renderPass);
+        currentRects.length = 0;
+      }
+      if (!TEMF._imageTextureGroups) {
+        TEMF._imageTextureGroups = new Map();
+        TEMF._imageTextureOrder = [];
+      }
+      _queueImageDraw(item);
+    }
+  }
+
+  if (currentRects.length > 0) {
+    _drawRects(currentRects, renderPass);
+  }
+
+  _drawImages(renderPass);
+
+  renderPass.end();
+  console.log('RenderPass ended, submitting commands...');
+  device.queue.submit([commandEncoder.finish()]);
+  console.log('Commands submitted');
+
+  TEMF._drawList.length = 0;
+}
+
+const input = {
+  keyboard: {
+    is_down: (key) => {
+      const normalized = _normalizeKey(key);
+      return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
+    }
+  },
+  mouse: {
+    get x() { return TEMF._mouseX; },
+    get y() { return TEMF._mouseY; },
+    is_down: (btn) => _getMouseButtonState(btn).down
+  },
+  pointer: {
+    get x() { return TEMF._mouseX; },
+    get y() { return TEMF._mouseY; },
+    get is_touch() { return TEMF._touchState.down; }
+  }
+};
+
+const mouse = {
+  get x() { return TEMF._mouseX; },
+  get y() { return TEMF._mouseY; },
+  click(btn) {
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
+    return state.clicked;
+  },
+  down(btn) {
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
+    return state.down;
+  },
+  drag(btn) {
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
+    const dragging = state.dragging;
+    state.dragging = false;
+    return dragging;
+  },
+  up(btn) {
+    const btnNum = (typeof btn === 'number') ? btn : 0;
+    const state = _getMouseState(String(btnNum));
+    return !state.down && !state.clicked;
+  },
+};
+
+const touch = {
+  get x() { return TEMF._touchX; },
+  get y() { return TEMF._touchY; },
+  tap() {
+    const tapped = TEMF._touchState.tapped;
+    TEMF._touchState.tapped = false;
+    return tapped;
+  },
+  down() {
+    return TEMF._touchState.down;
+  },
+  drag() {
+    const dragging = TEMF._touchState.dragging;
+    TEMF._touchState.dragging = false;
+    return dragging;
+  },
+  up() {
+    return !TEMF._touchState.down && TEMF._touchState.tapped;
+  },
+};
 
 function gameLoop() {
   const now = performance.now();
@@ -1478,14 +1489,17 @@ function gameLoop() {
       TEMF._game.update(TEMF._step);
     }
     if (TEMF._game && typeof TEMF._game.draw === 'function') {
+      console.log('Calling TEMF._game.draw()');
       TEMF._game.draw();
+    } else {
+      console.log('TEMF._game.draw is not a function:', typeof TEMF._game?.draw);
     }
     _cleanupSfxNodes();
     _draw();
     TEMF._accumulator -= TEMF._step;
   }
 
-  requestAnimationFrame(gameLoop);
+  TEMF._animationFrameId = requestAnimationFrame(gameLoop);
 }
 
 function start(button) {
@@ -1506,14 +1520,17 @@ function start(button) {
   TEMF._lastTime = 0;
 
   function initAndStart() {
+    console.log('Starting game loop...');
     TEMF._started = true;
     initWebGPU().then(() => {
+      console.log('WebGPU initialized');
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
       _initKeyboard();
       _initMouse();
       _initTouch();
       TEMF._lastTime = performance.now();
+      console.log('Starting gameLoop...');
       gameLoop();
     }).catch(err => {
       console.error('TEMF initialization failed:', err);
@@ -1523,7 +1540,11 @@ function start(button) {
   if (button) {
     const btn = typeof button === 'string' ? document.getElementById(button) : button;
     if (btn) {
-      btn.addEventListener('click', () => initAndStart());
+      console.log('Adding click listener to button:', button);
+      btn.addEventListener('click', () => {
+        console.log('Button clicked!');
+        initAndStart();
+      });
       return;
     }
   }
@@ -1534,14 +1555,13 @@ function start(button) {
 function fps(fpsValue) {
   TEMF._fps = fpsValue;
   TEMF._step = 1 / TEMF._fps;
+  console.log('FPS set to:', fpsValue);
+}
+if (typeof window !== 'undefined') {
+  window.fps = fps;
 }
 
-// ============================================================
-// Public API / global exports
-// ============================================================
-
 TEMF.cleanupTextures = _cleanupTextures;
-
 TEMF.cleanupAudio = _cleanupAudio;
 
 export { start, fps, TEMF, mouse, touch, audio };
