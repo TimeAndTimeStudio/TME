@@ -3,7 +3,7 @@ let JUMP_FORCE = 300;
 let GRAVITY = 800;
 let GROUND = 400;
 function update(dt) {
-  if ((input.keyboard.is_down("space") || input.touch.tapped)) {
+  if ((input.keyboard.is_down("space") || touch.tap())) {
     player.vy = (0 - JUMP_FORCE);
   }
   player.vy = (player.vy + (GRAVITY * dt));
@@ -14,8 +14,14 @@ function update(dt) {
   }
 }
 function draw() {
-  rect(0, GROUND, 800, 50, "brown");
+  let canvasSize = getCanvasSize();
+  let W = canvasSize.width;
+  let H = canvasSize.height;
+  rect(0, GROUND, W, 50, "brown");
   rect(player.x, player.y, 50, 50, "blue");
+  if (input.keyboard.is_down("f11")) {
+    requestFullscreen();
+  }
 }
 fps(60);
 setGame({ update: update, draw: draw });

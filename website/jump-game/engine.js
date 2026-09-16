@@ -273,8 +273,17 @@ function _resize() {
   if (!TEMF._canvas || !TEMF._context) return;
 
   const dpr = window.devicePixelRatio || 1;
-  const width = TEMF._canvas.clientWidth * dpr;
-  const height = TEMF._canvas.clientHeight * dpr;
+  let width = TEMF._canvas.clientWidth * dpr;
+  let height = TEMF._canvas.clientHeight * dpr;
+
+  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (isFullscreen || (isMobile && height > width)) {
+    if (height > width) {
+      [width, height] = [height, width];
+    }
+  }
 
   if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
     TEMF._canvas.width = width;
@@ -1048,33 +1057,14 @@ function _initTouch() {
 // Input: public API objects
 // ============================================================
 
-const input = {
-  keyboard: {
-    is_down: (key) => {
-      const normalized = _normalizeKey(key);
-      return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
-    }
-  },
-  mouse: {
-    get x() { return TEMF._mouseX; },
-    get y() { return TEMF._mouseY; },
-    is_down: (btn) => _getMouseState(String(btn)).down
-  },
-  pointer: {
-    get x() { return TEMF._mouseX; },
-    get y() { return TEMF._mouseY; },
-    get is_touch() { return TEMF._touchState.down; }
-  },
-  touch: {
-    get x() { return TEMF._touchX; },
-    get y() { return TEMF._touchY; },
-    get tapped() {
-      const tapped = TEMF._touchState.tapped;
-      TEMF._touchState.tapped = false;
-      return tapped;
-    }
-  }
-};
+ const input = {
+   keyboard: {
+     is_down: (key) => {
+       const normalized = _normalizeKey(key);
+       return TEMF._keyPressed.has(normalized) || TEMF._keyPressed.has(key);
+     }
+   }
+ };
 
 const mouse = {
   get x() { return TEMF._mouseX; },
@@ -1510,6 +1500,11 @@ function _bootstrap(button) {
     initWebGPU().then(() => {
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+          resizeCanvas();
+        }, 100);
+      });
       _initKeyboard();
       _initMouse();
       _initTouch();
@@ -1558,6 +1553,44 @@ function fps(fpsValue) {
   TEMF._step = 1 / TEMF._fps;
 }
 
+function getCanvasSize() {
+  const canvas = TEMF._canvas || document.getElementById('game');
+  if (!canvas) return { width: 0, height: 0 };
+  return { width: canvas.width, height: canvas.height };
+}
+
+function requestFullscreen() {
+  const canvas = TEMF._canvas || document.getElementById('game');
+  if (!canvas) return;
+  
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  
+  if (canvas.requestFullscreen) {
+    canvas.requestFullscreen();
+  } else if (canvas.webkitRequestFullscreen) {
+    canvas.webkitRequestFullscreen();
+  } else if (canvas.msRequestFullscreen) {
+    canvas.msRequestFullscreen();
+  }
+}
+
+function handleFullscreenChange() {
+  setTimeout(() => {
+    resizeCanvas();
+  }, 100);
+}
+
+function exitFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+}
+
 // ============================================================
 // Public API / global exports
 // ============================================================
@@ -1566,12 +1599,15 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
   window.setGame = setGame;
   window.fps = fps;
+  window.getCanvasSize = getCanvasSize;
+  window.requestFullscreen = requestFullscreen;
+  window.exitFullscreen = exitFullscreen;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
