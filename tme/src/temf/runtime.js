@@ -1539,6 +1539,34 @@ function fps(fpsValue) {
   TEMF._step = 1 / TEMF._fps;
 }
 
+function getCanvasSize() {
+  const canvas = TEMF._canvas || document.getElementById('game');
+  if (!canvas) return { width: 0, height: 0 };
+  return { width: canvas.width, height: canvas.height };
+}
+
+function requestFullscreen() {
+  const canvas = TEMF._canvas || document.getElementById('game');
+  if (!canvas) return;
+  if (canvas.requestFullscreen) {
+    canvas.requestFullscreen();
+  } else if (canvas.webkitRequestFullscreen) {
+    canvas.webkitRequestFullscreen();
+  } else if (canvas.msRequestFullscreen) {
+    canvas.msRequestFullscreen();
+  }
+}
+
+function exitFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) {
+    document.msExitFullscreen();
+  }
+}
+
 // ============================================================
 // Public API / global exports
 // ============================================================
@@ -1547,12 +1575,15 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
   window.setGame = setGame;
   window.fps = fps;
+  window.getCanvasSize = getCanvasSize;
+  window.requestFullscreen = requestFullscreen;
+  window.exitFullscreen = exitFullscreen;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
