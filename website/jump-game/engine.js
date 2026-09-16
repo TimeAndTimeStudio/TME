@@ -1,11 +1,16 @@
 /**
  * TEMF — Time Engine Mini Fast Runtime
  *
- * Minimal runtime that waits for explicit start() before
- * initializing WebGPU and starting the game loop.
- *
- * Phase 4: Rectangle + Image rendering with texture caching.
- * Phase 6: Transform (rotation, scale) and alpha for rect and image.
+ * Rendering: rect + image draw calls, transform (rotation, scale) and alpha
+ * for both. Textures are cached by path (LRU-evicted) and uploaded via
+ * createImageBitmap + copyExternalImageToTexture (no CPU canvas readback).
+ * Rect and image data live in per-frame-reused GPU storage buffers (no
+ * uniform-buffer size ceiling) and are drawn with instancing (6 verts,
+ * N instances) instead of one draw call per object.
+ * Draw order matches call order: consecutive same-type/same-texture items
+ * are batched into a single draw call, but the batch flushes whenever the
+ * type or texture changes, so later rect()/image() calls always render on
+ * top of earlier ones — different textures are never batched together.
  */
 
 'use strict';
@@ -32,6 +37,9 @@ const TEMF = {
   _imageSampler: null,
   _drawList: [],
   _rectMax: 1024,
+  _imageMax: 1024,
+  _rectScratch: null,
+  _imageScratch: null,
   _textureCache: new Map(),
   _textureCacheMax: 64,
   _pendingImageDraws: [],
@@ -40,9 +48,14 @@ const TEMF = {
   _mouseX: 0,
   _mouseY: 0,
   _mouseButtons: new Map(),
-  _touchX: 0,
-  _touchY: 0,
-  _touchState: { down: false, tapped: false, dragging: false },
+  _touchMax: 4,
+  _touchSlots: [
+    { x: 0, y: 0, down: false },
+    { x: 0, y: 0, down: false },
+    { x: 0, y: 0, down: false },
+    { x: 0, y: 0, down: false },
+  ],
+  _touchPointerToSlot: new Map(), // native pointerId -> slot index (0-3)
   _audioContext: null,
   _audioInitialized: false,
   _audioCache: new Map(),
@@ -67,25 +80,9 @@ const TEMF = {
 
 function _parseColor(color) {
   if (!color || typeof color !== 'string') {
-    return [1, 1, 1, 1];
+    throw new Error(`_parseColor: invalid color value ${JSON.stringify(color)} (expected a hex string like "#rrggbb")`);
   }
   const hex = color.trim();
-  const colorMap = {
-    'black': [0, 0, 0],
-    'white': [1, 1, 1],
-    'red': [1, 0, 0],
-    'green': [0, 1, 0],
-    'blue': [0, 0, 1],
-    'yellow': [1, 1, 0],
-    'cyan': [0, 1, 1],
-    'magenta': [1, 0, 1],
-    'gray': [0.5, 0.5, 0.5],
-    'grey': [0.5, 0.5, 0.5],
-    'brown': [0.649, 0.165, 0.165],
-  };
-  if (colorMap[hex.toLowerCase()]) {
-    return [...colorMap[hex.toLowerCase()], 1];
-  }
   const m8 = hex.match(/^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
   if (m8) {
     return [
@@ -104,7 +101,7 @@ function _parseColor(color) {
       parseInt(m16[4], 16) / 255,
     ];
   }
-  return [1, 1, 1, 1];
+  throw new Error(`_parseColor: invalid color format "${color}" (expected "#rrggbb" or "#rrggbbaa")`);
 }
 
 function _getBasePath() {
@@ -150,13 +147,6 @@ async function _createTexture(device, img) {
   const width = img.width;
   const height = img.height;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-  const imageData = ctx.getImageData(0, 0, width, height);
-
   const texture = device.createTexture({
     size: [width, height, 1],
     format: 'rgba8unorm',
@@ -166,12 +156,18 @@ async function _createTexture(device, img) {
       GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  device.queue.writeTexture(
-    { texture: texture },
-    imageData.data,
-    { bytesPerRow: width * 4 },
-    [width, height]
-  );
+  // createImageBitmap + copyExternalImageToTexture: decodes and uploads via
+  // the GPU/compositor path, avoiding a 2D canvas + getImageData CPU readback.
+  const bitmap = await createImageBitmap(img, { imageOrientation: 'none' });
+  try {
+    device.queue.copyExternalImageToTexture(
+      { source: bitmap },
+      { texture: texture },
+      [width, height]
+    );
+  } finally {
+    bitmap.close();
+  }
 
   return texture;
 }
@@ -230,24 +226,16 @@ function _getOrCreateTexture(path) {
       entry.width = loadedWidth;
       entry.height = loadedHeight;
       entry.lastUsed = performance.now();
-
-      if (TEMF._pendingImageDraws.length > 0) {
-        const pending = TEMF._pendingImageDraws.filter(d => d.path === path);
-        TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
-        for (const draw of pending) {
-          _queueImageDraw(draw);
-        }
-      }
+      // No need to replay _pendingImageDraws here: the game loop calls the
+      // game's draw() again every tick, so the next _draw() call will simply
+      // find this texture 'loaded' and draw it in its correct call order.
+      TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
     })
     .catch((err) => {
       entry.status = 'error';
       entry.error = err.message;
       console.error(err.message);
-
-      if (TEMF._pendingImageDraws.length > 0) {
-        const pending = TEMF._pendingImageDraws.filter(d => d.path === path);
-        TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
-      }
+      TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
     });
 
   return null;
@@ -290,27 +278,30 @@ function _createRenderer() {
 
   // Rectangle pipeline
   const rectShaderCode = `
-    @group(0) @binding(0) var<uniform> rectData: array<vec4f, ${max * 3}>;
+    struct RectData {
+      x: f32, y: f32, w: f32, h: f32,
+      r: f32, g: f32, b: f32, a: f32,
+      rotation: f32, scale: f32, pad0: f32, pad1: f32,
+    };
+    @group(0) @binding(0) var<storage, read> rectData: array<RectData>;
     @group(0) @binding(1) var<uniform> canvasSize: vec2f;
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) color: vec4f,
     };
     @vertex
-    fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
-      let rectIdx = vertexIndex / 6u;
-      let cornerIdx = vertexIndex % 6u;
-      let base = rectIdx * 3u;
-      let x = rectData[base].x;
-      let y = rectData[base].y;
-      let w = rectData[base].z;
-      let h = rectData[base].w;
-      let r = rectData[base + 1u].x;
-      let g = rectData[base + 1u].y;
-      let b = rectData[base + 1u].z;
-      let a = rectData[base + 1u].w;
-      let rotation = rectData[base + 2u].x;
-      let scale = rectData[base + 2u].y;
+    fn vs(@builtin(vertex_index) cornerIdx: u32, @builtin(instance_index) rectIdx: u32) -> VSOut {
+      let item = rectData[rectIdx];
+      let x = item.x;
+      let y = item.y;
+      let w = item.w;
+      let h = item.h;
+      let r = item.r;
+      let g = item.g;
+      let b = item.b;
+      let a = item.a;
+      let rotation = item.rotation;
+      let scale = item.scale;
       var pos: vec2f;
       if (cornerIdx == 0u) {
         pos = vec2f(x, y);
@@ -378,11 +369,12 @@ function _createRenderer() {
     },
   });
 
-  const uniformBufferSize = max * 3 * 4 * 4 + 8; // max rects * 3 vec4f * 4 floats * 4 bytes + canvasSize vec2f
+  const rectBufferSize = max * 12 * 4; // max rects * 12 floats * 4 bytes (storage buffer, no 64KB uniform ceiling)
   const uniformBuffer = device.createBuffer({
-    size: uniformBufferSize,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    size: rectBufferSize,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
+  TEMF._rectScratch = new Float32Array(max * 12);
 
   const rectBindGroupLayout = rectPipeline.getBindGroupLayout(0);
   const canvasSizeBuffer = device.createBuffer({
@@ -423,7 +415,7 @@ function _createRenderer() {
       alpha: f32,
       padding: f32,
     };
-    @group(0) @binding(1) var<uniform> imageData: array<ImageUniforms, 1024>;
+    @group(0) @binding(1) var<storage, read> imageData: array<ImageUniforms>;
     @group(0) @binding(2) var mySampler: sampler;
     @group(0) @binding(3) var myTexture: texture_2d<f32>;
     struct VSOut {
@@ -431,9 +423,7 @@ function _createRenderer() {
       @location(0) uv: vec2f,
     };
     @vertex
-    fn vs(@builtin(vertex_index) vertexIndex: u32) -> VSOut {
-      let imgIdx = vertexIndex / 6u;
-      let vertIdx = vertexIndex % 6u;
+    fn vs(@builtin(vertex_index) vertIdx: u32, @builtin(instance_index) imgIdx: u32) -> VSOut {
       let base = imageData[imgIdx];
       let x0 = base.x;
       let y0 = base.y;
@@ -503,10 +493,12 @@ function _createRenderer() {
     },
   });
 
+  const imageMax = TEMF._imageMax;
   const imageUniformBuffer = device.createBuffer({
-    size: 1024 * 12 * 4, // 12 floats/item (48-byte stride incl. padding) to match WGSL struct alignment
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    size: imageMax * 12 * 4, // 12 floats/item (48-byte stride incl. padding); storage buffer, no 64KB ceiling
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
+  TEMF._imageScratch = new Float32Array(imageMax * 12);
 
   const imageBindGroupLayout = imagePipeline.getBindGroupLayout(0);
 
@@ -691,8 +683,9 @@ function _drawRects(rects, rp) {
   const device = TEMF._device;
   if (!device || rects.length === 0) return;
 
-  const data = new Float32Array(rects.length * 3 * 4);
-  for (let i = 0; i < rects.length; i++) {
+  const count = Math.min(rects.length, TEMF._rectMax);
+  const data = TEMF._rectScratch; // reused every call/frame, no per-draw allocation
+  for (let i = 0; i < count; i++) {
     const r = rects[i];
     data[i * 12 + 0] = r.x;
     data[i * 12 + 1] = r.y;
@@ -713,7 +706,7 @@ function _drawRects(rects, rp) {
     0,
     data.buffer,
     0,
-    rects.length * 3 * 16
+    count * 12 * 4
   );
 
   const canvasSizeData = new Float32Array([TEMF._canvas.width, TEMF._canvas.height]);
@@ -721,73 +714,45 @@ function _drawRects(rects, rp) {
 
   rp.setPipeline(TEMF._rectPipeline);
   rp.setBindGroup(0, TEMF._rectBindGroup);
-  rp.draw(rects.length * 6, 1, 0, 0);
+  rp.draw(6, count, 0, 0); // 6 verts per quad, instanced N times
 }
 
-function _queueImageDraw(imgDraw) {
-  const texEntry = _getOrCreateTexture(imgDraw.path);
-  if (!texEntry || texEntry.status !== 'loaded') {
-    if (texEntry && texEntry.status === 'pending') {
-      if (!TEMF._pendingImageDraws) TEMF._pendingImageDraws = [];
-      TEMF._pendingImageDraws.push(imgDraw);
-    }
-    return;
-  }
-
-  const texture = texEntry.texture;
-  if (!TEMF._imageTextureGroups) TEMF._imageTextureGroups = new Map();
-  if (!TEMF._imageTextureOrder) TEMF._imageTextureOrder = [];
-
-  if (!TEMF._imageTextureGroups.has(texture)) {
-    TEMF._imageTextureGroups.set(texture, []);
-    TEMF._imageTextureOrder.push(texture);
-  }
-  TEMF._imageTextureGroups.get(texture).push(imgDraw);
-}
-
-function _drawImages(rp) {
+function _drawImageBatch(texture, items, rp) {
   const device = TEMF._device;
-  if (!device || !TEMF._imageTextureGroups || TEMF._imageTextureGroups.size === 0) return;
+  if (!device || !texture || items.length === 0) return;
 
-  for (const texture of TEMF._imageTextureOrder) {
-    const items = TEMF._imageTextureGroups.get(texture);
-    if (!items || items.length === 0) continue;
+  const bindGroup = _getOrCreateImageBindGroup(texture);
+  if (!bindGroup) return;
 
-    const bindGroup = _getOrCreateImageBindGroup(texture);
-    if (!bindGroup) continue;
-
-    const uniformData = new Float32Array(items.length * 12);
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      uniformData[i * 12 + 0] = item.x;
-      uniformData[i * 12 + 1] = item.y;
-      uniformData[i * 12 + 2] = item.width;
-      uniformData[i * 12 + 3] = item.height;
-      uniformData[i * 12 + 4] = item.u0 || 0;
-      uniformData[i * 12 + 5] = item.v0 || 0;
-      uniformData[i * 12 + 6] = item.u1 || 1;
-      uniformData[i * 12 + 7] = item.v1 || 1;
-      uniformData[i * 12 + 8] = item.rotation || 0;
-      uniformData[i * 12 + 9] = item.scale || 1;
-      uniformData[i * 12 + 10] = item.alpha || 1;
-      uniformData[i * 12 + 11] = 0; // padding to match WGSL struct's 48-byte stride
-    }
-
-    device.queue.writeBuffer(
-      TEMF._imageUniformBuffer,
-      0,
-      uniformData.buffer,
-      0,
-      items.length * 48
-    );
-
-    rp.setPipeline(TEMF._imagePipeline);
-    rp.setBindGroup(0, bindGroup);
-    rp.draw(items.length * 6, 1, 0, 0);
+  const count = Math.min(items.length, TEMF._imageMax);
+  const uniformData = TEMF._imageScratch; // reused every call/frame, no per-draw allocation
+  for (let i = 0; i < count; i++) {
+    const item = items[i];
+    uniformData[i * 12 + 0] = item.x;
+    uniformData[i * 12 + 1] = item.y;
+    uniformData[i * 12 + 2] = item.width;
+    uniformData[i * 12 + 3] = item.height;
+    uniformData[i * 12 + 4] = item.u0 || 0;
+    uniformData[i * 12 + 5] = item.v0 || 0;
+    uniformData[i * 12 + 6] = item.u1 || 1;
+    uniformData[i * 12 + 7] = item.v1 || 1;
+    uniformData[i * 12 + 8] = item.rotation || 0;
+    uniformData[i * 12 + 9] = item.scale || 1;
+    uniformData[i * 12 + 10] = item.alpha || 1;
+    uniformData[i * 12 + 11] = 0; // padding to match WGSL struct's 48-byte stride
   }
 
-  TEMF._imageTextureGroups.clear();
-  TEMF._imageTextureOrder.length = 0;
+  device.queue.writeBuffer(
+    TEMF._imageUniformBuffer,
+    0,
+    uniformData.buffer,
+    0,
+    count * 48
+  );
+
+  rp.setPipeline(TEMF._imagePipeline);
+  rp.setBindGroup(0, bindGroup);
+  rp.draw(6, count, 0, 0); // 6 verts per quad, instanced N times
 }
 
 function _draw() {
@@ -828,30 +793,51 @@ function _draw() {
 
   const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
 
-  const currentRects = [];
+  // Batch consecutive items of the same type (and, for images, the same
+  // texture) into a single instanced draw call, but flush the current batch
+  // the moment something different comes along. This keeps draw order
+  // exactly matching call order: earlier rect()/image() calls end up below,
+  // later calls end up on top, which a "draw everything of type A, then
+  // everything of type B" approach cannot guarantee.
+  let batchType = null;
+  let batchTexture = null;
+  let batch = [];
+
+  const flushBatch = () => {
+    if (batch.length === 0) return;
+    if (batchType === 'rect') {
+      _drawRects(batch, renderPass);
+    } else if (batchType === 'image') {
+      _drawImageBatch(batchTexture, batch, renderPass);
+    }
+    batch = [];
+  };
 
   for (let i = 0; i < TEMF._drawList.length; i++) {
     const item = TEMF._drawList[i];
     if (item.type === 'rect') {
-      currentRects.push(item);
+      if (batchType !== 'rect') {
+        flushBatch();
+        batchType = 'rect';
+      }
+      batch.push(item);
     } else if (item.type === 'image') {
-      if (currentRects.length > 0) {
-        _drawRects(currentRects, renderPass);
-        currentRects.length = 0;
+      const texEntry = _getOrCreateTexture(item.path);
+      if (!texEntry || texEntry.status !== 'loaded') {
+        if (texEntry && texEntry.status === 'pending') {
+          TEMF._pendingImageDraws.push(item);
+        }
+        continue; // not loaded yet (or failed) — skip this frame, keep order for the rest
       }
-      if (!TEMF._imageTextureGroups) {
-        TEMF._imageTextureGroups = new Map();
-        TEMF._imageTextureOrder = [];
+      if (batchType !== 'image' || batchTexture !== texEntry.texture) {
+        flushBatch();
+        batchType = 'image';
+        batchTexture = texEntry.texture;
       }
-      _queueImageDraw(item);
+      batch.push(item);
     }
   }
-
-  if (currentRects.length > 0) {
-    _drawRects(currentRects, renderPass);
-  }
-
-  _drawImages(renderPass);
+  flushBatch();
 
   renderPass.end();
   device.queue.submit([commandEncoder.finish()]);
@@ -927,28 +913,17 @@ function _initMouse() {
       TEMF._mouseY = e.offsetY;
       const btn = e.button.toString();
       if (!TEMF._mouseButtons.has(btn)) {
-        TEMF._mouseButtons.set(btn, { down: false, clicked: false, dragging: false });
+        TEMF._mouseButtons.set(btn, { down: false });
       }
       const state = TEMF._mouseButtons.get(btn);
       state.down = true;
-      state.clicked = false;
-      state.dragging = false;
     }
   });
 
   canvas.addEventListener('pointermove', (e) => {
     if (e.pointerType === 'mouse') {
-      const prevX = TEMF._mouseX;
-      const prevY = TEMF._mouseY;
       TEMF._mouseX = e.offsetX;
       TEMF._mouseY = e.offsetY;
-      const buttons = e.buttons;
-      for (const [btn, state] of TEMF._mouseButtons) {
-        const btnNum = parseInt(btn, 10);
-        if (btnNum >= 0 && btnNum <= 2 && (buttons & (1 << btnNum)) && state.down && (prevX !== TEMF._mouseX || prevY !== TEMF._mouseY)) {
-          state.dragging = true;
-        }
-      }
     }
   });
 
@@ -957,9 +932,7 @@ function _initMouse() {
       const btn = e.button.toString();
       const state = TEMF._mouseButtons.get(btn);
       if (state) {
-        state.clicked = true;
         state.down = false;
-        state.dragging = false;
       }
     }
   });
@@ -968,7 +941,6 @@ function _initMouse() {
     if (e.pointerType === 'mouse') {
       for (const [btn, state] of TEMF._mouseButtons) {
         state.down = false;
-        state.dragging = false;
       }
     }
   });
@@ -977,7 +949,6 @@ function _initMouse() {
     if (e.pointerType === 'mouse') {
       for (const [btn, state] of TEMF._mouseButtons) {
         state.down = false;
-        state.dragging = false;
       }
     }
   });
@@ -985,7 +956,7 @@ function _initMouse() {
 
 function _getMouseState(btn) {
   if (!TEMF._mouseButtons.has(btn)) {
-    TEMF._mouseButtons.set(btn, { down: false, clicked: false, dragging: false });
+    TEMF._mouseButtons.set(btn, { down: false });
   }
   return TEMF._mouseButtons.get(btn);
 }
@@ -994,6 +965,30 @@ function _getMouseState(btn) {
 // Input: touch
 // ============================================================
 
+function _touchAllocateSlot(pointerId) {
+  if (TEMF._touchPointerToSlot.has(pointerId)) {
+    return TEMF._touchPointerToSlot.get(pointerId);
+  }
+  const used = new Set(TEMF._touchPointerToSlot.values());
+  for (let i = 0; i < TEMF._touchMax; i++) {
+    if (!used.has(i)) {
+      TEMF._touchPointerToSlot.set(pointerId, i);
+      return i;
+    }
+  }
+  return -1; // all 4 slots taken — this extra finger is ignored
+}
+
+function _touchReleaseSlot(pointerId) {
+  TEMF._touchPointerToSlot.delete(pointerId);
+}
+
+function _touchWipeSlot(slot) {
+  slot.x = 0;
+  slot.y = 0;
+  slot.down = false;
+}
+
 function _initTouch() {
   if (typeof window === 'undefined') return;
 
@@ -1001,47 +996,46 @@ function _initTouch() {
   if (!canvas) return;
 
   canvas.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'touch') {
-      TEMF._touchX = e.offsetX;
-      TEMF._touchY = e.offsetY;
-      TEMF._touchState.down = true;
-      TEMF._touchState.tapped = false;
-      TEMF._touchState.dragging = false;
-    }
+    if (e.pointerType !== 'touch') return;
+    const slotIdx = _touchAllocateSlot(e.pointerId);
+    if (slotIdx === -1) return; // over the cap — this finger is ignored entirely
+    const slot = TEMF._touchSlots[slotIdx];
+    slot.x = e.offsetX;
+    slot.y = e.offsetY;
+    slot.down = true;
   });
 
   canvas.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') {
-      const prevX = TEMF._touchX;
-      const prevY = TEMF._touchY;
-      TEMF._touchX = e.offsetX;
-      TEMF._touchY = e.offsetY;
-      if (TEMF._touchState.down && (prevX !== TEMF._touchX || prevY !== TEMF._touchY)) {
-        TEMF._touchState.dragging = true;
-      }
-    }
+    if (e.pointerType !== 'touch') return;
+    const slotIdx = TEMF._touchPointerToSlot.get(e.pointerId);
+    if (slotIdx === undefined) return;
+    const slot = TEMF._touchSlots[slotIdx];
+    slot.x = e.offsetX;
+    slot.y = e.offsetY;
   });
 
   canvas.addEventListener('pointerup', (e) => {
-    if (e.pointerType === 'touch') {
-      TEMF._touchState.tapped = true;
-      TEMF._touchState.down = false;
-      TEMF._touchState.dragging = false;
-    }
+    if (e.pointerType !== 'touch') return;
+    const slotIdx = TEMF._touchPointerToSlot.get(e.pointerId);
+    if (slotIdx === undefined) return;
+    _touchWipeSlot(TEMF._touchSlots[slotIdx]); // discard immediately, nothing lingers for a later read
+    _touchReleaseSlot(e.pointerId); // free the slot so a new finger can reuse it
   });
 
   canvas.addEventListener('pointercancel', (e) => {
-    if (e.pointerType === 'touch') {
-      TEMF._touchState.down = false;
-      TEMF._touchState.dragging = false;
-    }
+    if (e.pointerType !== 'touch') return;
+    const slotIdx = TEMF._touchPointerToSlot.get(e.pointerId);
+    if (slotIdx === undefined) return;
+    _touchWipeSlot(TEMF._touchSlots[slotIdx]);
+    _touchReleaseSlot(e.pointerId);
   });
 
   canvas.addEventListener('pointerleave', (e) => {
-    if (e.pointerType === 'touch') {
-      TEMF._touchState.down = false;
-      TEMF._touchState.dragging = false;
-    }
+    if (e.pointerType !== 'touch') return;
+    const slotIdx = TEMF._touchPointerToSlot.get(e.pointerId);
+    if (slotIdx === undefined) return;
+    _touchWipeSlot(TEMF._touchSlots[slotIdx]);
+    _touchReleaseSlot(e.pointerId);
   });
 }
 
@@ -1061,48 +1055,45 @@ function _initTouch() {
 const mouse = {
   get x() { return TEMF._mouseX; },
   get y() { return TEMF._mouseY; },
-  click(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    return state.clicked;
-  },
   down(btn) {
     const btnNum = (typeof btn === 'number') ? btn : 0;
     const state = _getMouseState(String(btnNum));
     return state.down;
   },
-  drag(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    const dragging = state.dragging;
-    state.dragging = false;
-    return dragging;
-  },
-  up(btn) {
-    const btnNum = (typeof btn === 'number') ? btn : 0;
-    const state = _getMouseState(String(btnNum));
-    return !state.down && !state.clicked;
-  },
 };
 
+function _touchSlotIsActive(idx) {
+  for (const mappedIdx of TEMF._touchPointerToSlot.values()) {
+    if (mappedIdx === idx) return true; // a real finger is currently held at this slot
+  }
+  return false; // no lingering state after release — matches Godot: index only exists while pressed
+}
+
+function _getTouchSlot(id) {
+  const idx = (typeof id === 'number') ? id : 0;
+  if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) {
+    throw new Error(`touch: invalid finger id ${id} (must be an integer 0-${TEMF._touchMax - 1})`);
+  }
+  if (!_touchSlotIsActive(idx)) {
+    throw new Error(`touch: no finger currently tracked at id ${idx}`);
+  }
+  return TEMF._touchSlots[idx];
+}
+
 const touch = {
-  get x() { return TEMF._touchX; },
-  get y() { return TEMF._touchY; },
-  tap() {
-    const tapped = TEMF._touchState.tapped;
-    TEMF._touchState.tapped = false;
-    return tapped;
+  exists(id) {
+    const idx = (typeof id === 'number') ? id : 0;
+    if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) return false;
+    return _touchSlotIsActive(idx);
   },
-  down() {
-    return TEMF._touchState.down;
+  x(id) {
+    return _getTouchSlot(id).x;
   },
-  drag() {
-    const dragging = TEMF._touchState.dragging;
-    TEMF._touchState.dragging = false;
-    return dragging;
+  y(id) {
+    return _getTouchSlot(id).y;
   },
-  up() {
-    return !TEMF._touchState.down && TEMF._touchState.tapped;
+  down(id) {
+    return _getTouchSlot(id).down;
   },
 };
 
@@ -1513,17 +1504,6 @@ function _bootstrap(button) {
   initAndStart();
 }
 
-function start(button) {
-  const game = {};
-  if (typeof update === 'function') game.update = update;
-  if (typeof draw === 'function') game.draw = draw;
-  if (typeof window.update === 'function') game.update = window.update;
-  if (typeof window.draw === 'function') game.draw = window.draw;
-
-  TEMF._game = game;
-  _bootstrap(button);
-}
-
 // For game code written as its own ES module (top-level functions there
 // are NOT auto-exposed on window the way a classic <script> would be),
 // call setGame({ update, draw }) instead of assigning window.update/draw.
@@ -1592,10 +1572,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, setFullscreenCallback, mouse, touch, audio };
-
 if (typeof window !== 'undefined') {
-  window.start = start;
   window.setGame = setGame;
   window.fps = fps;
   window.getCanvasSize = getCanvasSize;
@@ -1610,7 +1587,10 @@ if (typeof window !== 'undefined') {
   window.touch = touch;
   window.audio = audio;
 
-  // Auto-start: no need for game code to call start() manually.
-  // (window.start is still exposed above in case manual control is ever needed.)
-  start();
+  // Load game.js only after every window.* binding above is in place,
+  // so game.js can safely call setGame()/rect()/touch.* etc. as soon as
+  // it starts running, regardless of <script> ordering in index.html.
+  import('./game.js').catch((err) => {
+    console.error('Failed to load game.js:', err);
+  });
 }

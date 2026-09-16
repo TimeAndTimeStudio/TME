@@ -39,8 +39,7 @@ async function initProject(projectDir) {
 <body>
     <canvas id="game"></canvas>
 
-    <script type="module" src="./engine.js"></script>
-    <script type="module" src="./game.js"></script>
+    <script type="module" src="./runtime.js"></script>
 </body>
 </html>
 `,
