@@ -1599,6 +1599,12 @@ function fps(fpsValue) {
 function setOrientation(orientation) {
   if (orientation === 'landscape' || orientation === 'portrait') {
     TEMF._requireOrientation = orientation;
+    if (TEMF._started) {
+      _showOrientationOverlay(() => {
+        TEMF._started = false;
+        _bootstrap();
+      });
+    }
   }
 }
 
@@ -1669,5 +1675,20 @@ if (typeof window !== 'undefined') {
 
   // Auto-start: no need for game code to call start() manually.
   // (window.start is still exposed above in case manual control is ever needed.)
-  start();
+  // Wait for game.js to be loaded before starting
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (!TEMF._started) {
+          start();
+        }
+      }, 100);
+    });
+  } else {
+    setTimeout(() => {
+      if (!TEMF._started) {
+        start();
+      }
+    }, 100);
+  }
 }
