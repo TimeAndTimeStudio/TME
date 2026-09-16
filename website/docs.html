@@ -262,6 +262,15 @@ node tme/bin/tme build</div>
               <p>ตรวจสอบว่า touch แล้ว (auto-reset หลังอ่าน)</p>
               <div class="code-block">if input.touch.tapped:
   print("Touch tapped")</div>
+
+              <h3>input.pointer.x, input.pointer.y</h3>
+              <p>ตำแหน่ง pointer</p>
+              <div class="code-block">print(f"Pointer at {input.pointer.x}, {input.pointer.y}")</div>
+
+              <h3>input.pointer.is_touch</h3>
+              <p>ตรวจสอบว่าใช้ touch อยู่หรือไม่</p>
+              <div class="code-block">if input.pointer.is_touch:
+  print("Using touch input")</div>
             </div>
             <div class="lang-en">
               <h2>Input</h2>
@@ -289,6 +298,15 @@ node tme/bin/tme build</div>
               <p>Check if touch happened (auto-reset after read).</p>
               <div class="code-block">if input.touch.tapped:
   print("Touch tapped")</div>
+
+              <h3>input.pointer.x, input.pointer.y</h3>
+              <p>Pointer position.</p>
+              <div class="code-block">print(f"Pointer at {input.pointer.x}, {input.pointer.y}")</div>
+
+              <h3>input.pointer.is_touch</h3>
+              <p>Check if using touch input.</p>
+              <div class="code-block">if input.pointer.is_touch:
+  print("Using touch input")</div>
             </div>
           </section>
 
