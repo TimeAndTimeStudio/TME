@@ -60,6 +60,12 @@ body {
     width: 100vw;
     height: 100vh;
 }
+
+#game:-webkit-full-screen,
+#game:fullscreen {
+    width: 100vw;
+    height: 100vh;
+}
 `
   };
 
