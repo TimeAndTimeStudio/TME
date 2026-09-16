@@ -1,9 +1,7 @@
 # Jump Game — TME Example
-# Simple jumping game with fullscreen support
+# Simple jumping game with orientation support
 
-canvasSize = getCanvasSize()
-W = canvasSize.width
-H = canvasSize.height
+setOrientation('landscape')
 
 player = { x: 100, y: 400, vy: 0 }
 JUMP_FORCE = 300
@@ -22,6 +20,11 @@ function update(dt):
     player.vy = 0
 
 function draw():
+  canvasSize = getCanvasSize()
+  W = canvasSize.width
+  H = canvasSize.height
+  GROUND = H - 50
+  
   rect(0, GROUND, W, 50, "brown")
   rect(player.x, player.y, 50, 50, "blue")
   
