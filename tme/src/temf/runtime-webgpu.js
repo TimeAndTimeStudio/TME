@@ -412,12 +412,14 @@ function _createRenderer() {
       alpha: f32,
       padding: f32,
     };
+    @group(0) @binding(0) var<uniform> canvasSize: vec2f;
     @group(0) @binding(1) var<storage, read> imageData: array<ImageUniforms>;
     @group(0) @binding(2) var mySampler: sampler;
     @group(0) @binding(3) var myTexture: texture_2d<f32>;
     struct VSOut {
       @builtin(position) position: vec4f,
       @location(0) uv: vec2f,
+      @location(1) alpha: f32,
     };
     @vertex
     fn vs(@builtin(vertex_index) vertIdx: u32, @builtin(instance_index) imgIdx: u32) -> VSOut {
@@ -450,12 +452,16 @@ function _createRenderer() {
       let sin_r = sin(rad);
       pos = vec2f(pos.x * cos_r - pos.y * sin_r, pos.x * sin_r + pos.y * cos_r);
       pos = pos + vec2f(cx, cy);
-      return VSOut(vec4f(pos, 0.0, 1.0), uv);
+      let clipPos = vec2f(
+        (pos.x / canvasSize.x) * 2.0 - 1.0,
+        1.0 - (pos.y / canvasSize.y) * 2.0
+      );
+      return VSOut(vec4f(clipPos, 0.0, 1.0), uv, base.alpha);
     }
     @fragment
     fn fs(input: VSOut) -> @location(0) vec4f {
       let texColor = textureSample(myTexture, mySampler, input.uv);
-      return vec4f(texColor.rgb, texColor.a);
+      return vec4f(texColor.rgb, texColor.a * input.alpha);
     }
   `;
 
@@ -658,6 +664,10 @@ function _getOrCreateImageBindGroup(texture) {
     layout: TEMF._imageBindGroupLayout,
     entries: [
       {
+        binding: 0,
+        resource: { buffer: TEMF._canvasSizeBuffer },
+      },
+      {
         binding: 1,
         resource: { buffer: TEMF._imageUniformBuffer },
       },
@@ -746,6 +756,9 @@ function _drawImageBatch(texture, items, rp) {
     0,
     count * 48
   );
+
+  const canvasSizeData = new Float32Array([TEMF._canvas.width, TEMF._canvas.height]);
+  device.queue.writeBuffer(TEMF._canvasSizeBuffer, 0, canvasSizeData);
 
   rp.setPipeline(TEMF._imagePipeline);
   rp.setBindGroup(0, bindGroup);

@@ -44,10 +44,10 @@ const TEMF = {
   _mouseButtons: new Map(),
   _touchMax: 4,
   _touchSlots: [
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
+    { x: 0, y: 0, down: false },
+    { x: 0, y: 0, down: false },
+    { x: 0, y: 0, down: false },
+    { x: 0, y: 0, down: false },
   ],
   _touchPointerToSlot: new Map(),
   _audioContext: null,
@@ -366,7 +366,7 @@ async function initWebGL() {
     throw new Error('Canvas #game not found in DOM.');
   }
 
-  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: false });
+  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true });
   if (!gl) {
     throw new Error('WebGL is not supported by this browser.');
   }
@@ -374,7 +374,10 @@ async function initWebGL() {
   TEMF._canvas = canvas;
   TEMF._gl = gl;
   gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  // Match WebGPU's blend state: color blends by src-alpha, alpha channel
+  // accumulates with srcFactor=one (matches the WebGPU pipeline's separate
+  // color/alpha blend equations) so the two backends composite identically.
+  gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   _resize();
   _createRenderer();
@@ -476,15 +479,14 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
   });
 }
 
-function _drawRects(rects, locs) {
+function _drawRects(count, locs) {
   const gl = TEMF._gl;
-  if (!gl || rects.length === 0) return;
+  if (!gl || count === 0) return;
 
   const verts = [
     [0, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 1]
   ];
 
-  const count = rects.length;
   const totalVerts = count * 6;
   const posData = new Float32Array(totalVerts * 2);
   const rectData = new Float32Array(totalVerts * 4);
@@ -492,7 +494,7 @@ function _drawRects(rects, locs) {
   const rotScaleData = new Float32Array(totalVerts * 2);
 
   for (let i = 0; i < count; i++) {
-    const item = rects[i];
+    const item = TEMF._drawList[i];
     const x = item.x, y = item.y, w = item.width, h = item.height;
     const r = item.r, g = item.g, b = item.b, a = item.a;
     const rot = item.rotation || 0;
@@ -634,46 +636,65 @@ function _draw() {
 
   let batchType = null;
   let batchTexture = null;
-  let batch = [];
+  let batchStart = 0;
 
   const flushBatch = () => {
-    if (batch.length === 0) return;
-    if (batchType === 'rect') {
-      _drawRects(batch, TEMF._rectLocs);
-    } else if (batchType === 'image') {
-      _drawImageBatch(batchTexture, batch, TEMF._imageLocs);
+    if (batchStart >= TEMF._drawList.length) return;
+    let end = batchStart;
+    while (end < TEMF._drawList.length) {
+      const item = TEMF._drawList[end];
+      if (item.type === 'rect') {
+        if (batchType !== 'rect') break;
+        end++;
+      } else if (item.type === 'image') {
+        const texEntry = _getOrCreateTexture(item.path);
+        if (!texEntry || texEntry.status !== 'loaded') {
+          if (texEntry && texEntry.status === 'pending') {
+            TEMF._pendingImageDraws.push(item);
+          }
+          break;
+        }
+        if (batchType !== 'image' || batchTexture !== texEntry.texture) break;
+        end++;
+      }
     }
-    batch = [];
+
+    const count = end - batchStart;
+    if (count > 0) {
+      if (batchType === 'rect') {
+        _drawRects(count, TEMF._rectLocs);
+      } else if (batchType === 'image') {
+        _drawImageBatch(batchTexture, TEMF._drawList.slice(batchStart, end), TEMF._imageLocs);
+      }
+    }
+    batchStart = end;
   };
 
-  for (let i = 0; i < TEMF._drawList.length; i++) {
+  let i = 0;
+  while (i < TEMF._drawList.length) {
     const item = TEMF._drawList[i];
+    batchStart = i;
 
     if (item.type === 'rect') {
-      if (batchType !== 'rect') {
-        flushBatch();
-        batchType = 'rect';
-        batchTexture = null;
-      }
-      batch.push(item);
+      batchType = 'rect';
+      batchTexture = null;
+      flushBatch();
     } else if (item.type === 'image') {
       const texEntry = _getOrCreateTexture(item.path);
       if (!texEntry || texEntry.status !== 'loaded') {
         if (texEntry && texEntry.status === 'pending') {
           TEMF._pendingImageDraws.push(item);
         }
+        i++;
         continue;
       }
-      if (batchType !== 'image' || batchTexture !== texEntry.texture) {
-        flushBatch();
-        batchType = 'image';
-        batchTexture = texEntry.texture;
-      }
-      batch.push(item);
+      batchType = 'image';
+      batchTexture = texEntry.texture;
+      flushBatch();
     }
+    i = batchStart;
   }
 
-  flushBatch();
   TEMF._drawList.length = 0;
 }
 
@@ -814,6 +835,7 @@ function _touchReleaseSlot(pointerId) {
 function _touchWipeSlot(slot) {
   slot.x = 0;
   slot.y = 0;
+  slot.down = false;
 }
 
 function _initTouch() {
@@ -829,6 +851,7 @@ function _initTouch() {
     const slot = TEMF._touchSlots[slotIdx];
     slot.x = e.offsetX;
     slot.y = e.offsetY;
+    slot.down = true;
   });
 
   canvas.addEventListener('pointermove', (e) => {
@@ -898,7 +921,7 @@ function _getTouchSlot(id) {
 }
 
 const touch = {
-  down(id) {
+  exists(id) {
     const idx = (typeof id === 'number') ? id : 0;
     if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) return false;
     return _touchSlotIsActive(idx);
@@ -908,6 +931,9 @@ const touch = {
   },
   y(id) {
     return _getTouchSlot(id).y;
+  },
+  down(id) {
+    return _getTouchSlot(id).down;
   },
 };
 
@@ -1380,8 +1406,8 @@ if (typeof window !== 'undefined') {
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;
-}
 
-import('./game.js').catch((err) => {
-  console.error('Failed to load game.js:', err);
-});
+  import('./game.js').catch((err) => {
+    console.error('Failed to load game.js:', err);
+  });
+}
