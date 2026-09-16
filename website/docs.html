@@ -252,21 +252,37 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
     player.jumping = true</div>
 
               <h3>Mouse</h3>
+              <p>รองรับเมาส์ 3 ปุ่ม</p>
+              <ul>
+                <li><code>0</code> = ปุ่มซ้าย (Left Click)</li>
+                <li><code>1</code> = ปุ่มกลาง (Middle Click / Scroll Wheel)</li>
+                <li><code>2</code> = ปุ่มขวา (Right Click)</li>
+              </ul>
               <div class="code-block">function draw():
   print(mouse.x, mouse.y)
   
-  if mouse.down(0):
+  if mouse.down(0):  # ปุ่มซ้าย
     if mouse.x > 100 and mouse.x < 200:
       if mouse.y > 100 and mouse.y < 150:
-        startGame()</div>
+        startGame()
+  
+  if mouse.down(2):  # ปุ่มขวา
+    print("Right click detected")</div>
 
               <h3>Touch</h3>
+              <p>รองรับสูงสุด 4 นิ้ว พร้อมกัน (Multi-Touch)</p>
+              <ul>
+                <li><code>touch.exists(0)</code> — นิ้วที่ 0 กดอยู่</li>
+                <li><code>touch.exists(1)</code> — นิ้วที่ 1 กดอยู่</li>
+                <li><code>touch.exists(2)</code> — นิ้วที่ 2 กดอยู่</li>
+                <li><code>touch.exists(3)</code> — นิ้วที่ 3 กดอยู่</li>
+              </ul>
               <div class="code-block">function update(dt):
-  if touch.exists(0):
+  if touch.exists(0):  # นิ้วแรก
     player.x = touch.x(0)
     player.y = touch.y(0)
   
-  if touch.exists(1):
+  if touch.exists(1):  # นิ้วสอง (Multi-Touch)
     fireBullet(touch.x(1), touch.y(1))</div>
             </div>
             <div class="lang-en">
@@ -283,21 +299,37 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
     player.jumping = true</div>
 
               <h3>Mouse</h3>
+              <p>รองรับเมาส์ 3 ปุ่ม</p>
+              <ul>
+                <li><code>0</code> = ปุ่มซ้าย (Left Click)</li>
+                <li><code>1</code> = ปุ่มกลาง (Middle Click / Scroll Wheel)</li>
+                <li><code>2</code> = ปุ่มขวา (Right Click)</li>
+              </ul>
               <div class="code-block">function draw():
   print(mouse.x, mouse.y)
   
-  if mouse.down(0):
+  if mouse.down(0):  # ปุ่มซ้าย
     if mouse.x > 100 and mouse.x < 200:
       if mouse.y > 100 and mouse.y < 150:
-        startGame()</div>
+        startGame()
+  
+  if mouse.down(2):  # ปุ่มขวา
+    print("Right click detected")</div>
 
               <h3>Touch</h3>
+              <p>รองรับสูงสุด 4 นิ้ว พร้อมกัน (Multi-Touch)</p>
+              <ul>
+                <li><code>touch.exists(0)</code> — นิ้วที่ 0 กดอยู่</li>
+                <li><code>touch.exists(1)</code> — นิ้วที่ 1 กดอยู่</li>
+                <li><code>touch.exists(2)</code> — นิ้วที่ 2 กดอยู่</li>
+                <li><code>touch.exists(3)</code> — นิ้วที่ 3 กดอยู่</li>
+              </ul>
               <div class="code-block">function update(dt):
-  if touch.exists(0):
+  if touch.exists(0):  # นิ้วแรก
     player.x = touch.x(0)
     player.y = touch.y(0)
   
-  if touch.exists(1):
+  if touch.exists(1):  # นิ้วสอง (Multi-Touch)
     fireBullet(touch.x(1), touch.y(1))</div>
             </div>
           </section>
@@ -362,7 +394,7 @@ audio.mutedBgm = true</div>
               <h2>Game Loop</h2>
               <p>กำหนดฟังก์ชันหลักของเกม 2 ฟังก์ชัน</p>
 
-              <h3>setGame({ update: update, draw: draw })</h3>
+              <h3>setGame({ update, draw })</h3>
               <div class="code-block">function update(dt):
   player.x += player.vx * dt
   if player.x > 800:
@@ -372,7 +404,7 @@ function draw():
   rect(0, 0, 800, 600, "#87CEEB")
   rect(player.x, player.y, 50, 50, "#FF5733")
 
-setGame({ update: update, draw: draw })</div>
+setGame({ update, draw })</div>
 
               <h3>fps(value)</h3>
               <div class="code-block">fps(60)
@@ -382,7 +414,7 @@ fps(30)</div>
               <h2>Game Loop</h2>
               <p>Define the two main game functions.</p>
 
-              <h3>setGame({ update: update, draw: draw })</h3>
+              <h3>setGame({ update, draw })</h3>
               <div class="code-block">function update(dt):
   player.x += player.vx * dt
   if player.x > 800:
@@ -392,7 +424,7 @@ function draw():
   rect(0, 0, 800, 600, "#87CEEB")
   rect(player.x, player.y, 50, 50, "#FF5733")
 
-setGame({ update: update, draw: draw })</div>
+setGame({ update, draw })</div>
 
               <h3>fps(value)</h3>
               <div class="code-block">fps(60)
