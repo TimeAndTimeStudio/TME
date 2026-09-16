@@ -23,7 +23,7 @@ function draw() {
   W = canvasSize.width;
   rect(0, GROUND, W, 50, "#8B4513");
   rect(player.x, player.y, 50, 50, "#0000FF");
-  image("img/img1.png", (player.x - 25), (player.y - 60), 50, 50);
+  image("img/img1.png", (player.x - 600), (player.y - 720), 1200, 600);
 }
 fps(60);
 setGame({ update: update, draw: draw });
