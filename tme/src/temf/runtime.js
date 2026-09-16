@@ -284,18 +284,24 @@ function _resize() {
       [width, height] = [height, width];
       
       if (!isFullscreen && isMobile) {
-        TEMF._canvas.style.transform = 'rotate(90deg)';
+        const screenW = window.innerWidth * dpr;
+        const screenH = window.innerHeight * dpr;
+        const scale = Math.min(screenW / width, screenH / height);
+        
+        TEMF._canvas.style.transform = `rotate(90deg) translate(-50%, -50%)`;
+        TEMF._canvas.style.transformOrigin = 'center center';
         TEMF._canvas.style.position = 'fixed';
-        TEMF._canvas.style.top = '0';
-        TEMF._canvas.style.left = '0';
-        TEMF._canvas.style.width = '100vh';
-        TEMF._canvas.style.height = '100vw';
+        TEMF._canvas.style.top = '50%';
+        TEMF._canvas.style.left = '50%';
+        TEMF._canvas.style.width = `${width * scale}px`;
+        TEMF._canvas.style.height = `${height * scale}px`;
         TEMF._canvas.style.zIndex = '9999';
       }
     }
   } else {
     if (TEMF._canvas.style.transform) {
       TEMF._canvas.style.transform = '';
+      TEMF._canvas.style.transformOrigin = '';
       TEMF._canvas.style.position = '';
       TEMF._canvas.style.top = '';
       TEMF._canvas.style.left = '';
