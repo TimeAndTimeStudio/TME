@@ -1458,6 +1458,14 @@ const audio = {
 // ============================================================
 
 function gameLoop() {
+  if (!TEMF._started) {
+    // Paused (e.g. waiting for correct orientation). Keep polling via rAF
+    // instead of running update/draw, and don't let a second _bootstrap()
+    // call spawn a duplicate loop on top of this one.
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
   TEMF._lastTime = now;
@@ -1490,6 +1498,17 @@ function _bootstrap(button) {
     TEMF._started = true;
     const overlay = document.getElementById('temf-fullscreen-overlay');
     if (overlay) overlay.remove();
+
+    // If we've already initialized once (e.g. this is a re-entry after an
+    // orientation-overlay round trip), gameLoop() is already alive (it
+    // pauses itself instead of exiting), so just resume it in place —
+    // don't re-attach listeners or spawn a second concurrent loop.
+    if (TEMF._bootstrapped) {
+      TEMF._lastTime = performance.now();
+      return;
+    }
+    TEMF._bootstrapped = true;
+
     initWebGPU().then(() => {
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
@@ -1585,8 +1604,11 @@ function _showOrientationOverlay(callback) {
   document.getElementById('temf-start-btn').addEventListener('click', () => {
     if (isMobile || TEMF._requireOrientation === 'landscape') {
       requestFullscreen();
+      let fired = false;
       const checkFullscreen = () => {
+        if (fired) return;
         if (document.fullscreenElement || document.webkitFullscreenElement) {
+          fired = true;
           setTimeout(callback, 500);
         }
       };
@@ -1647,10 +1669,13 @@ function getCanvasSize() {
 function requestFullscreen() {
   const canvas = TEMF._canvas || document.getElementById('game');
   if (!canvas) return;
-  
-  document.addEventListener('fullscreenchange', handleFullscreenChange);
-  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-  
+
+  if (!TEMF._fullscreenListenersAttached) {
+    TEMF._fullscreenListenersAttached = true;
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  }
+
   if (canvas.requestFullscreen) {
     canvas.requestFullscreen();
   } else if (canvas.webkitRequestFullscreen) {
