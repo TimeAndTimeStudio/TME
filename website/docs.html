@@ -79,6 +79,8 @@
               <li><a href="#project-structure">Project Structure</a></li>
               <li><a href="#render">Render</a></li>
               <li><a href="#input">Input</a></li>
+              <li><a href="#mouse-api">Mouse</a></li>
+              <li><a href="#touch-api">Touch</a></li>
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
               <li><a href="#build">Build</a></li>
@@ -95,6 +97,8 @@
               <li><a href="#project-structure">Project Structure</a></li>
               <li><a href="#render">Render</a></li>
               <li><a href="#input">Input</a></li>
+              <li><a href="#mouse-api">Mouse</a></li>
+              <li><a href="#touch-api">Touch</a></li>
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
               <li><a href="#build">Build</a></li>
@@ -271,6 +275,68 @@ node tme/bin/tme build</div>
               <h3>Pointer</h3>
               <div class="code-block">if input.pointer.is_touch:
   print(f"Pointer at {input.pointer.x}, {input.pointer.y}")</div>
+            </div>
+          </section>
+
+          <section id="mouse-api">
+            <div class="lang-th">
+              <h2>Mouse API</h2>
+              <p>Mouse API แบบเต็มรูปแบบ</p>
+
+              <h3>properties</h3>
+              <div class="code-block">mouse.x  # ตำแหน่ง X
+mouse.y  # ตำแหน่ง Y</div>
+
+              <h3>methods</h3>
+              <div class="code-block">mouse.click(0)  # ตรวจสอบ click
+mouse.down(0)   # ตรวจสอบ down
+mouse.drag(0)   # ตรวจสอบ drag
+mouse.up(0)     # ตรวจสอบ up</div>
+            </div>
+            <div class="lang-en">
+              <h2>Mouse API</h2>
+              <p>Full-featured mouse API</p>
+
+              <h3>properties</h3>
+              <div class="code-block">mouse.x  # X position
+mouse.y  # Y position</div>
+
+              <h3>methods</h3>
+              <div class="code-block">mouse.click(0)  # Check click
+mouse.down(0)   # Check down
+mouse.drag(0)   # Check drag
+mouse.up(0)     # Check up</div>
+            </div>
+          </section>
+
+          <section id="touch-api">
+            <div class="lang-th">
+              <h2>Touch API</h2>
+              <p>Touch API แบบเต็มรูปแบบ</p>
+
+              <h3>properties</h3>
+              <div class="code-block">touch.x  # ตำแหน่ง X
+touch.y  # ตำแหน่ง Y</div>
+
+              <h3>methods</h3>
+              <div class="code-block">touch.tap()   # ตรวจสอบ tap
+touch.down()  # ตรวจสอบ down
+touch.drag()  # ตรวจสอบ drag
+touch.up()    # ตรวจสอบ up</div>
+            </div>
+            <div class="lang-en">
+              <h2>Touch API</h2>
+              <p>Full-featured touch API</p>
+
+              <h3>properties</h3>
+              <div class="code-block">touch.x  # X position
+touch.y  # Y position</div>
+
+              <h3>methods</h3>
+              <div class="code-block">touch.tap()   # Check tap
+touch.down()  # Check down
+touch.drag()  # Check drag
+touch.up()    # Check up</div>
             </div>
           </section>
 
