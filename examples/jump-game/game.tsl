@@ -1,5 +1,9 @@
 # Jump Game — TME Example
-# Simple jumping game
+# Simple jumping game with fullscreen support
+
+const canvasSize = getCanvasSize()
+const W = canvasSize.width
+const H = canvasSize.height
 
 player = { x: 100, y: 400, vy: 0 }
 JUMP_FORCE = 300
@@ -7,7 +11,7 @@ GRAVITY = 800
 GROUND = 400
 
 function update(dt):
-  if input.keyboard.is_down("space") or input.touch.tapped:
+  if input.keyboard.is_down("space") or touch.tap():
     player.vy = (0 - JUMP_FORCE)
 
   player.vy = (player.vy + (GRAVITY * dt))
@@ -18,7 +22,7 @@ function update(dt):
     player.vy = 0
 
 function draw():
-  rect(0, GROUND, 800, 50, "brown")
+  rect(0, GROUND, W, 50, "brown")
   rect(player.x, player.y, 50, 50, "blue")
 
 fps(60)
