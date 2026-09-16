@@ -7,7 +7,7 @@ GRAVITY = 800
 GROUND = 400
 
 function update(dt):
-  if input.keyboard.is_down("space") or input.pointer.clicked:
+  if input.keyboard.is_down("space") or input.touch.tapped:
     player.vy = (0 - JUMP_FORCE)
 
   player.vy = (player.vy + (GRAVITY * dt))

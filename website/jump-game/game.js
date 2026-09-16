@@ -3,7 +3,7 @@ let JUMP_FORCE = 300;
 let GRAVITY = 800;
 let GROUND = 400;
 function update(dt) {
-  if ((input.keyboard.is_down("space") || input.pointer.clicked)) {
+  if ((input.keyboard.is_down("space") || input.touch.tapped)) {
     player.vy = (0 - JUMP_FORCE);
   }
   player.vy = (player.vy + (GRAVITY * dt));
