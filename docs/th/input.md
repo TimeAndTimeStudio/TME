@@ -10,38 +10,43 @@
 |----------|----------|
 | `A-Z` | ตัวอักษร A ถึง Z |
 | `0-9` | ตัวเลข 0 ถึง 9 |
-| `Space` | Spacebar |
-| `Enter` | Enter |
-| `Escape` | Esc |
-| `Backspace` | Backspace |
-| `Tab` | Tab |
-| `ArrowUp` | ลูกศรขึ้น |
-| `ArrowDown` | ลูกศรลง |
-| `ArrowLeft` | ลูกศรซ้าย |
-| `ArrowRight` | ลูกศรขวา |
-| `Home` | Home |
-| `End` | End |
-| `PageUp` | Page Up |
-| `PageDown` | Page Down |
-| `Insert` | Insert |
-| `Delete` | Delete |
-| `CapsLock` | Caps Lock |
-| `NumLock` | Num Lock |
-| `ScrollLock` | Scroll Lock |
-| `Pause` | Pause |
-| `PrintScreen` | Print Screen |
-| `Control` or `Ctrl` | Ctrl |
-| `Shift` | Shift |
-| `Alt` | Alt |
-| `Meta` | Meta (Win/Cmd) |
-| `Fn` | Fn |
-| `Numpad0`-`Numpad9` | ปุ่มตัวเลขบน Keypad |
-| `NumpadAdd` | + บน Keypad |
-| `NumpadSubtract` | - บน Keypad |
-| `NumpadMultiply` | * บน Keypad |
-| `NumpadDivide` | / บน Keypad |
-| `NumpadDecimal` | . บน Keypad |
-| `NumpadEnter` | Enter บน Keypad |
+| `SPACE` | Spacebar |
+| `ENTER` | Enter |
+| `ESC` | Esc |
+| `BACKSPACE` | Backspace |
+| `TAB` | Tab |
+| `UP` | ลูกศรขึ้น |
+| `DOWN` | ลูกศรลง |
+| `LEFT` | ลูกศรซ้าย |
+| `RIGHT` | ลูกศรขวา |
+| `HOME` | Home |
+| `END` | End |
+| `PAGEUP` | Page Up |
+| `PAGEDOWN` | Page Down |
+| `INSERT` | Insert |
+| `DELETE` | Delete |
+| `CAPSLOCK` | Caps Lock |
+| `NUMLOCK` | Num Lock |
+| `SCROLLLOCK` | Scroll Lock |
+| `PAUSE` | Pause |
+| `PRINTSCREEN` | Print Screen |
+| `CTRL` | Ctrl |
+| `SHIFT` | Shift |
+| `ALT` | Alt |
+| `META` | Meta (Win/Cmd) |
+| `FN` | Fn |
+| `NUMPAD0`-`NUMPAD9` | ปุ่มตัวเลขบน Keypad |
+| `NUMPADADD` | + บน Keypad |
+| `NUMPADSUB` | - บน Keypad |
+| `NUMPADMUL` | * บน Keypad |
+| `NUMPADDIV` | / บน Keypad |
+| `NUMPADDEC` | . บน Keypad |
+| `NUMPADENTER` | Enter บน Keypad |
+| `NUMPADCOMMA` | , บน Keypad |
+| `NUMPADEQUAL` | = บน Keypad |
+| `NUMPADPARENLEFT` | ( บน Keypad |
+| `NUMPADPARENRIGHT` | ) บน Keypad |
+| `CLEAR` | Clear |
 
 ```javascript
 function update(dt):
