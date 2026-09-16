@@ -16,6 +16,11 @@ function update(dt):
 
 ## Mouse
 
+Supports 3 mouse buttons:
+- `0` = Left Button (Left Click)
+- `1` = Middle Button (Scroll Wheel)
+- `2` = Right Button (Right Click)
+
 ```javascript
 function draw():
   # Mouse position
@@ -28,9 +33,18 @@ function draw():
       if mouse.y > 100 and mouse.y < 150:
         # Clicked on button
         startGame()
+  
+  if mouse.down(2):  # Right button
+    print("Right click detected")
 ```
 
 ## Touch
+
+Supports up to 4 fingers simultaneously (Multi-Touch):
+- `touch.exists(0)` — Finger 0 is pressed
+- `touch.exists(1)` — Finger 1 is pressed
+- `touch.exists(2)` — Finger 2 is pressed
+- `touch.exists(3)` — Finger 3 is pressed
 
 ```javascript
 function update(dt):

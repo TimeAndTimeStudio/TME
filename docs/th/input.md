@@ -16,6 +16,11 @@ function update(dt):
 
 ## Mouse
 
+รองรับเมาส์ 3 ปุ่ม:
+- `0` = ปุ่มซ้าย (Left Click)
+- `1` = ปุ่มกลาง (Middle Click / Scroll Wheel)
+- `2` = ปุ่มขวา (Right Click)
+
 ```javascript
 function draw():
   # ตำแหน่งเมาส์
@@ -28,9 +33,18 @@ function draw():
       if mouse.y > 100 and mouse.y < 150:
         # คลิกที่ปุ่ม
         startGame()
+  
+  if mouse.down(2):  # ปุ่มขวา
+    print("Right click detected")
 ```
 
 ## Touch
+
+รองรับสูงสุด 4 นิ้ว พร้อมกัน (Multi-Touch):
+- `touch.exists(0)` — นิ้วที่ 0 กดอยู่
+- `touch.exists(1)` — นิ้วที่ 1 กดอยู่
+- `touch.exists(2)` — นิ้วที่ 2 กดอยู่
+- `touch.exists(3)` — นิ้วที่ 3 กดอยู่
 
 ```javascript
 function update(dt):
