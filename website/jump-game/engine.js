@@ -282,6 +282,26 @@ function _resize() {
   if (isFullscreen || (isMobile && height > width)) {
     if (height > width) {
       [width, height] = [height, width];
+      
+      if (!isFullscreen && isMobile) {
+        TEMF._canvas.style.transform = 'rotate(90deg)';
+        TEMF._canvas.style.position = 'fixed';
+        TEMF._canvas.style.top = '0';
+        TEMF._canvas.style.left = '0';
+        TEMF._canvas.style.width = '100vh';
+        TEMF._canvas.style.height = '100vw';
+        TEMF._canvas.style.zIndex = '9999';
+      }
+    }
+  } else {
+    if (TEMF._canvas.style.transform) {
+      TEMF._canvas.style.transform = '';
+      TEMF._canvas.style.position = '';
+      TEMF._canvas.style.top = '';
+      TEMF._canvas.style.left = '';
+      TEMF._canvas.style.width = '';
+      TEMF._canvas.style.height = '';
+      TEMF._canvas.style.zIndex = '';
     }
   }
 
