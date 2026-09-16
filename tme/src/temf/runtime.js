@@ -1577,46 +1577,6 @@ function exitFullscreen() {
   }
 }
 
-function lockOrientation(orientation = 'landscape') {
-  if (screen.orientation && screen.orientation.lock) {
-    try {
-      screen.orientation.lock(orientation);
-    } catch (e) {
-      console.warn('Failed to lock orientation:', e);
-    }
-  } else if (screen.lockOrientation) {
-    try {
-      screen.lockOrientation(orientation);
-    } catch (e) {
-      console.warn('Failed to lock orientation:', e);
-    }
-  } else if (screen.mozLockOrientation) {
-    try {
-      screen.mozLockOrientation(orientation);
-    } catch (e) {
-      console.warn('Failed to lock orientation:', e);
-    }
-  } else if (screen.webkitLockOrientation) {
-    try {
-      screen.webkitLockOrientation(orientation);
-    } catch (e) {
-      console.warn('Failed to lock orientation:', e);
-    }
-  }
-}
-
-function unlockOrientation() {
-  if (screen.orientation && screen.orientation.unlock) {
-    screen.orientation.unlock();
-  } else if (screen.unlockOrientation) {
-    screen.unlockOrientation();
-  } else if (screen.mozUnlockOrientation) {
-    screen.mozUnlockOrientation();
-  } else if (screen.webkitUnlockOrientation) {
-    screen.webkitUnlockOrientation();
-  }
-}
-
 // ============================================================
 // Public API / global exports
 // ============================================================
@@ -1625,7 +1585,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, lockOrientation, unlockOrientation, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -1634,8 +1594,6 @@ if (typeof window !== 'undefined') {
   window.getCanvasSize = getCanvasSize;
   window.requestFullscreen = requestFullscreen;
   window.exitFullscreen = exitFullscreen;
-  window.lockOrientation = lockOrientation;
-  window.unlockOrientation = unlockOrientation;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
