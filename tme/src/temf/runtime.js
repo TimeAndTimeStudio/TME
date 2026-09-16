@@ -273,8 +273,14 @@ function _resize() {
   if (!TEMF._canvas || !TEMF._context) return;
 
   const dpr = window.devicePixelRatio || 1;
-  const width = TEMF._canvas.clientWidth * dpr;
-  const height = TEMF._canvas.clientHeight * dpr;
+  let width = TEMF._canvas.clientWidth * dpr;
+  let height = TEMF._canvas.clientHeight * dpr;
+
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    if (height > width) {
+      [width, height] = [height, width];
+    }
+  }
 
   if (TEMF._canvas.width !== width || TEMF._canvas.height !== height) {
     TEMF._canvas.width = width;
