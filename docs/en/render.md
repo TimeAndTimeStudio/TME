@@ -54,4 +54,23 @@ image('images/player.png', 100, 100, 64, 64);
 image('images/enemy.png', 200, 150, 90, 1.5, 0.8);
 ```
 
+## `getCanvasSize()`
+
+Gets the current canvas size (including DPR).
+
+**Signature:**
+```typescript
+getCanvasSize(): { width: number, height: number }
+```
+
+**Example:**
+```javascript
+function draw():
+  size = getCanvasSize()
+  W = size.width
+  H = size.height
+  # Use W, H for positioning
+  rect(0, H-50, W, 50, "brown")
+```
+
 

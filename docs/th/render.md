@@ -54,3 +54,22 @@ image('images/player.png', 100, 100, 64, 64);
 image('images/enemy.png', 200, 150, 90, 1.5, 0.8);
 ```
 
+## `getCanvasSize()`
+
+ดึงขนาดปัจจุบันของ canvas (รวม DPR)
+
+**Signature:**
+```typescript
+getCanvasSize(): { width: number, height: number }
+```
+
+**ตัวอย่าง:**
+```javascript
+function draw():
+  size = getCanvasSize()
+  W = size.width
+  H = size.height
+  # ใช้ W, H ในการคำนวณตำแหน่ง
+  rect(0, H-50, W, 50, "brown")
+```
+
