@@ -9,3 +9,11 @@ canvas {
   width: 100vw;
   height: 100vh;
 }
+:fullscreen {
+  margin: 0;
+  padding: 0;
+}
+:-webkit-full-screen {
+  margin: 0;
+  padding: 0;
+}
