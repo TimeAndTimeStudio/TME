@@ -954,7 +954,12 @@ const touch = {
     return _getTouchSlot(id).y;
   },
   down(id) {
-    return _getTouchSlot(id).down;
+    const idx = (typeof id === 'number') ? id : 0;
+    if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) {
+      throw new Error(`touch: invalid finger id ${id} (must be an integer 0-${TEMF._touchMax - 1})`);
+    }
+    if (!_touchSlotIsActive(idx)) return false; // no finger there yet: same as "not pressed"
+    return TEMF._touchSlots[idx].down;
   },
 };
 

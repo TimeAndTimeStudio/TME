@@ -591,24 +591,14 @@ function _rect(x, y, width, height, color, rotation, scale, alpha) {
   });
 }
 
-function _image(path, x, y, width, height, rotation, scale, alpha, cropX, cropY, cropWidth, cropHeight) {
-  let srcW, srcH;
-
-  if (typeof width === 'number' && typeof height === 'number') {
-    srcW = width;
-    srcH = height;
-  } else {
-    srcW = 0;
-    srcH = 0;
-  }
-
+function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cropHeight) {
   const optRotation = (typeof rotation === 'number') ? rotation : 0;
   const optScale = (typeof scale === 'number') ? scale : 1;
   const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : 1;
   const optCropX = (typeof cropX === 'number') ? cropX : 0;
   const optCropY = (typeof cropY === 'number') ? cropY : 0;
-  const optCropW = (typeof cropWidth === 'number') ? cropWidth : srcW;
-  const optCropH = (typeof cropHeight === 'number') ? cropHeight : srcH;
+  const optCropW = (typeof cropWidth === 'number') ? cropWidth : 0;
+  const optCropH = (typeof cropHeight === 'number') ? cropHeight : 0;
 
   const img = TEMF._imageElements.get(path);
   let texW = 0, texH = 0;
@@ -619,10 +609,7 @@ function _image(path, x, y, width, height, rotation, scale, alpha, cropX, cropY,
   }
 
   let displayW, displayH;
-  if (srcW > 0 && srcH > 0) {
-    displayW = srcW * optScale;
-    displayH = srcH * optScale;
-  } else if (img) {
+  if (img) {
     displayW = texW * optScale;
     displayH = texH * optScale;
   } else {
@@ -631,9 +618,9 @@ function _image(path, x, y, width, height, rotation, scale, alpha, cropX, cropY,
   }
 
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
-  if (img && (srcW > 0 || optCropW > 0)) {
-    const cropW = optCropW > 0 ? optCropW : srcW;
-    const cropH = optCropH > 0 ? optCropH : srcH;
+  if (img) {
+    const cropW = optCropW > 0 ? optCropW : texW;
+    const cropH = optCropH > 0 ? optCropH : texH;
     u0 = optCropX / texW;
     v0 = optCropY / texH;
     u1 = (optCropX + cropW) / texW;
