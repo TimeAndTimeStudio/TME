@@ -1553,4 +1553,10 @@ if (typeof window !== 'undefined') {
   window.touch = touch;
   window.audio = audio;
 
+  // Load game.js only after every window.* binding above is in place,
+  // so game.js can safely call setGame()/rect()/touch.* etc. as soon as
+  // it starts running, regardless of <script> ordering in index.html.
+  import('./game.js').catch((err) => {
+    console.error('Failed to load game.js:', err);
+  });
 }

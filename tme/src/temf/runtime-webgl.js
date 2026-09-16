@@ -1381,4 +1381,7 @@ if (typeof window !== 'undefined') {
   window.touch = touch;
   window.audio = audio;
 
+  import('./game.js').catch((err) => {
+    console.error('Failed to load game.js:', err);
+  });
 }
