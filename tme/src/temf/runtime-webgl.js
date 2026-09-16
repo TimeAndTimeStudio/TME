@@ -3,10 +3,12 @@
  *
  * Rendering: rect + image draw calls, transform (rotation, scale) and alpha
  * for both. Textures are cached by path (LRU-evicted) and uploaded via
- * Image element + texImage2D (no CPU canvas readback).
- * Rect and image data live in per-frame-reused vertex buffers and are
- * drawn with triangle strips (6 verts per quad) instead of one draw
- * call per object.
+ * an Image element + texImage2D (no CPU canvas readback).
+ * Rect and image data live in a per-frame-reused instanced vertex buffer
+ * (one float slot per object, no per-vertex duplication) and are drawn
+ * with a single instanced draw call per batch (6 verts, N instances) via
+ * the ANGLE_instanced_arrays extension — mirrors the WebGPU backend's
+ * storage-buffer + instancing approach as closely as WebGL1 allows.
  * Draw order matches call order: consecutive same-type/same-texture items
  * are batched into a single draw call, but the batch flushes whenever the
  * type or texture changes, so later rect()/image() calls always render on
@@ -19,6 +21,7 @@ const TEMF = {
   _started: false,
   _canvas: null,
   _gl: null,
+  _instancing: null, // ANGLE_instanced_arrays extension
   _fps: 60,
   _accumulator: 0,
   _lastTime: 0,
@@ -27,22 +30,17 @@ const TEMF = {
   _fullscreenCallback: null,
   _rectProgram: null,
   _rectLocs: null,
-  _rectBuffer: null,
-  _rectPosBuffer: null,
-  _rectRectBuffer: null,
-  _rectColorAlphaBuffer: null,
-  _rectRotScaleBuffer: null,
+  _rectQuadBuffer: null,
+  _rectInstanceBuffer: null,
   _imageProgram: null,
   _imageLocs: null,
-  _imageBuffer: null,
-  _imagePosBuffer: null,
-  _imageRectBuffer: null,
-  _imageUVBuffer: null,
-  _imageAlphaBuffer: null,
-  _imageRotScaleBuffer: null,
+  _imageQuadBuffer: null,
+  _imageInstanceBuffer: null,
   _drawList: [],
   _rectMax: 1024,
   _imageMax: 1024,
+  _rectScratch: null,
+  _imageScratch: null,
   _textureCache: new Map(),
   _textureCacheMax: 64,
   _pendingImageDraws: [],
@@ -53,12 +51,12 @@ const TEMF = {
   _mouseButtons: new Map(),
   _touchMax: 4,
   _touchSlots: [
-    { x: 0, y: 0, down: false },
-    { x: 0, y: 0, down: false },
-    { x: 0, y: 0, down: false },
-    { x: 0, y: 0, down: false },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
   ],
-  _touchPointerToSlot: new Map(),
+  _touchPointerToSlot: new Map(), // native pointerId -> slot index (0-3)
   _audioContext: null,
   _audioInitialized: false,
   _audioCache: new Map(),
@@ -124,7 +122,7 @@ function _getBasePath() {
 // Rendering: texture loading & caching
 // ============================================================
 
-function _loadImage(path) {
+async function _loadImage(path) {
   if (TEMF._imageElements.has(path)) {
     return TEMF._imageElements.get(path);
   }
@@ -148,6 +146,7 @@ function _loadImage(path) {
 function _createTexture(gl, img) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -207,6 +206,9 @@ function _getOrCreateTexture(path) {
       entry.width = loadedWidth;
       entry.height = loadedHeight;
       entry.lastUsed = performance.now();
+      // No need to replay _pendingImageDraws here: the game loop calls the
+      // game's draw() again every tick, so the next _draw() call will simply
+      // find this texture 'loaded' and draw it in its correct call order.
       TEMF._pendingImageDraws = TEMF._pendingImageDraws.filter(d => d.path !== path);
     })
     .catch((err) => {
@@ -287,27 +289,31 @@ function _getLocations(gl, program, attribs, uniforms) {
 
 function _createRenderer() {
   const gl = TEMF._gl;
+  const max = TEMF._rectMax;
 
   // === Rectangle shader ===
+  // Corner (aCorner) is per-vertex (divisor 0); every other attribute is
+  // per-instance (divisor 1), same split as the WebGPU version's
+  // per-vertex cornerIdx vs. per-instance storage-buffer item.
   const rectVS = `
-    attribute vec2 aPos;
-    attribute vec4 aRect;
-    attribute vec4 aColorAlpha;
-    attribute vec2 aRotScale;
+    attribute vec2 aCorner;
+    attribute vec4 aData0; // x, y, w, h
+    attribute vec4 aData1; // r, g, b, a
+    attribute vec2 aData2; // rotation, scale
     uniform vec2 uCanvasSize;
     varying vec4 vColor;
     void main() {
-      vec2 pos = aPos;
-      vec2 center = aRect.xy + aRect.zw * 0.5;
-      pos = (pos - center) * aRotScale.y;
-      float rad = aRotScale.x * 3.14159265 / 180.0;
+      vec2 pos = aData0.xy + aCorner * aData0.zw;
+      vec2 center = aData0.xy + aData0.zw * 0.5;
+      pos = (pos - center) * aData2.y;
+      float rad = aData2.x * 3.14159265 / 180.0;
       float c = cos(rad);
       float s = sin(rad);
       pos = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
       float px = (pos.x / uCanvasSize.x) * 2.0 - 1.0;
       float py = 1.0 - (pos.y / uCanvasSize.y) * 2.0;
       gl_Position = vec4(px, py, 0.0, 1.0);
-      vColor = aColorAlpha;
+      vColor = aData1;
     }
   `;
 
@@ -320,37 +326,44 @@ function _createRenderer() {
   `;
 
   const rectProg = _linkProgram(gl, _compileShader(gl, gl.VERTEX_SHADER, rectVS), _compileShader(gl, gl.FRAGMENT_SHADER, rectFS));
-  const rectLocs = _getLocations(gl, rectProg, ['aPos', 'aRect', 'aColorAlpha', 'aRotScale'], ['uCanvasSize']);
+  const rectLocs = _getLocations(gl, rectProg, ['aCorner', 'aData0', 'aData1', 'aData2'], ['uCanvasSize']);
   TEMF._rectProgram = rectProg;
   TEMF._rectLocs = rectLocs;
-  TEMF._rectPosBuffer = gl.createBuffer();
-  TEMF._rectRectBuffer = gl.createBuffer();
-  TEMF._rectColorAlphaBuffer = gl.createBuffer();
-  TEMF._rectRotScaleBuffer = gl.createBuffer();
+
+  // Unit quad (0..1), uploaded once — reused every frame, no per-draw rebuild.
+  const quadVerts = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]);
+  TEMF._rectQuadBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectQuadBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STATIC_DRAW);
+
+  TEMF._rectInstanceBuffer = gl.createBuffer();
+  TEMF._rectScratch = new Float32Array(max * 10); // 10 floats/instance: x,y,w,h,r,g,b,a,rotation,scale
 
   // === Image shader ===
   const imgVS = `
-    attribute vec2 aPos;
-    attribute vec4 aRect;
-    attribute vec2 aUV;
-    attribute float aAlpha;
-    attribute vec2 aRotScale;
+    attribute vec2 aCorner;
+    attribute vec4 aData0; // x, y, w, h
+    attribute vec4 aData1; // u0, v0, u1, v1
+    attribute vec4 aData2; // rotation, scale, alpha, padding
     uniform vec2 uCanvasSize;
     varying vec2 vUV;
     varying float vAlpha;
     void main() {
-      vec2 pos = aPos;
-      vec2 center = aRect.xy + aRect.zw * 0.5;
-      pos = (pos - center) * aRotScale.y;
-      float rad = aRotScale.x * 3.14159265 / 180.0;
+      vec2 pos = aData0.xy + aCorner * aData0.zw;
+      vUV = mix(aData1.xy, aData1.zw, aCorner);
+      // WebGL's V axis runs the opposite way from the WebGPU sample used
+      // for images, so flip V here to keep both backends' textures upright.
+      vUV.y = aData1.y + aData1.w - vUV.y;
+      vec2 center = aData0.xy + aData0.zw * 0.5;
+      pos = (pos - center) * aData2.y;
+      float rad = aData2.x * 3.14159265 / 180.0;
       float c = cos(rad);
       float s = sin(rad);
       pos = vec2(pos.x * c - pos.y * s, pos.x * s + pos.y * c) + center;
       float px = (pos.x / uCanvasSize.x) * 2.0 - 1.0;
       float py = 1.0 - (pos.y / uCanvasSize.y) * 2.0;
       gl_Position = vec4(px, py, 0.0, 1.0);
-      vUV = aUV;
-      vAlpha = aAlpha;
+      vAlpha = aData2.z;
     }
   `;
 
@@ -366,14 +379,17 @@ function _createRenderer() {
   `;
 
   const imgProg = _linkProgram(gl, _compileShader(gl, gl.VERTEX_SHADER, imgVS), _compileShader(gl, gl.FRAGMENT_SHADER, imgFS));
-  const imgLocs = _getLocations(gl, imgProg, ['aPos', 'aRect', 'aUV', 'aAlpha', 'aRotScale'], ['uCanvasSize', 'uTexture']);
+  const imgLocs = _getLocations(gl, imgProg, ['aCorner', 'aData0', 'aData1', 'aData2'], ['uCanvasSize', 'uTexture']);
   TEMF._imageProgram = imgProg;
   TEMF._imageLocs = imgLocs;
-  TEMF._imagePosBuffer = gl.createBuffer();
-  TEMF._imageRectBuffer = gl.createBuffer();
-  TEMF._imageUVBuffer = gl.createBuffer();
-  TEMF._imageAlphaBuffer = gl.createBuffer();
-  TEMF._imageRotScaleBuffer = gl.createBuffer();
+
+  TEMF._imageQuadBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageQuadBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STATIC_DRAW);
+
+  TEMF._imageInstanceBuffer = gl.createBuffer();
+  const imageMax = TEMF._imageMax;
+  TEMF._imageScratch = new Float32Array(imageMax * 12); // 12 floats/instance: x,y,w,h,u0,v0,u1,v1,rotation,scale,alpha,pad
 }
 
 async function initWebGL() {
@@ -387,8 +403,14 @@ async function initWebGL() {
     throw new Error('WebGL is not supported by this browser.');
   }
 
+  const instancing = gl.getExtension('ANGLE_instanced_arrays');
+  if (!instancing) {
+    throw new Error('WebGL: ANGLE_instanced_arrays is not supported by this browser.');
+  }
+
   TEMF._canvas = canvas;
   TEMF._gl = gl;
+  TEMF._instancing = instancing;
   gl.enable(gl.BLEND);
   // Match WebGPU's blend state: color blends by src-alpha, alpha channel
   // accumulates with srcFactor=one (matches the WebGPU pipeline's separate
@@ -433,14 +455,20 @@ function _rect(x, y, width, height, color, rotation, scale, alpha) {
   });
 }
 
-function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cropHeight) {
+function _image(path, x, y, width, height, rotation, scale, alpha) {
+  let srcW, srcH;
+
+  if (typeof width === 'number' && typeof height === 'number') {
+    srcW = width;
+    srcH = height;
+  } else {
+    srcW = 0;
+    srcH = 0;
+  }
+
   const optRotation = (typeof rotation === 'number') ? rotation : 0;
   const optScale = (typeof scale === 'number') ? scale : 1;
   const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : 1;
-  const optCropX = (typeof cropX === 'number') ? cropX : 0;
-  const optCropY = (typeof cropY === 'number') ? cropY : 0;
-  const optCropW = (typeof cropWidth === 'number') ? cropWidth : 0;
-  const optCropH = (typeof cropHeight === 'number') ? cropHeight : 0;
 
   const img = TEMF._imageElements.get(path);
   let texW = 0, texH = 0;
@@ -451,7 +479,10 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cro
   }
 
   let displayW, displayH;
-  if (img) {
+  if (srcW > 0 && srcH > 0) {
+    displayW = srcW * optScale;
+    displayH = srcH * optScale;
+  } else if (img) {
     displayW = texW * optScale;
     displayH = texH * optScale;
   } else {
@@ -460,13 +491,11 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cro
   }
 
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
-  if (img) {
-    const cropW = optCropW > 0 ? optCropW : texW;
-    const cropH = optCropH > 0 ? optCropH : texH;
-    u0 = optCropX / texW;
-    v0 = optCropY / texH;
-    u1 = (optCropX + cropW) / texW;
-    v1 = (optCropY + cropH) / texH;
+  if (img && srcW > 0 && srcH > 0) {
+    u0 = 0;
+    v0 = 0;
+    u1 = srcW / texW;
+    v1 = srcH / texH;
   }
 
   if (TEMF._drawList.length >= TEMF._rectMax) return;
@@ -488,154 +517,103 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cro
   });
 }
 
-function _drawRects(count, locs) {
+function _drawRects(rects, locs) {
   const gl = TEMF._gl;
-  if (!gl || count === 0) return;
+  const ext = TEMF._instancing;
+  if (!gl || rects.length === 0) return;
 
-  const verts = [
-    [0, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 1]
-  ];
-
-  const totalVerts = count * 6;
-  const posData = new Float32Array(totalVerts * 2);
-  const rectData = new Float32Array(totalVerts * 4);
-  const colorAlphaData = new Float32Array(totalVerts * 4);
-  const rotScaleData = new Float32Array(totalVerts * 2);
-
+  const count = Math.min(rects.length, TEMF._rectMax);
+  const data = TEMF._rectScratch; // reused every call/frame, no per-draw allocation
   for (let i = 0; i < count; i++) {
-    const item = TEMF._drawList[i];
-    const x = item.x, y = item.y, w = item.width, h = item.height;
-    const r = item.r, g = item.g, b = item.b, a = item.a;
-    const rot = item.rotation || 0;
-    const sc = item.scale || 1;
-
-    for (let v = 0; v < 6; v++) {
-      const vi = (i * 6 + v) * 2;
-      posData[vi + 0] = verts[v][0];
-      posData[vi + 1] = verts[v][1];
-
-      rectData[vi + 0] = x;
-      rectData[vi + 1] = y;
-      rectData[vi + 2] = w;
-      rectData[vi + 3] = h;
-
-      colorAlphaData[vi + 0] = r;
-      colorAlphaData[vi + 1] = g;
-      colorAlphaData[vi + 2] = b;
-      colorAlphaData[vi + 3] = a;
-
-      rotScaleData[vi + 0] = rot;
-      rotScaleData[vi + 1] = sc;
-    }
+    const r = rects[i];
+    data[i * 10 + 0] = r.x;
+    data[i * 10 + 1] = r.y;
+    data[i * 10 + 2] = r.width;
+    data[i * 10 + 3] = r.height;
+    data[i * 10 + 4] = r.r;
+    data[i * 10 + 5] = r.g;
+    data[i * 10 + 6] = r.b;
+    data[i * 10 + 7] = r.a;
+    data[i * 10 + 8] = r.rotation || 0;
+    data[i * 10 + 9] = r.scale || 1;
   }
 
   gl.useProgram(TEMF._rectProgram);
   gl.uniform2fv(locs.uCanvasSize, [TEMF._canvas.width, TEMF._canvas.height]);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectPosBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, posData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aPos);
-  gl.vertexAttribPointer(locs.aPos, 2, gl.FLOAT, false, 0, 0);
+  // Per-vertex: the shared unit quad (divisor 0).
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectQuadBuffer);
+  gl.enableVertexAttribArray(locs.aCorner);
+  gl.vertexAttribPointer(locs.aCorner, 2, gl.FLOAT, false, 0, 0);
+  ext.vertexAttribDivisorANGLE(locs.aCorner, 0);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectRectBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, rectData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aRect);
-  gl.vertexAttribPointer(locs.aRect, 4, gl.FLOAT, false, 0, 0);
+  // Per-instance: one write, three attribute views into the same buffer
+  // (mirrors the WebGPU pipeline reading one RectData struct per instance).
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectInstanceBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, data.buffer, gl.DYNAMIC_DRAW, 0, count * 10 * 4);
+  const stride = 10 * 4;
+  gl.enableVertexAttribArray(locs.aData0);
+  gl.vertexAttribPointer(locs.aData0, 4, gl.FLOAT, false, stride, 0);
+  ext.vertexAttribDivisorANGLE(locs.aData0, 1);
+  gl.enableVertexAttribArray(locs.aData1);
+  gl.vertexAttribPointer(locs.aData1, 4, gl.FLOAT, false, stride, 16);
+  ext.vertexAttribDivisorANGLE(locs.aData1, 1);
+  gl.enableVertexAttribArray(locs.aData2);
+  gl.vertexAttribPointer(locs.aData2, 2, gl.FLOAT, false, stride, 32);
+  ext.vertexAttribDivisorANGLE(locs.aData2, 1);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectColorAlphaBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, colorAlphaData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aColorAlpha);
-  gl.vertexAttribPointer(locs.aColorAlpha, 4, gl.FLOAT, false, 0, 0);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectRotScaleBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, rotScaleData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aRotScale);
-  gl.vertexAttribPointer(locs.aRotScale, 2, gl.FLOAT, false, 0, 0);
-
-  gl.drawArrays(gl.TRIANGLES, 0, totalVerts);
+  ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, 6, count); // 6 verts per quad, instanced N times
 }
 
 function _drawImageBatch(texture, items, locs) {
   const gl = TEMF._gl;
-  if (!gl || items.length === 0) return;
+  const ext = TEMF._instancing;
+  if (!gl || !texture || items.length === 0) return;
 
-  const count = items.length;
-  const verts = [
-    [0, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 1]
-  ];
-
-  const totalVerts = count * 6;
-  const posData = new Float32Array(totalVerts * 2);
-  const rectData = new Float32Array(totalVerts * 4);
-  const uvData = new Float32Array(totalVerts * 2);
-  const alphaData = new Float32Array(totalVerts);
-  const rotScaleData = new Float32Array(totalVerts * 2);
-
+  const count = Math.min(items.length, TEMF._imageMax);
+  const data = TEMF._imageScratch; // reused every call/frame, no per-draw allocation
   for (let i = 0; i < count; i++) {
     const item = items[i];
-    const x = item.x, y = item.y, w = item.width, h = item.height;
-    const u0 = item.u0 || 0, v0 = item.v0 || 0;
-    const u1 = item.u1 || 1, v1 = item.v1 || 1;
-    const alpha = item.alpha || 1;
-    const rot = item.rotation || 0;
-    const sc = item.scale || 1;
-
-    for (let v = 0; v < 6; v++) {
-      const vi = (i * 6 + v) * 2;
-      posData[vi + 0] = verts[v][0];
-      posData[vi + 1] = verts[v][1];
-
-      rectData[vi + 0] = x;
-      rectData[vi + 1] = y;
-      rectData[vi + 2] = w;
-      rectData[vi + 3] = h;
-
-      if (v === 0) { uvData[vi + 0] = u0; uvData[vi + 1] = v1; }
-      else if (v === 1) { uvData[vi + 0] = u1; uvData[vi + 1] = v1; }
-      else if (v === 2) { uvData[vi + 0] = u0; uvData[vi + 1] = v0; }
-      else if (v === 3) { uvData[vi + 0] = u0; uvData[vi + 1] = v0; }
-      else if (v === 4) { uvData[vi + 0] = u1; uvData[vi + 1] = v1; }
-      else { uvData[vi + 0] = u1; uvData[vi + 1] = v0; }
-
-      alphaData[i * 6 + v] = alpha;
-      rotScaleData[vi + 0] = rot;
-      rotScaleData[vi + 1] = sc;
-    }
+    data[i * 12 + 0] = item.x;
+    data[i * 12 + 1] = item.y;
+    data[i * 12 + 2] = item.width;
+    data[i * 12 + 3] = item.height;
+    data[i * 12 + 4] = item.u0 || 0;
+    data[i * 12 + 5] = item.v0 || 0;
+    data[i * 12 + 6] = item.u1 || 1;
+    data[i * 12 + 7] = item.v1 || 1;
+    data[i * 12 + 8] = item.rotation || 0;
+    data[i * 12 + 9] = item.scale || 1;
+    data[i * 12 + 10] = item.alpha || 1;
+    data[i * 12 + 11] = 0; // padding, unused
   }
 
   gl.useProgram(TEMF._imageProgram);
   gl.uniform2fv(locs.uCanvasSize, [TEMF._canvas.width, TEMF._canvas.height]);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imagePosBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, posData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aPos);
-  gl.vertexAttribPointer(locs.aPos, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageQuadBuffer);
+  gl.enableVertexAttribArray(locs.aCorner);
+  gl.vertexAttribPointer(locs.aCorner, 2, gl.FLOAT, false, 0, 0);
+  ext.vertexAttribDivisorANGLE(locs.aCorner, 0);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageRectBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, rectData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aRect);
-  gl.vertexAttribPointer(locs.aRect, 4, gl.FLOAT, false, 0, 0);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageUVBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aUV);
-  gl.vertexAttribPointer(locs.aUV, 2, gl.FLOAT, false, 0, 0);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageAlphaBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, alphaData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aAlpha);
-  gl.vertexAttribPointer(locs.aAlpha, 1, gl.FLOAT, false, 0, 0);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageRotScaleBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, rotScaleData, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(locs.aRotScale);
-  gl.vertexAttribPointer(locs.aRotScale, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageInstanceBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, data.buffer, gl.DYNAMIC_DRAW, 0, count * 12 * 4);
+  const stride = 12 * 4;
+  gl.enableVertexAttribArray(locs.aData0);
+  gl.vertexAttribPointer(locs.aData0, 4, gl.FLOAT, false, stride, 0);
+  ext.vertexAttribDivisorANGLE(locs.aData0, 1);
+  gl.enableVertexAttribArray(locs.aData1);
+  gl.vertexAttribPointer(locs.aData1, 4, gl.FLOAT, false, stride, 16);
+  ext.vertexAttribDivisorANGLE(locs.aData1, 1);
+  gl.enableVertexAttribArray(locs.aData2);
+  gl.vertexAttribPointer(locs.aData2, 4, gl.FLOAT, false, stride, 32);
+  ext.vertexAttribDivisorANGLE(locs.aData2, 1);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.uniform1i(locs.uTexture, 0);
 
-  gl.drawArrays(gl.TRIANGLES, 0, totalVerts);
+  ext.drawArraysInstancedANGLE(gl.TRIANGLES, 0, 6, count); // 6 verts per quad, instanced N times
 }
 
 function _draw() {
@@ -648,66 +626,51 @@ function _draw() {
 
   if (TEMF._drawList.length === 0) return;
 
+  // Batch consecutive items of the same type (and, for images, the same
+  // texture) into a single instanced draw call, but flush the current batch
+  // the moment something different comes along. This keeps draw order
+  // exactly matching call order: earlier rect()/image() calls end up below,
+  // later calls end up on top, which a "draw everything of type A, then
+  // everything of type B" approach cannot guarantee.
   let batchType = null;
   let batchTexture = null;
-  let batchStart = 0;
+  let batch = [];
 
   const flushBatch = () => {
-    if (batchStart >= TEMF._drawList.length) return;
-    let end = batchStart;
-    while (end < TEMF._drawList.length) {
-      const item = TEMF._drawList[end];
-      if (item.type === 'rect') {
-        if (batchType !== 'rect') break;
-        end++;
-      } else if (item.type === 'image') {
-        const texEntry = _getOrCreateTexture(item.path);
-        if (!texEntry || texEntry.status !== 'loaded') {
-          if (texEntry && texEntry.status === 'pending') {
-            TEMF._pendingImageDraws.push(item);
-          }
-          break;
-        }
-        if (batchType !== 'image' || batchTexture !== texEntry.texture) break;
-        end++;
-      }
+    if (batch.length === 0) return;
+    if (batchType === 'rect') {
+      _drawRects(batch, TEMF._rectLocs);
+    } else if (batchType === 'image') {
+      _drawImageBatch(batchTexture, batch, TEMF._imageLocs);
     }
-
-    const count = end - batchStart;
-    if (count > 0) {
-      if (batchType === 'rect') {
-        _drawRects(count, TEMF._rectLocs);
-      } else if (batchType === 'image') {
-        _drawImageBatch(batchTexture, TEMF._drawList.slice(batchStart, end), TEMF._imageLocs);
-      }
-    }
-    batchStart = end;
+    batch = [];
   };
 
-  let i = 0;
-  while (i < TEMF._drawList.length) {
+  for (let i = 0; i < TEMF._drawList.length; i++) {
     const item = TEMF._drawList[i];
-    batchStart = i;
-
     if (item.type === 'rect') {
-      batchType = 'rect';
-      batchTexture = null;
-      flushBatch();
+      if (batchType !== 'rect') {
+        flushBatch();
+        batchType = 'rect';
+      }
+      batch.push(item);
     } else if (item.type === 'image') {
       const texEntry = _getOrCreateTexture(item.path);
       if (!texEntry || texEntry.status !== 'loaded') {
         if (texEntry && texEntry.status === 'pending') {
           TEMF._pendingImageDraws.push(item);
         }
-        i++;
-        continue;
+        continue; // not loaded yet (or failed) — skip this frame, keep order for the rest
       }
-      batchType = 'image';
-      batchTexture = texEntry.texture;
-      flushBatch();
+      if (batchType !== 'image' || batchTexture !== texEntry.texture) {
+        flushBatch();
+        batchType = 'image';
+        batchTexture = texEntry.texture;
+      }
+      batch.push(item);
     }
-    i = batchStart;
   }
+  flushBatch();
 
   TEMF._drawList.length = 0;
 }
@@ -839,7 +802,7 @@ function _touchAllocateSlot(pointerId) {
       return i;
     }
   }
-  return -1;
+  return -1; // all 4 slots taken — this extra finger is ignored
 }
 
 function _touchReleaseSlot(pointerId) {
@@ -849,7 +812,6 @@ function _touchReleaseSlot(pointerId) {
 function _touchWipeSlot(slot) {
   slot.x = 0;
   slot.y = 0;
-  slot.down = false;
 }
 
 function _initTouch() {
@@ -861,11 +823,10 @@ function _initTouch() {
   canvas.addEventListener('pointerdown', (e) => {
     if (e.pointerType !== 'touch') return;
     const slotIdx = _touchAllocateSlot(e.pointerId);
-    if (slotIdx === -1) return;
+    if (slotIdx === -1) return; // over the cap — this finger is ignored entirely
     const slot = TEMF._touchSlots[slotIdx];
     slot.x = e.offsetX;
     slot.y = e.offsetY;
-    slot.down = true;
   });
 
   canvas.addEventListener('pointermove', (e) => {
@@ -881,8 +842,8 @@ function _initTouch() {
     if (e.pointerType !== 'touch') return;
     const slotIdx = TEMF._touchPointerToSlot.get(e.pointerId);
     if (slotIdx === undefined) return;
-    _touchWipeSlot(TEMF._touchSlots[slotIdx]);
-    _touchReleaseSlot(e.pointerId);
+    _touchWipeSlot(TEMF._touchSlots[slotIdx]); // discard immediately, nothing lingers for a later read
+    _touchReleaseSlot(e.pointerId); // free the slot so a new finger can reuse it
   });
 
   canvas.addEventListener('pointercancel', (e) => {
@@ -918,9 +879,9 @@ const mouse = {
 
 function _touchSlotIsActive(idx) {
   for (const mappedIdx of TEMF._touchPointerToSlot.values()) {
-    if (mappedIdx === idx) return true;
+    if (mappedIdx === idx) return true; // a real finger is currently held at this slot
   }
-  return false;
+  return false; // no lingering state after release — matches Godot: index only exists while pressed
 }
 
 function _getTouchSlot(id) {
@@ -940,19 +901,16 @@ const touch = {
     if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) return false;
     return _touchSlotIsActive(idx);
   },
+  down(id) {
+    const idx = (typeof id === 'number') ? id : 0;
+    if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) return false;
+    return _touchSlotIsActive(idx);
+  },
   x(id) {
     return _getTouchSlot(id).x;
   },
   y(id) {
     return _getTouchSlot(id).y;
-  },
-  down(id) {
-    const idx = (typeof id === 'number') ? id : 0;
-    if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) {
-      throw new Error(`touch: invalid finger id ${id} (must be an integer 0-${TEMF._touchMax - 1})`);
-    }
-    if (!_touchSlotIsActive(idx)) return false; // no finger there yet: same as "not pressed"
-    return TEMF._touchSlots[idx].down;
   },
 };
 
@@ -1304,7 +1262,7 @@ const audio = {
 };
 
 // ============================================================
-// Game loop
+// Game loop & bootstrap
 // ============================================================
 
 function gameLoop() {
@@ -1337,9 +1295,7 @@ function _bootstrap() {
   TEMF._lastTime = 0;
   TEMF._started = true;
 
-  console.log('[TEMF] bootstrap starting (webgl)...');
   initWebGL().then(() => {
-    console.log('[TEMF] WebGL initialized, starting game loop.');
     createResizeObserver();
     window.addEventListener('resize', resizeCanvas);
     _initKeyboard();
@@ -1352,8 +1308,13 @@ function _bootstrap() {
   });
 }
 
+// For game code written as its own ES module (top-level functions there
+// are NOT auto-exposed on window the way a classic <script> would be),
+// call setGame({ update, draw }) instead of assigning window.update/draw.
+// Safe to call whether or not the engine has already auto-started: it
+// always updates TEMF._game, and only runs the one-time bootstrap if
+// nothing has started it yet.
 function setGame(gameObj) {
-  console.log('[TEMF] setGame() called (webgl runtime).');
   TEMF._game = gameObj || {};
   _bootstrap();
 }
@@ -1416,7 +1377,6 @@ TEMF.cleanupTextures = _cleanupTextures;
 TEMF.cleanupAudio = _cleanupAudio;
 
 if (typeof window !== 'undefined') {
-  console.log('[TEMF] runtime-webgl.js loaded, exposing globals...');
   window.setGame = setGame;
   window.fps = fps;
   window.getCanvasSize = getCanvasSize;
@@ -1430,6 +1390,9 @@ if (typeof window !== 'undefined') {
   window.touch = touch;
   window.audio = audio;
 
+  // Load game.js only after every window.* binding above is in place,
+  // so game.js can safely call setGame()/rect()/touch.* etc. as soon as
+  // it starts running, regardless of <script> ordering in index.html.
   import('./game.js').catch((err) => {
     console.error('Failed to load game.js:', err);
   });
