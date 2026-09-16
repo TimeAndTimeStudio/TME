@@ -2,19 +2,6 @@
 
 Fullscreen mode management and exit callback system.
 
-## getCanvasSize()
-
-Get current canvas size (including DPR).
-
-```javascript
-function draw():
-  size = getCanvasSize()
-  W = size.width
-  H = size.height
-  # Use W, H for positioning
-  rect(0, H-50, W, 50, "brown")
-```
-
 ## requestFullscreen()
 
 Enter fullscreen mode.

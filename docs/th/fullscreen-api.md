@@ -2,19 +2,6 @@
 
 ระบบจัดการโหมดเต็มหน้าจอและ callback เมื่อออกจาก fullscreen
 
-## getCanvasSize()
-
-ดึงขนาดปัจจุบันของ canvas (รวม DPR)
-
-```javascript
-function draw():
-  size = getCanvasSize()
-  W = size.width
-  H = size.height
-  # ใช้ W, H ในการคำนวณตำแหน่ง
-  rect(0, H-50, W, 50, "brown")
-```
-
 ## requestFullscreen()
 
 เข้าสู่โหมดเต็มหน้าจอ

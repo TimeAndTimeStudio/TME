@@ -521,14 +521,6 @@ setGame({update: update, draw: draw})</div>
               <h2>Fullscreen API</h2>
               <p>ระบบจัดการโหมดเต็มหน้าจอและ callback เมื่อออกจาก fullscreen</p>
 
-              <h3>getCanvasSize()</h3>
-              <p>ดึงขนาดปัจจุบันของ canvas (รวม DPR)</p>
-              <div class="code-block">function draw():
-  size = getCanvasSize()
-  W = size.width
-  H = size.height
-  # ใช้ W, H ในการคำนวณตำแหน่ง</div>
-
               <h3>requestFullscreen()</h3>
               <p>เข้าสู่โหมดเต็มหน้าจอ</p>
               <div class="code-block"># กดปุ่ม F11
@@ -553,14 +545,6 @@ setFullscreenCallback(onFullscreenExit)</div>
             <div class="lang-en">
               <h2>Fullscreen API</h2>
               <p>Fullscreen mode management and exit callback system.</p>
-
-              <h3>getCanvasSize()</h3>
-              <p>Get current canvas size (including DPR).</p>
-              <div class="code-block">function draw():
-  size = getCanvasSize()
-  W = size.width
-  H = size.height
-  # Use W, H for positioning</div>
 
               <h3>requestFullscreen()</h3>
               <p>Enter fullscreen mode.</p>
