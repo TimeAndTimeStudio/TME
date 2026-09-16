@@ -213,6 +213,15 @@ node tme/bin/tme build</div>
               <p>วาดรูปภาพ</p>
               <div class="code-block">image(src, x, y, width, height)</div>
               <p>Image โหลดแบบ on-demand — โหลดเมื่อใช้เท่านั้น</p>
+
+              <h3>getCanvasSize()</h3>
+              <p>ดึงขนาดปัจจุบันของ canvas (รวม DPR)</p>
+              <div class="code-block">function draw():
+  size = getCanvasSize()
+  W = size.width
+  H = size.height
+  # ใช้ W, H ในการคำนวณตำแหน่ง
+  rect(0, H-50, W, 50, "brown")</div>
             </div>
             <div class="lang-en">
               <h2>Render</h2>
@@ -234,6 +243,15 @@ node tme/bin/tme build</div>
               <p>Draw an image.</p>
               <div class="code-block">image(src, x, y, width, height)</div>
               <p>Images load on-demand — only loaded when used.</p>
+
+              <h3>getCanvasSize()</h3>
+              <p>Get current canvas size (including DPR).</p>
+              <div class="code-block">function draw():
+  size = getCanvasSize()
+  W = size.width
+  H = size.height
+  # Use W, H for positioning
+  rect(0, H-50, W, 50, "brown")</div>
             </div>
           </section>
 
@@ -470,16 +488,6 @@ setGame({update: update, draw: draw})</div>
               <p>Internal object สำหรับ advanced users</p>
               <div class="code-block">print(TEMF._fps)</div>
 
-              <h3>getCanvasSize()</h3>
-              <p>ดึงขนาด canvas</p>
-              <div class="code-block">const size = getCanvasSize()
-print(f"Canvas: {size.width} x {size.height}")
-
-# ใช้คำนวณตำแหน่งกลางจอ
-const cx = size.width / 2
-const cy = size.height / 2
-rect(cx, cy, 100, 100, "red")</div>
-
               <h3>requestFullscreen()</h3>
               <p>เข้าสู่โหมดเต็มหน้าจอ</p>
               <div class="code-block"># กด F11 เพื่อเข้า fullscreen
@@ -557,16 +565,6 @@ setGame({update: update, draw: draw})</div>
               <h3>TEMF</h3>
               <p>Internal object for advanced users.</p>
               <div class="code-block">print(TEMF._fps)</div>
-
-              <h3>getCanvasSize()</h3>
-              <p>Get canvas size.</p>
-              <div class="code-block">const size = getCanvasSize()
-print(f"Canvas: {size.width} x {size.height}")
-
-# Center on screen
-const cx = size.width / 2
-const cy = size.height / 2
-rect(cx, cy, 100, 100, "red")</div>
 
               <h3>requestFullscreen()</h3>
               <p>Enter fullscreen mode.</p>
