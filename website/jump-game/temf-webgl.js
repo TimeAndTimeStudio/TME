@@ -476,14 +476,15 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
   });
 }
 
-function _drawRects(count, locs) {
+function _drawRects(rects, locs) {
   const gl = TEMF._gl;
-  if (!gl || count === 0) return;
+  if (!gl || rects.length === 0) return;
 
   const verts = [
     [0, 0], [1, 0], [0, 1], [0, 1], [1, 0], [1, 1]
   ];
 
+  const count = rects.length;
   const totalVerts = count * 6;
   const posData = new Float32Array(totalVerts * 2);
   const rectData = new Float32Array(totalVerts * 4);
@@ -491,7 +492,7 @@ function _drawRects(count, locs) {
   const rotScaleData = new Float32Array(totalVerts * 2);
 
   for (let i = 0; i < count; i++) {
-    const item = TEMF._drawList[i];
+    const item = rects[i];
     const x = item.x, y = item.y, w = item.width, h = item.height;
     const r = item.r, g = item.g, b = item.b, a = item.a;
     const rot = item.rotation || 0;
@@ -659,7 +660,7 @@ function _draw() {
     const count = end - batchStart;
     if (count > 0) {
       if (batchType === 'rect') {
-        _drawRects(count, TEMF._rectLocs);
+        _drawRects(TEMF._drawList.slice(batchStart, end), TEMF._rectLocs);
       } else if (batchType === 'image') {
         _drawImageBatch(batchTexture, TEMF._drawList.slice(batchStart, end), TEMF._imageLocs);
       }
