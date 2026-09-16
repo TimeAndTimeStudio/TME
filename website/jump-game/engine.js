@@ -1592,7 +1592,7 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, setFullscreenCallback, TEMF, mouse, touch, audio };
+export { start, setGame, fps, getCanvasSize, requestFullscreen, exitFullscreen, setFullscreenCallback, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
@@ -1602,7 +1602,6 @@ if (typeof window !== 'undefined') {
   window.requestFullscreen = requestFullscreen;
   window.exitFullscreen = exitFullscreen;
   window.setFullscreenCallback = setFullscreenCallback;
-  window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
   window.key = { down: _keyDown };
