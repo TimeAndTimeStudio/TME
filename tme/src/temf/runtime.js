@@ -1063,7 +1063,8 @@ const input = {
   pointer: {
     get x() { return TEMF._mouseX; },
     get y() { return TEMF._mouseY; },
-    get is_touch() { return TEMF._touchState.down; }
+    get is_touch() { return TEMF._touchState.down; },
+    get clicked() { return TEMF._mouseButtons.get('0').clicked; }
   }
 };
 
@@ -1488,18 +1489,9 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-function start(button) {
-  if (TEMF._started) {
-    return;
-  }
+function _bootstrap(button) {
+  if (TEMF._started) return;
 
-  const game = {};
-  if (typeof update === 'function') game.update = update;
-  if (typeof draw === 'function') game.draw = draw;
-  if (typeof window.update === 'function') game.update = window.update;
-  if (typeof window.draw === 'function') game.draw = window.draw;
-
-  TEMF._game = game;
   TEMF._fps = TEMF._fps || 60;
   TEMF._step = 1 / TEMF._fps;
   TEMF._accumulator = 0;
@@ -1531,6 +1523,28 @@ function start(button) {
   initAndStart();
 }
 
+function start(button) {
+  const game = {};
+  if (typeof update === 'function') game.update = update;
+  if (typeof draw === 'function') game.draw = draw;
+  if (typeof window.update === 'function') game.update = window.update;
+  if (typeof window.draw === 'function') game.draw = window.draw;
+
+  TEMF._game = game;
+  _bootstrap(button);
+}
+
+// For game code written as its own ES module (top-level functions there
+// are NOT auto-exposed on window the way a classic <script> would be),
+// call setGame({ update, draw }) instead of assigning window.update/draw.
+// Safe to call whether or not the engine has already auto-started: it
+// always updates TEMF._game, and only runs the one-time bootstrap if
+// nothing has started it yet.
+function setGame(gameObj) {
+  TEMF._game = gameObj || {};
+  _bootstrap();
+}
+
 function fps(fpsValue) {
   TEMF._fps = fpsValue;
   TEMF._step = 1 / TEMF._fps;
@@ -1544,10 +1558,11 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, fps, TEMF, mouse, touch, audio };
+export { start, setGame, fps, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
+  window.setGame = setGame;
   window.fps = fps;
   window.TEMF = TEMF;
   window.rect = _rect;
@@ -1557,4 +1572,8 @@ if (typeof window !== 'undefined') {
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;
+
+  // Auto-start: no need for game code to call start() manually.
+  // (window.start is still exposed above in case manual control is ever needed.)
+  start();
 }
