@@ -95,13 +95,14 @@
     <section>
       <div class="container">
         <div class="code-block">
-          <span class="comment"># ทดสอบ</span><br>
+          <span class="comment"># ตัวอย่าง</span><br>
           <span class="keyword">function</span> update(dt):<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> input.keyboard.is_down("space"):<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rect(100, 100, 50, 50, "blue")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> input.keyboard.is_down("space") or input.touch.tapped:<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;player.vy = -300<br>
           <br>
           <span class="keyword">function</span> draw():<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;image("player.png", 200, 200, 64, 64)
+          &nbsp;&nbsp;&nbsp;&nbsp;rect(0, 400, 800, 50, "brown")<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;rect(player.x, player.y, 50, 50, "blue")
         </div>
 
         <p style="text-align:center; color: var(--text-light); margin-bottom: 8px;">
@@ -150,8 +151,8 @@
             </div>
             <h3>Fast Build</h3>
             <p>
-              <span class="lang-th">tme build — compile game.tsl ผ่าน TSL compiler สร้าง static dist/ ทันที</span>
-              <span class="lang-en">tme build — compile game.tsl via TSL compiler, output static dist/ instantly</span>
+              <span class="lang-th">node tme/bin/tme build — compile game.tsl ผ่าน TSL compiler สร้าง static dist/ ทันที</span>
+              <span class="lang-en">node tme/bin/tme build — compile game.tsl via TSL compiler, output static dist/ instantly</span>
             </p>
           </div>
           <div class="feature-card">
@@ -170,8 +171,8 @@
             </div>
             <h3>Game Loop</h3>
             <p>
-              <span class="lang-th">Fixed timestep update — start() แล้วเริ่ม loop ทันที ไม่ซับซ้อน</span>
-              <span class="lang-en">Fixed timestep update — call start() and loop runs automatically</span>
+              <span class="lang-th">Fixed timestep update — setGame() แล้วเริ่ม loop ทันที ไม่ซับซ้อน</span>
+              <span class="lang-en">Fixed timestep update — call setGame() and loop runs automatically</span>
             </p>
           </div>
           <div class="feature-card">
@@ -203,12 +204,15 @@
           </h3>
           <div class="code-block" style="font-size: 0.85rem;">
 <span class="keyword">function</span> update(dt):<br>
-&nbsp;&nbsp;<span class="keyword">if</span> input.keyboard.is_down("space"):<br>
-&nbsp;&nbsp;&nbsp;&nbsp;player.y -= 10<br>
+&nbsp;&nbsp;<span class="keyword">if</span> input.keyboard.is_down("space") or input.touch.tapped:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;player.vy = -300<br>
+&nbsp;&nbsp;player.y = (player.y + (player.vy * dt))<br>
+&nbsp;&nbsp;<span class="keyword">if</span> (player.y > 400):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;player.y = 400<br>
 <br>
 <span class="keyword">function</span> draw():<br>
 &nbsp;&nbsp;rect(0, 400, 800, 50, "brown")<br>
-&nbsp;&nbsp;image("player.png", player.x, player.y, 50, 50)
+&nbsp;&nbsp;rect(player.x, player.y, 50, 50, "blue")
           </div>
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             <a href="https://github.com/TimeAndTimeStudio/TME/tree/main/examples/jump-game" class="btn btn-outline" target="_blank" rel="noopener">
