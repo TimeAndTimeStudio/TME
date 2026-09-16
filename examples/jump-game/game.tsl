@@ -25,8 +25,8 @@ function update(dt):
 function draw():
   canvasSize = getCanvasSize()
   W = canvasSize.width
-  rect(0, GROUND, W, 50, "brown")
-  rect(player.x, player.y, 50, 50, "blue")
+  rect(0, GROUND, W, 50, "#8B4513")
+  rect(player.x, player.y, 50, 50, "#0000FF")
 
 fps(60)
 setGame({update: update, draw: draw})
