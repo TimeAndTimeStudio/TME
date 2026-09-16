@@ -1458,14 +1458,6 @@ const audio = {
 // ============================================================
 
 function gameLoop() {
-  if (!TEMF._started) {
-    // Paused (e.g. waiting for correct orientation). Keep polling via rAF
-    // instead of running update/draw, and don't let a second _bootstrap()
-    // call spawn a duplicate loop on top of this one.
-    requestAnimationFrame(gameLoop);
-    return;
-  }
-
   const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
   TEMF._lastTime = now;
@@ -1496,38 +1488,9 @@ function _bootstrap(button) {
 
   function initAndStart() {
     TEMF._started = true;
-    const overlay = document.getElementById('temf-fullscreen-overlay');
-    if (overlay) overlay.remove();
-
-    // If we've already initialized once (e.g. this is a re-entry after an
-    // orientation-overlay round trip), gameLoop() is already alive (it
-    // pauses itself instead of exiting), so just resume it in place —
-    // don't re-attach listeners or spawn a second concurrent loop.
-    if (TEMF._bootstrapped) {
-      TEMF._lastTime = performance.now();
-      return;
-    }
-    TEMF._bootstrapped = true;
-
     initWebGPU().then(() => {
       createResizeObserver();
       window.addEventListener('resize', resizeCanvas);
-      
-      // Use modern Screen Orientation API with fallback
-      if (screen.orientation && screen.orientation.addEventListener) {
-        screen.orientation.addEventListener('change', () => {
-          setTimeout(checkOrientation, 100);
-        });
-      } else {
-        window.addEventListener('orientationchange', () => {
-          setTimeout(checkOrientation, 100);
-        });
-      }
-      
-      window.addEventListener('resize', () => {
-        setTimeout(checkOrientation, 100);
-      });
-      
       _initKeyboard();
       _initMouse();
       _initTouch();
@@ -1538,97 +1501,15 @@ function _bootstrap(button) {
     });
   }
 
-  function checkOrientation() {
-    if (!TEMF._requireOrientation || !TEMF._started) return;
-    
-    const isLandscape = window.innerWidth > window.innerHeight;
-    const isPortrait = window.innerHeight > window.innerWidth;
-    const isCorrectOrientation = (TEMF._requireOrientation === 'landscape' && isLandscape) ||
-                                 (TEMF._requireOrientation === 'portrait' && isPortrait);
-    
-    if (!isCorrectOrientation) {
-      TEMF._started = false;
-      const existingOverlay = document.getElementById('temf-fullscreen-overlay');
-      if (existingOverlay) existingOverlay.remove();
-      _showOrientationOverlay(() => {
-        TEMF._started = false;
-        _bootstrap();
-      });
-    }
-  }
-
   if (button) {
     const btn = typeof button === 'string' ? document.getElementById(button) : button;
     if (btn) {
-      btn.addEventListener('click', () => {
-        if (TEMF._requireOrientation) {
-          _showOrientationOverlay(initAndStart);
-        } else {
-          initAndStart();
-        }
-      });
+      btn.addEventListener('click', () => initAndStart());
       return;
     }
   }
 
-  if (TEMF._requireOrientation) {
-    _showOrientationOverlay(initAndStart);
-  } else {
-    initAndStart();
-  }
-}
-
-function _showOrientationOverlay(callback) {
-  const existingOverlay = document.getElementById('temf-fullscreen-overlay');
-  if (existingOverlay) existingOverlay.remove();
-  
-  const overlay = document.createElement('div');
-  overlay.id = 'temf-fullscreen-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;font-family:sans-serif;text-align:center;padding:20px;';
-  
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  let title = '';
-  let instructions = '';
-  
-  if (TEMF._requireOrientation === 'landscape') {
-    title = '🎮 ต้องการโหมดแนวนอน';
-    instructions = isMobile 
-      ? '1. หมอโทรศัพท์เป็นแนวนอน<br>2. กดปุ่มด้านล่างเพื่อเข้า fullscreen<br>3. หรือกด F11 (PC)'
-      : 'กด F11 เพื่อเข้า fullscreen<br>แล้วกดปุ่มด้านล่าง';
-  } else if (TEMF._requireOrientation === 'portrait') {
-    title = '🎮 ต้องการโหมด fullscreen';
-    instructions = isMobile
-      ? 'กดปุ่มด้านล่างเพื่อเข้า fullscreen<br>แล้วกดเริ่มเกม'
-      : 'กด F11 เพื่อเข้า fullscreen<br>แล้วกดปุ่มด้านล่าง';
-  }
-  
-  overlay.innerHTML = `
-    <h2 style="margin-bottom:20px;font-size:24px;">${title}</h2>
-    <p style="font-size:16px;line-height:1.8;white-space:pre-line;margin-bottom:30px;">${instructions}</p>
-    <button id="temf-start-btn" style="padding:15px 50px;font-size:20px;background:#4CAF50;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;box-shadow:0 4px 6px rgba(0,0,0,0.3);">เริ่มเกม</button>
-  `;
-  
-  document.body.appendChild(overlay);
-  
-  document.getElementById('temf-start-btn').addEventListener('click', () => {
-    if (isMobile || TEMF._requireOrientation === 'landscape') {
-      requestFullscreen();
-      let fired = false;
-      const checkFullscreen = () => {
-        if (fired) return;
-        if (document.fullscreenElement || document.webkitFullscreenElement) {
-          fired = true;
-          setTimeout(callback, 500);
-        }
-      };
-      setTimeout(checkFullscreen, 100);
-      setTimeout(checkFullscreen, 500);
-      setTimeout(checkFullscreen, 1000);
-    } else {
-      callback();
-    }
-  });
+  initAndStart();
 }
 
 function start(button) {
@@ -1658,71 +1539,6 @@ function fps(fpsValue) {
   TEMF._step = 1 / TEMF._fps;
 }
 
-function setOrientation(orientation) {
-  if (orientation === 'landscape' || orientation === 'portrait') {
-    TEMF._requireOrientation = orientation;
-    if (TEMF._started) {
-      _showOrientationOverlay(() => {
-        TEMF._started = false;
-        _bootstrap();
-      });
-    }
-  }
-}
-
-function getCanvasSize() {
-  const canvas = TEMF._canvas || document.getElementById('game');
-  if (!canvas) return { width: 0, height: 0 };
-  return { width: canvas.width, height: canvas.height };
-}
-
-function requestFullscreen() {
-  const canvas = TEMF._canvas || document.getElementById('game');
-  if (!canvas) return;
-
-  if (!TEMF._fullscreenListenersAttached) {
-    TEMF._fullscreenListenersAttached = true;
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-  }
-
-  if (canvas.requestFullscreen) {
-    canvas.requestFullscreen();
-  } else if (canvas.webkitRequestFullscreen) {
-    canvas.webkitRequestFullscreen();
-  } else if (canvas.msRequestFullscreen) {
-    canvas.msRequestFullscreen();
-  }
-}
-
-function handleFullscreenChange() {
-  setTimeout(() => {
-    resizeCanvas();
-  }, 100);
-  
-  if (!document.fullscreenElement && !document.webkitFullscreenElement && TEMF._started && TEMF._requireOrientation) {
-    TEMF._started = false;
-    if (TEMF._game && typeof TEMF._game.draw === 'function') {
-      const overlay = document.getElementById('temf-fullscreen-overlay');
-      if (overlay) overlay.remove();
-      _showOrientationOverlay(() => {
-        TEMF._started = false;
-        _bootstrap();
-      });
-    }
-  }
-}
-
-function exitFullscreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-  } else if (document.msExitFullscreen) {
-    document.msExitFullscreen();
-  }
-}
-
 // ============================================================
 // Public API / global exports
 // ============================================================
@@ -1731,16 +1547,12 @@ TEMF.cleanupTextures = _cleanupTextures;
 
 TEMF.cleanupAudio = _cleanupAudio;
 
-export { start, setGame, fps, setOrientation, getCanvasSize, requestFullscreen, exitFullscreen, TEMF, mouse, touch, audio };
+export { start, setGame, fps, TEMF, mouse, touch, audio };
 
 if (typeof window !== 'undefined') {
   window.start = start;
   window.setGame = setGame;
   window.fps = fps;
-  window.setOrientation = setOrientation;
-  window.getCanvasSize = getCanvasSize;
-  window.requestFullscreen = requestFullscreen;
-  window.exitFullscreen = exitFullscreen;
   window.TEMF = TEMF;
   window.rect = _rect;
   window.image = _image;
@@ -1752,20 +1564,5 @@ if (typeof window !== 'undefined') {
 
   // Auto-start: no need for game code to call start() manually.
   // (window.start is still exposed above in case manual control is ever needed.)
-  // Wait for game.js to be loaded before starting
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        if (!TEMF._started) {
-          start();
-        }
-      }, 100);
-    });
-  } else {
-    setTimeout(() => {
-      if (!TEMF._started) {
-        start();
-      }
-    }, 100);
-  }
+  start();
 }
