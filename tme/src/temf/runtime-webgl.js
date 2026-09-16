@@ -28,9 +28,18 @@ const TEMF = {
   _rectProgram: null,
   _rectLocs: null,
   _rectBuffer: null,
+  _rectPosBuffer: null,
+  _rectRectBuffer: null,
+  _rectColorAlphaBuffer: null,
+  _rectRotScaleBuffer: null,
   _imageProgram: null,
   _imageLocs: null,
   _imageBuffer: null,
+  _imagePosBuffer: null,
+  _imageRectBuffer: null,
+  _imageUVBuffer: null,
+  _imageAlphaBuffer: null,
+  _imageRotScaleBuffer: null,
   _drawList: [],
   _rectMax: 1024,
   _imageMax: 1024,
@@ -314,7 +323,10 @@ function _createRenderer() {
   const rectLocs = _getLocations(gl, rectProg, ['aPos', 'aRect', 'aColorAlpha', 'aRotScale'], ['uCanvasSize']);
   TEMF._rectProgram = rectProg;
   TEMF._rectLocs = rectLocs;
-  TEMF._rectBuffer = gl.createBuffer();
+  TEMF._rectPosBuffer = gl.createBuffer();
+  TEMF._rectRectBuffer = gl.createBuffer();
+  TEMF._rectColorAlphaBuffer = gl.createBuffer();
+  TEMF._rectRotScaleBuffer = gl.createBuffer();
 
   // === Image shader ===
   const imgVS = `
@@ -357,7 +369,11 @@ function _createRenderer() {
   const imgLocs = _getLocations(gl, imgProg, ['aPos', 'aRect', 'aUV', 'aAlpha', 'aRotScale'], ['uCanvasSize', 'uTexture']);
   TEMF._imageProgram = imgProg;
   TEMF._imageLocs = imgLocs;
-  TEMF._imageBuffer = gl.createBuffer();
+  TEMF._imagePosBuffer = gl.createBuffer();
+  TEMF._imageRectBuffer = gl.createBuffer();
+  TEMF._imageUVBuffer = gl.createBuffer();
+  TEMF._imageAlphaBuffer = gl.createBuffer();
+  TEMF._imageRotScaleBuffer = gl.createBuffer();
 }
 
 async function initWebGL() {
@@ -523,20 +539,22 @@ function _drawRects(count, locs) {
   gl.useProgram(TEMF._rectProgram);
   gl.uniform2fv(locs.uCanvasSize, [TEMF._canvas.width, TEMF._canvas.height]);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectBuffer);
-
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectPosBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, posData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aPos);
   gl.vertexAttribPointer(locs.aPos, 2, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectRectBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, rectData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aRect);
   gl.vertexAttribPointer(locs.aRect, 4, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectColorAlphaBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, colorAlphaData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aColorAlpha);
   gl.vertexAttribPointer(locs.aColorAlpha, 4, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._rectRotScaleBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, rotScaleData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aRotScale);
   gl.vertexAttribPointer(locs.aRotScale, 2, gl.FLOAT, false, 0, 0);
@@ -595,24 +613,27 @@ function _drawImageBatch(texture, items, locs) {
   gl.useProgram(TEMF._imageProgram);
   gl.uniform2fv(locs.uCanvasSize, [TEMF._canvas.width, TEMF._canvas.height]);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageBuffer);
-
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imagePosBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, posData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aPos);
   gl.vertexAttribPointer(locs.aPos, 2, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageRectBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, rectData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aRect);
   gl.vertexAttribPointer(locs.aRect, 4, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageUVBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aUV);
   gl.vertexAttribPointer(locs.aUV, 2, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageAlphaBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, alphaData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aAlpha);
   gl.vertexAttribPointer(locs.aAlpha, 1, gl.FLOAT, false, 0, 0);
 
+  gl.bindBuffer(gl.ARRAY_BUFFER, TEMF._imageRotScaleBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, rotScaleData, gl.DYNAMIC_DRAW);
   gl.enableVertexAttribArray(locs.aRotScale);
   gl.vertexAttribPointer(locs.aRotScale, 2, gl.FLOAT, false, 0, 0);
@@ -1288,8 +1309,8 @@ const audio = {
 // Game loop
 // ============================================================
 
-function gameLoop(now) {
-  if (!TEMF._lastTime) TEMF._lastTime = now;
+function gameLoop() {
+  const now = performance.now();
   const elapsed = Math.min((now - TEMF._lastTime) / 1000, 0.25);
   TEMF._lastTime = now;
   TEMF._accumulator += elapsed;

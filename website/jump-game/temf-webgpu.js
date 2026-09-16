@@ -591,7 +591,7 @@ function _rect(x, y, width, height, color, rotation, scale, alpha) {
   });
 }
 
-function _image(path, x, y, width, height, rotation, scale, alpha) {
+function _image(path, x, y, width, height, rotation, scale, alpha, cropX, cropY, cropWidth, cropHeight) {
   let srcW, srcH;
 
   if (typeof width === 'number' && typeof height === 'number') {
@@ -605,6 +605,10 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
   const optRotation = (typeof rotation === 'number') ? rotation : 0;
   const optScale = (typeof scale === 'number') ? scale : 1;
   const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : 1;
+  const optCropX = (typeof cropX === 'number') ? cropX : 0;
+  const optCropY = (typeof cropY === 'number') ? cropY : 0;
+  const optCropW = (typeof cropWidth === 'number') ? cropWidth : srcW;
+  const optCropH = (typeof cropHeight === 'number') ? cropHeight : srcH;
 
   const img = TEMF._imageElements.get(path);
   let texW = 0, texH = 0;
@@ -627,11 +631,13 @@ function _image(path, x, y, width, height, rotation, scale, alpha) {
   }
 
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
-  if (img && srcW > 0 && srcH > 0) {
-    u0 = 0;
-    v0 = 0;
-    u1 = srcW / texW;
-    v1 = srcH / texH;
+  if (img && (srcW > 0 || optCropW > 0)) {
+    const cropW = optCropW > 0 ? optCropW : srcW;
+    const cropH = optCropH > 0 ? optCropH : srcH;
+    u0 = optCropX / texW;
+    v0 = optCropY / texH;
+    u1 = (optCropX + cropW) / texW;
+    v1 = (optCropY + cropH) / texH;
   }
 
   if (TEMF._drawList.length >= TEMF._rectMax) return;
