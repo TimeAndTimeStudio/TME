@@ -83,6 +83,7 @@
               <li><a href="#touch-api">Touch</a></li>
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
+              <li><a href="#fullscreen-api">Fullscreen API</a></li>
               <li><a href="#build">Build</a></li>
             </ul>
           </div>
@@ -101,6 +102,7 @@
               <li><a href="#touch-api">Touch</a></li>
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
+              <li><a href="#fullscreen-api">Fullscreen API</a></li>
               <li><a href="#build">Build</a></li>
             </ul>
           </div>
@@ -496,6 +498,39 @@ if mouse.click(0):
 # หรือกดปุ่มบนจอ
 if input.keyboard.is_down("escape"):
   exitFullscreen()</div>
+
+              <h3>setFullscreenCallback()</h3>
+              <p>ลงทะเบียนฟังก์ชันที่จะทำงานเมื่อออกจาก fullscreen</p>
+              <div class="code-block"># วิธีที่ 1: นิยามฟังก์ชันแยก
+function onFullscreenExit():
+  print("ออกจาก fullscreen แล้ว!")
+  # ทำอย่างอื่น เช่น pause game, แสดงเมนู, etc.
+
+setFullscreenCallback(onFullscreenExit)
+
+# วิธีที่ 2: ใช้ lambda/anonymous function
+setFullscreenCallback(function():
+  # โค้ดเมื่อออกจาก fullscreen
+  print("Fullscreen ended")
+)
+
+# ตัวอย่าง: แสดงเมนูเมื่อออกจาก fullscreen
+fullscreenMenu = { visible: false }
+
+function onExitFullscreen():
+  fullscreenMenu.visible = true
+
+setFullscreenCallback(onExitFullscreen)
+
+function draw():
+  if fullscreenMenu.visible:
+    # วาดเมนู
+    rect(0, 0, 800, 600, "rgba(0,0,0,0.8)")
+    text("กด Enter เพื่อกลับเข้าเกม", 100, 300)
+    
+    if input.keyboard.is_down("enter"):
+      fullscreenMenu.visible = false
+      requestFullscreen()</div>
             </div>
             <div class="lang-en">
               <h2>Game Loop</h2>
@@ -547,10 +582,112 @@ if mouse.click(0):
 
               <h3>exitFullscreen()</h3>
               <p>Exit fullscreen mode.</p>
-              <div class="code-block"># ESC exits fullscreen (browser handles automatically)
-# Or button on screen
+              <div class="code-block"># Press ESC to exit fullscreen (browser does this automatically)
+# Or press a button on screen
 if input.keyboard.is_down("escape"):
   exitFullscreen()</div>
+
+              <h3>setFullscreenCallback()</h3>
+              <p>Register a function that runs when exiting fullscreen.</p>
+              <div class="code-block"># Method 1: Define function separately
+function onFullscreenExit():
+  print("Exited fullscreen!")
+  # Do something: pause game, show menu, etc.
+
+setFullscreenCallback(onFullscreenExit)
+
+# Method 2: Use lambda/anonymous function
+setFullscreenCallback(function():
+  # Code when exiting fullscreen
+  print("Fullscreen ended")
+)
+
+# Example: Show menu when exiting fullscreen
+fullscreenMenu = { visible: false }
+
+function onExitFullscreen():
+  fullscreenMenu.visible = true
+
+setFullscreenCallback(onExitFullscreen)
+
+function draw():
+  if fullscreenMenu.visible:
+    # Draw menu
+    rect(0, 0, 800, 600, "rgba(0,0,0,0.8)")
+    text("Press Enter to return to game", 100, 300)
+    
+    if input.keyboard.is_down("enter"):
+      fullscreenMenu.visible = false
+      requestFullscreen()</div>
+            </div>
+          </section>
+
+          <section id="fullscreen-api">
+            <div class="lang-th">
+              <h2>Fullscreen API</h2>
+              <p>ระบบจัดการโหมดเต็มหน้าจอและ callback เมื่อออกจาก fullscreen</p>
+
+              <h3>getCanvasSize()</h3>
+              <p>ดึงขนาดปัจจุบันของ canvas (รวม DPR)</p>
+              <div class="code-block">function draw():
+  size = getCanvasSize()
+  W = size.width
+  H = size.height
+  # ใช้ W, H ในการคำนวณตำแหน่ง</div>
+
+              <h3>requestFullscreen()</h3>
+              <p>เข้าสู่โหมดเต็มหน้าจอ</p>
+              <div class="code-block"># กดปุ่ม F11
+if input.keyboard.is_down("f11"):
+  requestFullscreen()</div>
+
+              <h3>exitFullscreen()</h3>
+              <p>ออกจากโหมดเต็มหน้าจอ</p>
+              <div class="code-block"># กด ESC (browser ทำให้อัตโนมัติ)
+# หรือกดปุ่มบนจอ
+if input.keyboard.is_down("escape"):
+  exitFullscreen()</div>
+
+              <h3>setFullscreenCallback()</h3>
+              <p>ลงทะเบียนฟังก์ชันเมื่อออกจาก fullscreen</p>
+              <div class="code-block">function onFullscreenExit():
+  print("ออกจาก fullscreen!")
+  # ทำอย่างอื่น เช่น pause game
+
+setFullscreenCallback(onFullscreenExit)</div>
+            </div>
+            <div class="lang-en">
+              <h2>Fullscreen API</h2>
+              <p>Fullscreen mode management and exit callback system.</p>
+
+              <h3>getCanvasSize()</h3>
+              <p>Get current canvas size (including DPR).</p>
+              <div class="code-block">function draw():
+  size = getCanvasSize()
+  W = size.width
+  H = size.height
+  # Use W, H for positioning</div>
+
+              <h3>requestFullscreen()</h3>
+              <p>Enter fullscreen mode.</p>
+              <div class="code-block"># Press F11
+if input.keyboard.is_down("f11"):
+  requestFullscreen()</div>
+
+              <h3>exitFullscreen()</h3>
+              <p>Exit fullscreen mode.</p>
+              <div class="code-block"># Press ESC (browser does automatically)
+# Or press button on screen
+if input.keyboard.is_down("escape"):
+  exitFullscreen()</div>
+
+              <h3>setFullscreenCallback()</h3>
+              <p>Register a function when exiting fullscreen.</p>
+              <div class="code-block">function onFullscreenExit():
+  print("Exited fullscreen!")
+  # Do something: pause game, show menu, etc.
+
+setFullscreenCallback(onFullscreenExit)</div>
             </div>
           </section>
 
