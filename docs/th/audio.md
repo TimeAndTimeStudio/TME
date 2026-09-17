@@ -52,6 +52,6 @@ audio.mutedSfx = true   # mute SFX
 audio.mutedBgm = true   # mute BGM
 
 # ตรวจสอบสถานะ
-if audio.muted:
+if audio.mutedSfx:
   print("เสียงถูก mute")
 ```
