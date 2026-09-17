@@ -2,7 +2,7 @@
 
 Preload resources (images, BGM, SFX) with status checking system.
 
-## preload(resources, onProgress?)
+## preload(resources)
 
 Load specified resources in advance.
 
@@ -24,11 +24,6 @@ preload({
   bgm: ["music/menu.mp3"],
   sfx: ["sfx/jump.wav"]
 })
-
-# With progress callback
-preload(["img/bg.png", "music/bgm.mp3"], function(info):
-  print(info.path + " - " + info.loaded + " (" + info.completed + "/" + info.total + ")")
-end)
 ```
 
 ### Parameters
@@ -36,18 +31,6 @@ end)
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `resources` | `string \| string[] \| object` | File path(s) or object with `images`, `bgm`, `sfx` arrays |
-| `onProgress` | `function` | Optional callback for progress updates |
-
-### Progress Callback Info Object
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `path` | `string` | File path |
-| `loaded` | `boolean` | Whether this file loaded successfully |
-| `total` | `number` | Total files to load |
-| `completed` | `number` | Files completed so far |
-| `progress` | `number` | Progress ratio (0-1) |
-| `failed` | `string[]` | Array of failed file paths |
 
 ## checkpreload()
 

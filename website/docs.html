@@ -586,7 +586,7 @@ setFullscreenCallback(onFullscreenExit)</div>
               <h2>Preload</h2>
               <p>ระบบโหลดทรัพยากรล่วงหน้า (รูปภาพ, เสียง BGM, SFX) พร้อมระบบตรวจสอบสถานะ</p>
 
-              <h3>preload(resources, onProgress?)</h3>
+              <h3>preload(resources)</h3>
               <p>โหลดไฟล์ที่กำหนดไว้ล่วงหน้า</p>
               <div class="code-block"># โหลดไฟล์เดียว
 preload("img/bg.png")
@@ -604,12 +604,7 @@ preload({
   images: ["img/bg.png", "img/char.png"],
   bgm: ["music/menu.mp3"],
   sfx: ["sfx/jump.wav"]
-})
-
-# พร้อม progress callback
-preload(["img/bg.png", "music/bgm.mp3"], function(info):
-  print(info.path + " - " + info.loaded + " (" + info.completed + "/" + info.total + ")")
-end)</div>
+})</div>
 
               <h3>checkpreload()</h3>
               <p>ตรวจสอบว่าโหลดทรัพยากรทั้งหมดเสร็จแล้วหรือยัง (คืนค่า <code>true</code> / <code>false</code>)</p>
@@ -704,7 +699,7 @@ function draw():
               <h2>Preload</h2>
               <p>Preload resources (images, BGM, SFX) with status checking system.</p>
 
-              <h3>preload(resources, onProgress?)</h3>
+              <h3>preload(resources)</h3>
               <p>Load specified resources in advance.</p>
               <div class="code-block"># Load a single file
 preload("img/bg.png")
@@ -722,12 +717,7 @@ preload({
   images: ["img/bg.png", "img/char.png"],
   bgm: ["music/menu.mp3"],
   sfx: ["sfx/jump.wav"]
-})
-
-# With progress callback
-preload(["img/bg.png", "music/bgm.mp3"], function(info):
-  print(info.path + " - " + info.loaded + " (" + info.completed + "/" + info.total + ")")
-end)</div>
+})</div>
 
               <h3>checkpreload()</h3>
               <p>Check if all resources have finished loading (returns <code>true</code> / <code>false</code>).</p>

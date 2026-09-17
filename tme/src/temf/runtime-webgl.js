@@ -1195,7 +1195,7 @@ function _preloadOne(path) {
   return _loadImage(path).then((img) => !!img).catch(() => false);
 }
 
-function preload(resources, onProgress) {
+function preload(resources) {
   if (!resources) {
     TEMF._preloadDone = true;
     return Promise.resolve([]);
@@ -1225,24 +1225,12 @@ function preload(resources, onProgress) {
   }
 
   TEMF._preloadDone = false;
-  let completed = 0;
   let failed = [];
 
   return Promise.all(paths.map((path) => {
     return _preloadOne(path).then((success) => {
-      completed++;
       if (!success) {
         failed.push(path);
-      }
-      if (onProgress && typeof onProgress === 'function') {
-        onProgress({
-          path,
-          loaded: success,
-          total,
-          completed: completed,
-          progress: completed / total,
-          failed: failed,
-        });
       }
       return success;
     });

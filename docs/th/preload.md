@@ -2,7 +2,7 @@
 
 ระบบโหลดทรัพยากรล่วงหน้า (รูปภาพ, เสียง BGM, SFX) พร้อมระบบตรวจสอบสถานะ
 
-## preload(resources, onProgress?)
+## preload(resources)
 
 โหลดไฟล์ที่กำหนดไว้ล่วงหน้า
 
@@ -24,11 +24,6 @@ preload({
   bgm: ["music/menu.mp3"],
   sfx: ["sfx/jump.wav"]
 })
-
-# พร้อม progress callback
-preload(["img/bg.png", "music/bgm.mp3"], function(info):
-  print(info.path + " - " + info.loaded + " (" + info.completed + "/" + info.total + ")")
-end)
 ```
 
 ### พารามิเตอร์
@@ -36,18 +31,6 @@ end)
 | พารามิเตอร์ | ประเภท | คำอธิบาย |
 |-------------|--------|----------|
 | `resources` | `string \| string[] \| object` | Path ของไฟล์ หรือ object ที่มี `images`, `bgm`, `sfx` เป็น array |
-| `onProgress` | `function` | ฟังก์ชัน callback เมื่อมีข้อมูล progress |
-
-### ข้อมูลใน callback (info object)
-
-| property | ประเภท | คำอธิบาย |
-|----------|--------|----------|
-| `path` | `string` | Path ของไฟล์ |
-| `loaded` | `boolean` | โหลดไฟล์นี้สำเร็จหรือไม่ |
-| `total` | `number` | จำนวนไฟล์ทั้งหมดที่ต้องโหลด |
-| `completed` | `number` | โหลดเสร็จแล้วกี่ไฟล์ |
-| `progress` | `number` | อัตราความคืบหน้า (0-1) |
-| `failed` | `string[]` | Array ของ path ที่โหลดล้มเหลว |
 
 ## checkpreload()
 
