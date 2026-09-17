@@ -25,7 +25,7 @@ TME provides a lightweight, WebGPU-only rendering and input system for browser-b
 ### Prerequisites
 
 - Node.js 18+
-- WebGPU-enabled browser (Chrome 113+, Edge 113+)
+- WebGPU-enabled (or WebGL) browser (Chrome 113+, Edge 113+)
 
 ### Installation
 
