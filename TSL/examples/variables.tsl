@@ -1,0 +1,10 @@
+# Variables
+name = "TSL"
+version = 1
+is_ready = true
+nothing = null
+
+print(name)
+print(version)
+print(is_ready)
+print(nothing)

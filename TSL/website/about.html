@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — TSL — Time Script Language</title>
+  <meta name="description" content="Learn about TSL (Time Script Language) — its design goals, compiler pipeline, error system, and GPL-3.0 license.">
+  <meta name="keywords" content="TSL, Time Script Language, compiler, transpiler, JavaScript, programming language, simple syntax">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="TimeAndTimeStudio">
+  <link rel="canonical" href="https://tsl.timeandtime.online/about">
+  <meta name="theme-color" content="#E8751A">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="About TSL — Time Script Language">
+  <meta property="og:description" content="Learn about TSL's design goals, compiler pipeline, error system, and GPL-3.0 license.">
+  <meta property="og:image" content="https://tsl.timeandtime.online/og-image.png">
+  <meta property="og:url" content="https://tsl.timeandtime.online/about">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="TSL">
+  <meta property="og:locale" content="th_TH">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About TSL — Time Script Language">
+  <meta name="twitter:description" content="Learn about TSL's design goals, compiler pipeline, error system, and GPL-3.0 license.">
+  <meta name="twitter:image" content="https://tsl.timeandtime.online/og-image.png">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "About TSL",
+    "url": "https://tsl.timeandtime.online/about",
+    "description": "Learn about TSL's design goals, compiler pipeline, error system, and GPL-3.0 license."
+  }
+  </script>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <div class="logo">T<span>S</span>L</div>
+      <button class="menu-toggle" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="docs.html">Docs</a></li>
+        <li><a href="https://github.com/TimeAndTimeStudio/TSL" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+      <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="th" onclick="setLang('th')">TH</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="hero" style="padding-bottom: 20px;">
+        <h1>About <span class="highlight">TSL</span></h1>
+        <div class="lang-th">
+          <p class="tagline">Small, Simple, Predictable — Compiles to JavaScript</p>
+        </div>
+        <div class="lang-en">
+          <p class="tagline">Small, Simple, Predictable — Compiles to JavaScript</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- What is TSL -->
+    <section class="container" style="padding: 40px 24px;">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 16px;">
+          <span class="lang-th">TSL คืออะไร?</span>
+          <span class="lang-en">What is TSL?</span>
+        </h2>
+        <div class="lang-th">
+          <p>TSL (Time Script Language) คือภาษาโปรแกรมขนาดเล็กที่ออกแบบมาเพื่อเขียนง่าย อ่านง่าย และ transpile เป็น JavaScript ใช้ indentation เป็น block เหมือน Python แต่ไม่ใช่ Python</p>
+        </div>
+        <div class="lang-en">
+          <p>TSL (Time Script Language) is a small programming language designed for easy writing and reading, transpiling to JavaScript. It uses indentation for blocks like Python, but is not Python.</p>
+        </div>
+
+        <div class="note">
+          <span class="lang-th"><strong>เป้าหมาย:</strong> ไม่ใช่การสร้างภาษา general-purpose ขนาดใหญ่ แต่เป็นภาษาเล็กที่ถูกต้อง คาดเดาได้ และง่ายต่อการ compile</span>
+          <span class="lang-en"><strong>Goal:</strong> Not to build a large general-purpose language, but a small, correct, predictable, and easy-to-compile language.</span>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Design Goals</span>
+          <span class="lang-en">Design Goals</span>
+        </h2>
+        <div class="lang-th">
+          <ul>
+            <li>Simple syntax — colon (:) และ indentation สำหรับ block</li>
+            <li>Full compiler pipeline — Lexer → Parser → AST → Validator → Generator</li>
+            <li>JavaScript backend — generate clean, readable, valid JavaScript</li>
+            <li>Deterministic output — same source always produces the same JavaScript</li>
+            <li>No VM, no bytecode, no JIT — compile ตรงเป็น JavaScript</li>
+            <li>Small and predictable</li>
+          </ul>
+        </div>
+        <div class="lang-en">
+          <ul>
+            <li>Simple syntax — colon (:) and indentation for blocks</li>
+            <li>Full compiler pipeline — Lexer → Parser → AST → Validator → Generator</li>
+            <li>JavaScript backend — generate clean, readable, valid JavaScript</li>
+            <li>Deterministic output — same source always produces the same JavaScript</li>
+            <li>No VM, no bytecode, no JIT — compile directly to JavaScript</li>
+            <li>Small and predictable</li>
+          </ul>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Project Stats</span>
+          <span class="lang-en">Project Stats</span>
+        </h2>
+        <div class="feature-grid" style="margin-top: 20px;">
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">1.0.0</div>
+            <p>
+              <span class="lang-th">Version</span>
+              <span class="lang-en">Version</span>
+            </p>
+          </div>
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">100+</div>
+            <p>
+              <span class="lang-th">Examples</span>
+              <span class="lang-en">Examples</span>
+            </p>
+          </div>
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">8</div>
+            <p>
+              <span class="lang-th">Test Suites</span>
+              <span class="lang-en">Test Suites</span>
+            </p>
+          </div>
+          <div class="feature-card" style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">5</div>
+            <p>
+              <span class="lang-th">Error Types</span>
+              <span class="lang-en">Error Types</span>
+            </p>
+          </div>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Compiler Pipeline</span>
+          <span class="lang-en">Compiler Pipeline</span>
+        </h2>
+        <div class="pipeline" style="margin: 24px 0;">
+          <div class="pipeline-step">TSL Source</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">Lexer</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">Parser</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">AST</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">Validator</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">Generator</div>
+          <span class="pipeline-arrow">→</span>
+          <div class="pipeline-step">JavaScript</div>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Error System</span>
+          <span class="lang-en">Error System</span>
+        </h2>
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <span class="lang-th">Category</span>
+                <span class="lang-en">Category</span>
+              </th>
+              <th>
+                <span class="lang-th">Class</span>
+                <span class="lang-en">Class</span>
+              </th>
+              <th>
+                <span class="lang-th">Pipeline Stage</span>
+                <span class="lang-en">Pipeline Stage</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="lang-th">Lexer Error</span>
+                <span class="lang-en">Lexer Error</span>
+              </td>
+              <td><code>LexerError</code></td>
+              <td>
+                <span class="lang-th">Tokenization</span>
+                <span class="lang-en">Tokenization</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="lang-th">Parser Error</span>
+                <span class="lang-en">Parser Error</span>
+              </td>
+              <td><code>ParserError</code></td>
+              <td>
+                <span class="lang-th">Parsing</span>
+                <span class="lang-en">Parsing</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="lang-th">Semantic Error</span>
+                <span class="lang-en">Semantic Error</span>
+              </td>
+              <td><code>ValidationError</code></td>
+              <td>
+                <span class="lang-th">Validation</span>
+                <span class="lang-en">Validation</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="lang-th">Generator Error</span>
+                <span class="lang-en">Generator Error</span>
+              </td>
+              <td><code>GeneratorError</code></td>
+              <td>
+                <span class="lang-th">Code Generation</span>
+                <span class="lang-en">Code Generation</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">Out of Scope (v1.0)</span>
+          <span class="lang-en">Out of Scope (v1.0)</span>
+        </h2>
+        <div class="lang-th">
+          <ul>
+            <li>Classes, inheritance, interfaces</li>
+            <li>Modules, packages</li>
+            <li>Static typing</li>
+            <li>Garbage collector, VM, bytecode</li>
+            <li>JIT compilation, native compilation</li>
+            <li>Async, threads, coroutines</li>
+            <li>Pattern matching, destructuring</li>
+          </ul>
+        </div>
+        <div class="lang-en">
+          <ul>
+            <li>Classes, inheritance, interfaces</li>
+            <li>Modules, packages</li>
+            <li>Static typing</li>
+            <li>Garbage collector, VM, bytecode</li>
+            <li>JIT compilation, native compilation</li>
+            <li>Async, threads, coroutines</li>
+            <li>Pattern matching, destructuring</li>
+          </ul>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
+          <span class="lang-th">License</span>
+          <span class="lang-en">License</span>
+        </h2>
+        <div class="lang-th">
+          <p>TSL ปล่อยภายใต้ <strong>GPL-3.0 License</strong></p>
+        </div>
+        <div class="lang-en">
+          <p>TSL is released under the <strong>GPL-3.0 License</strong></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <span class="lang-th">TSL v1.0.0 — Time Script Language &nbsp;|&nbsp; GPL-3.0 License</span>
+      <span class="lang-en">TSL v1.0.0 — Time Script Language &nbsp;|&nbsp; GPL-3.0 License</span>
+    </p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# While Loop with Break
+i = 0
+
+while true:
+    i = i + 1
+    if i == 5:
+        break
+
+print(i)

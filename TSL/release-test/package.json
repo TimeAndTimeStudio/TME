@@ -1,0 +1,12 @@
+{
+  "name": "tsl-release-test",
+  "version": "1.0.0",
+  "description": "TSL Release Candidate Test Suite - Phase 20",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node run-all-tests.js"
+  },
+  "dependencies": {
+    "tsl": "../"
+  }
+}

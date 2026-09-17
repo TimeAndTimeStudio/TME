@@ -1,0 +1,8 @@
+# Mixed Types in Array
+mixed = [1, "two", true, null, 3.14]
+
+print(mixed[0])
+print(mixed[1])
+print(mixed[2])
+print(mixed[3])
+print(mixed[4])

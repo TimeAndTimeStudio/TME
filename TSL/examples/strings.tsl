@@ -1,0 +1,5 @@
+# String Concatenation
+first = "Hello"
+last = "World"
+message = first + " " + last
+print(message)

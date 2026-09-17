@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#FFFBF5"/>
+  <rect width="1200" height="630" fill="#E8751A" opacity="0.1"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="1000" cy="100" r="150" fill="#E8751A" opacity="0.1"/>
+  <circle cx="200" cy="500" r="200" fill="#F59E0B" opacity="0.1"/>
+  
+  <!-- Main content -->
+  <g transform="translate(100, 150)">
+    <!-- TSL Logo -->
+    <text x="0" y="80" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#E8751A">TSL</text>
+    
+    <!-- Subtitle -->
+    <text x="0" y="140" font-family="Arial, sans-serif" font-size="48" fill="#2D2D2D">Time Script Language</text>
+    
+    <!-- Description -->
+    <text x="0" y="200" font-family="Arial, sans-serif" font-size="28" fill="#666666">Small, Simple, Predictable — Compiles to JavaScript</text>
+    
+    <!-- Decorative line -->
+    <rect x="0" y="230" width="120" height="4" fill="#E8751A"/>
+  </g>
+  
+  <!-- Footer -->
+  <g transform="translate(100, 550)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" fill="#999999">tsl.timeandtime.online</text>
+    <text x="1000" y="0" font-family="Arial, sans-serif" font-size="20" fill="#999999" text-anchor="end">GPL-3.0 License</text>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+# Palindrome Check
+function is_palindrome(text):
+    len = 0
+    for ch in text:
+        len = len + 1
+    
+    i = 0
+    while i < len / 2:
+        if text[i] != text[len - 1 - i]:
+            return false
+        i = i + 1
+    
+    return true
+
+print(is_palindrome("racecar"))

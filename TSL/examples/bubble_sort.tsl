@@ -1,0 +1,17 @@
+# Sorting (Bubble Sort)
+arr = [5, 3, 8, 1, 2]
+n = 5
+i = 0
+
+while i < n:
+    j = 0
+    while j < (n - 1):
+        if arr[j] > arr[j + 1]:
+            temp = arr[j]
+            arr[j] = arr[j + 1]
+            arr[j + 1] = temp
+        j = j + 1
+    i = i + 1
+
+for item in arr:
+    print(item)

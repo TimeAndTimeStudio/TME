@@ -1,0 +1,11 @@
+# Find Maximum
+numbers = [15, 3, 8, 1, 9, 2, 7]
+max = numbers[0]
+i = 1
+
+while i < 7:
+    if numbers[i] > max:
+        max = numbers[i]
+    i = i + 1
+
+print(max)

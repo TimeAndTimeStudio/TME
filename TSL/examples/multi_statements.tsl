@@ -1,0 +1,9 @@
+# Multiple Statements in Block
+x = 10
+y = 20
+z = 30
+
+if x > 5:
+    print("x is big")
+    print("y is " + y)
+    print("z is " + z)

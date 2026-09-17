@@ -1,0 +1,14 @@
+# Array Search
+numbers = [5, 3, 8, 1, 9, 2, 7]
+target = 7
+found = false
+
+for num in numbers:
+    if num == target:
+        found = true
+        break
+
+if found:
+    print("Found!")
+else:
+    print("Not found")

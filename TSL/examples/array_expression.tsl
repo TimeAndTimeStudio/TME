@@ -1,0 +1,4 @@
+# Array Access in Expression
+numbers = [10, 20, 30, 40, 50]
+result = numbers[0] + numbers[4]
+print(result)

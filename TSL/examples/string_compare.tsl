@@ -1,0 +1,7 @@
+# String Comparison
+name = "Alice"
+
+if name == "Alice":
+    print("Hello Alice!")
+else:
+    print("Who are you?")

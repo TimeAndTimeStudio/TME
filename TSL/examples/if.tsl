@@ -1,0 +1,7 @@
+# If / Else
+x = 15
+
+if x > 10:
+    print("big")
+else:
+    print("small")

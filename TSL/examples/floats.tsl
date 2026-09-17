@@ -1,0 +1,5 @@
+# Float Numbers
+pi = 3.14159
+radius = 5
+area = pi * radius * radius
+print(area)

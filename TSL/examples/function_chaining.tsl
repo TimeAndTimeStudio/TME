@@ -1,0 +1,9 @@
+# Function Calling Function
+function square(x):
+    return x * x
+
+function cube(x):
+    return square(x) * x
+
+result = cube(3)
+print(result)

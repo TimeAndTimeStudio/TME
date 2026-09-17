@@ -1,0 +1,7 @@
+# Boolean Logic
+a = true
+b = false
+c = true
+
+result = (a and b) or c
+print(result)

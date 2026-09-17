@@ -1,0 +1,19 @@
+# Dynamic Programming - Fibonacci
+function fibonacci(n):
+    if n <= 1:
+        return n
+    
+    prev2 = 0
+    prev1 = 1
+    current = 0
+    i = 2
+    
+    while i <= n:
+        current = prev1 + prev2
+        prev2 = prev1
+        prev1 = current
+        i = i + 1
+    
+    return current
+
+print(fibonacci(10))

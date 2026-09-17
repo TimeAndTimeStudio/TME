@@ -1,0 +1,6 @@
+# Object Clone
+original = { x: 10, y: 20 }
+clone = { x: original.x, y: original.y }
+
+print(clone.x)
+print(clone.y)
