@@ -1180,59 +1180,56 @@ function _isAudio(path) {
   return _AUDIO_EXTS.includes(ext);
 }
 
-function _preloadOne(path) {
-  if (_isAudio(path)) {
-    return _loadAudioBuffer(path).then((buffer) => {
-      return !!buffer;
-    }).catch(() => false);
-  }
-  return _loadImage(path).then((img) => !!img).catch(() => false);
-}
-
 function preload(resources) {
-  if (!resources) {
-    TEMF._preloadDone = true;
-    return Promise.resolve([]);
-  }
-
   let paths = [];
 
   if (typeof resources === 'string') {
     paths = [resources];
   } else if (Array.isArray(resources)) {
-    for (const item of resources) {
-      if (typeof item === 'string') {
-        paths.push(item);
-      } else if (item && typeof item === 'object') {
-        if (item.images) paths = paths.concat(item.images);
-        if (item.bgm) paths = paths.concat(item.bgm);
-        if (item.sfx) paths = paths.concat(item.sfx);
-        if (item.path) paths.push(item.path);
-      }
-    }
-  }
-
-  const total = paths.length;
-  if (total === 0) {
-    TEMF._preloadDone = true;
-    return Promise.resolve([]);
+    paths = resources.filter((path) => typeof path === 'string');
   }
 
   TEMF._preloadDone = false;
-  let failed = [];
+  TEMF._preloadFailed = [];
 
-  return Promise.all(paths.map((path) => {
-    return _preloadOne(path).then((success) => {
-      if (!success) {
-        failed.push(path);
-      }
-      return success;
-    });
-  })).then((results) => {
+  if (paths.length === 0) {
     TEMF._preloadDone = true;
-    TEMF._preloadFailed = failed;
-    return results;
-  });
+  } else {
+    Promise.all(
+      paths.map(async (path) => {
+        try {
+          if (_isAudio(path)) {
+            const buffer = await _loadAudioBuffer(path);
+
+            if (!buffer) {
+              TEMF._preloadFailed.push(path);
+            }
+          } else {
+            const img = await _loadImage(path);
+
+            if (img && TEMF._gl) {
+              const texture = _createTexture(TEMF._gl, img);
+
+              TEMF._textureCache.set(path, {
+                status: 'loaded',
+                texture: texture,
+                width: img.width,
+                height: img.height,
+                lastUsed: performance.now()
+              });
+            } else {
+              TEMF._preloadFailed.push(path);
+            }
+          }
+        } catch (err) {
+          TEMF._preloadFailed.push(path);
+          console.error('Preload failed:', path, err);
+        }
+      })
+    ).then(() => {
+      TEMF._preloadDone = true;
+    });
+  }
 }
 
 function checkpreload() {
