@@ -5,9 +5,9 @@ TME (Time Mini Engine) is a minimal game engine designed for lightweight 2D game
 
 ## Installation
 ```bash
-git clone https://github.com/TimeAndTimeStudio/TSL.git
 git clone https://github.com/TimeAndTimeStudio/TME.git
 cd TME
+git clone https://github.com/TimeAndTimeStudio/TSL.git
 ```
 
 ## TME CLI Commands

@@ -5,9 +5,9 @@ TME (Time Mini Engine) เป็นเกมเอนจินขนาดเล
 
 ## การติดตั้ง
 ```bash
-git clone https://github.com/TimeAndTimeStudio/TSL.git
 git clone https://github.com/TimeAndTimeStudio/TME.git
 cd TME
+git clone https://github.com/TimeAndTimeStudio/TSL.git
 ```
 
 ## คำสั่ง TME CLI
