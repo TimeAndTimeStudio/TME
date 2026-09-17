@@ -1,5 +1,0 @@
-# Object with Array
-person = { name: "Alice", age: 25, hobbies: ["reading", "coding"] }
-
-print(person.name)
-print(person.hobbies[0])

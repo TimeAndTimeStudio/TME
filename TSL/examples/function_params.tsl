@@ -1,7 +1,0 @@
-# Function with Multiple Parameters
-function greet(name, age):
-    message = "Hello, " + name + " you are " + age + " years old"
-    return message
-
-result = greet("Alice", 25)
-print(result)

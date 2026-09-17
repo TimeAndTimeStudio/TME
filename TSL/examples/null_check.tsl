@@ -1,7 +1,0 @@
-# Null Check
-value = null
-
-if value == null:
-    print("value is null")
-else:
-    print("value is not null")

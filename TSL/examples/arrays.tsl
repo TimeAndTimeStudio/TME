@@ -1,8 +1,0 @@
-# Arrays
-numbers = [1, 2, 3, 4, 5]
-
-first = numbers[0]
-print(first)
-
-last = numbers[4]
-print(last)

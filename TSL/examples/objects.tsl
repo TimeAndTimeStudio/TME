@@ -1,6 +1,0 @@
-# Objects
-player = { x: 100, y: 200, name: "Hero" }
-
-print(player.x)
-print(player.y)
-print(player.name)

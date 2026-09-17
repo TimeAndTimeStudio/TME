@@ -1,9 +1,0 @@
-# Simple Game Logic
-player_health = 100
-enemy_damage = 25
-
-while player_health > 0:
-    player_health = player_health - enemy_damage
-    print("Health: " + player_health)
-
-print("Game Over")

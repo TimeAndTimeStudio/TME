@@ -1,6 +1,0 @@
-# Empty Array and Object
-empty_array = []
-empty_object = {}
-
-print(empty_array)
-print(empty_object)

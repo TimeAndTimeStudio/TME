@@ -1,6 +1,0 @@
-# Function with Logical Operators
-function is_adult(age):
-    return age >= 18 and age <= 120
-
-result = is_adult(20)
-print(result)

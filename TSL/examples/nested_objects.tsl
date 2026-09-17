@@ -1,6 +1,0 @@
-# Object with Nested Object
-app = { name: "MyApp", version: 1 }
-config = { app: app, debug: true }
-
-print(config.app.name)
-print(config.debug)

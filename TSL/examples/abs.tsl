@@ -1,9 +1,0 @@
-# Absolute Value
-function abs(x):
-    if x < (0 - 1):
-        return (0 - x)
-    else:
-        return x
-
-print(abs((0 - 5)))
-print(abs(5))

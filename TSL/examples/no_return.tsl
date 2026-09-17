@@ -1,5 +1,0 @@
-# Function with No Return
-function say_hello():
-    print("Hello!")
-
-say_hello()

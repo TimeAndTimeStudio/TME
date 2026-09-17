@@ -1,7 +1,0 @@
-# Complex Object
-emp1 = { name: "Alice", role: "Engineer" }
-emp2 = { name: "Bob", role: "Designer" }
-company = { name: "TSL Inc", founded: 2024, employees: [emp1, emp2], active: true }
-
-print(company.name)
-print(company.employees[0].name)

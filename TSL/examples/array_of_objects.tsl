@@ -1,8 +1,0 @@
-# Array of Objects
-student1 = { name: "Alice", age: 20, gpa: 3.5 }
-student2 = { name: "Bob", age: 22, gpa: 3.8 }
-student3 = { name: "Charlie", age: 21, gpa: 3.2 }
-students = [student1, student2, student3]
-
-print(students[0].name)
-print(students[1].gpa)

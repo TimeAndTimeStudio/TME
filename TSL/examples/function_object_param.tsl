@@ -1,7 +1,0 @@
-# Function with Object Parameter
-function describe(person):
-    message = person.name + " is " + person.age + " years old"
-    return message
-
-alice = { name: "Alice", age: 25 }
-print(describe(alice))
