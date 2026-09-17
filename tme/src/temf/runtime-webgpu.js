@@ -72,6 +72,7 @@ const TEMF = {
   _audioMutedBgm: false,
   _bgmWasPlaying: false,
   _preloadDone: true,
+  _tabSwitched: false,
 };
 
 // ============================================================
@@ -1533,6 +1534,9 @@ function _initVisibility() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      // จำไว้ว่าเคยสลับออกจาก tab แล้ว (ค่าจะเป็น true ค้างตลอด ไม่รีเซ็ตกลับ)
+      TEMF._tabSwitched = true;
+
       // จำสถานะไว้ตอนออกจาก tab ว่าตอนนั้นเพลงกำลังเล่นอยู่หรือเปล่า
       TEMF._bgmWasPlaying = !!TEMF._bgmSource && TEMF._audioContext && TEMF._audioContext.state === 'running';
     }
@@ -1640,6 +1644,10 @@ function _handleFullscreenChange() {
   }
 }
 
+function hasTabSwitched() {
+  return !!TEMF._tabSwitched;
+}
+
 document.addEventListener('fullscreenchange', _handleFullscreenChange);
 document.addEventListener('webkitfullscreenchange', _handleFullscreenChange);
 document.addEventListener('msfullscreenchange', _handleFullscreenChange);
@@ -1659,6 +1667,7 @@ if (typeof window !== 'undefined') {
   window.requestFullscreen = requestFullscreen;
   window.exitFullscreen = exitFullscreen;
   window.setFullscreenCallback = setFullscreenCallback;
+  window.hasTabSwitched = hasTabSwitched;
   window.rect = _rect;
   window.image = _image;
   window.key = key;
