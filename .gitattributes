@@ -1,3 +1,65 @@
-# Prevent GitHub Linguist from misclassifying .tsl (Time Script Language)
-# files as TypeScript or counting them toward the repo's language stats.
+# Explicit Linguist overrides for every file in this repository.
+# Format: <path> linguist-language=<Language>
+# Docs/text files are marked linguist-documentation so they don't count
+# toward the language stats bar at all.
+
+# --- Root files ---
+README.md linguist-documentation
+LICENSE linguist-documentation
+package.json linguist-language=JSON
+.gitattributes linguist-documentation
+
+# --- CLI entry point (no file extension, but is a Node.js script) ---
+tme/bin/tme linguist-language=JavaScript
+
+# --- Engine source (JavaScript) ---
+tme/src/build/build.js linguist-language=JavaScript
+tme/src/build/init.js linguist-language=JavaScript
+tme/src/temf/backup.js linguist-language=JavaScript
+tme/src/temf/runtime-webgl.js linguist-language=JavaScript
+tme/src/temf/runtime-webgpu.js linguist-language=JavaScript
+tme/src/temf/runtime.js linguist-language=JavaScript
+
+# --- Tests (JavaScript) ---
+tests/audio.test.js linguist-language=JavaScript
+tests/gameloop.test.js linguist-language=JavaScript
+tests/keyboard.test.js linguist-language=JavaScript
+tests/mouse.test.js linguist-language=JavaScript
+tests/render.test.js linguist-language=JavaScript
+tests/touch.test.js linguist-language=JavaScript
+
+# --- Docs (English + Thai) — treated as documentation, excluded from stats ---
+docs/en/*.md linguist-documentation
+docs/th/*.md linguist-documentation
+
+# --- Website: HTML ---
+website/about.html linguist-language=HTML
+website/docs.html linguist-language=HTML
+website/index.html linguist-language=HTML
+website/jump-game/index.html linguist-language=HTML
+
+# --- Website: CSS ---
+website/css/style.css linguist-language=CSS
+website/jump-game/style.css linguist-language=CSS
+
+# --- Website: JavaScript ---
+website/js/main.js linguist-language=JavaScript
+website/jump-game/game.js linguist-language=JavaScript
+website/jump-game/temf-webgl.js linguist-language=JavaScript
+website/jump-game/temf-webgpu.js linguist-language=JavaScript
+website/jump-game/temf.js linguist-language=JavaScript
+
+# --- Website: images / SVG icons — vendored, excluded from stats ---
+website/favicon.svg linguist-vendored
+website/og-image.svg linguist-vendored
+website/og-image.png linguist-vendored
+website/jump-game/img/img1.png linguist-vendored
+
+# --- Website: non-code files ---
+website/robots.txt linguist-documentation
+website/sitemap.xml linguist-documentation
+
+# --- Any .tsl (Time Script Language) files added later ---
+# Not a real programming language Linguist recognizes; keep it from being
+# misclassified as TypeScript by its content classifier.
 *.tsl linguist-language=Text
