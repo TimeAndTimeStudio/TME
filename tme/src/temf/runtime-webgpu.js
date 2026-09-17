@@ -431,17 +431,17 @@ function _createRenderer() {
       var pos: vec2f;
       var uv: vec2f;
       if (vertIdx == 0u) {
-        pos = vec2f(x0, y0); uv = vec2f(base.u0, base.v1);
+        pos = vec2f(x0, y0); uv = vec2f(base.u0, base.v0);
       } else if (vertIdx == 1u) {
-        pos = vec2f(x1, y0); uv = vec2f(base.u1, base.v1);
+        pos = vec2f(x1, y0); uv = vec2f(base.u1, base.v0);
       } else if (vertIdx == 2u) {
-        pos = vec2f(x0, y1); uv = vec2f(base.u0, base.v0);
+        pos = vec2f(x0, y1); uv = vec2f(base.u0, base.v1);
       } else if (vertIdx == 3u) {
-        pos = vec2f(x0, y1); uv = vec2f(base.u0, base.v0);
+        pos = vec2f(x0, y1); uv = vec2f(base.u0, base.v1);
       } else if (vertIdx == 4u) {
-        pos = vec2f(x1, y0); uv = vec2f(base.u1, base.v1);
+        pos = vec2f(x1, y0); uv = vec2f(base.u1, base.v0);
       } else {
-        pos = vec2f(x1, y1); uv = vec2f(base.u1, base.v0);
+        pos = vec2f(x1, y1); uv = vec2f(base.u1, base.v1);
       }
       let cx = base.x + base.w * 0.5;
       let cy = base.y + base.h * 0.5;
@@ -591,14 +591,20 @@ function _rect(x, y, width, height, color, rotation, scale, alpha) {
   });
 }
 
-function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cropHeight) {
+function _image(path, x, y, width, height, rotation, scale, alpha) {
+  let srcW, srcH;
+
+  if (typeof width === 'number' && typeof height === 'number') {
+    srcW = width;
+    srcH = height;
+  } else {
+    srcW = 0;
+    srcH = 0;
+  }
+
   const optRotation = (typeof rotation === 'number') ? rotation : 0;
   const optScale = (typeof scale === 'number') ? scale : 1;
   const optAlpha = (alpha !== undefined && alpha !== null) ? alpha : 1;
-  const optCropX = (typeof cropX === 'number') ? cropX : 0;
-  const optCropY = (typeof cropY === 'number') ? cropY : 0;
-  const optCropW = (typeof cropWidth === 'number') ? cropWidth : 0;
-  const optCropH = (typeof cropHeight === 'number') ? cropHeight : 0;
 
   const img = TEMF._imageElements.get(path);
   let texW = 0, texH = 0;
@@ -609,7 +615,10 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cro
   }
 
   let displayW, displayH;
-  if (img) {
+  if (srcW > 0 && srcH > 0) {
+    displayW = srcW * optScale;
+    displayH = srcH * optScale;
+  } else if (img) {
     displayW = texW * optScale;
     displayH = texH * optScale;
   } else {
@@ -618,13 +627,11 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropWidth, cro
   }
 
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
-  if (img) {
-    const cropW = optCropW > 0 ? optCropW : texW;
-    const cropH = optCropH > 0 ? optCropH : texH;
-    u0 = optCropX / texW;
-    v0 = optCropY / texH;
-    u1 = (optCropX + cropW) / texW;
-    v1 = (optCropY + cropH) / texH;
+  if (img && srcW > 0 && srcH > 0) {
+    u0 = 0;
+    v0 = 0;
+    u1 = srcW / texW;
+    v1 = srcH / texH;
   }
 
   if (TEMF._drawList.length >= TEMF._rectMax) return;
@@ -1070,6 +1077,11 @@ function _getTouchSlot(id) {
 }
 
 const touch = {
+  exists(id) {
+    const idx = (typeof id === 'number') ? id : 0;
+    if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) return false;
+    return _touchSlotIsActive(idx);
+  },
   down(id) {
     const idx = (typeof id === 'number') ? id : 0;
     if (idx < 0 || idx >= TEMF._touchMax || !Number.isInteger(idx)) return false;

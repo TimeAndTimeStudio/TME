@@ -350,10 +350,7 @@ function _createRenderer() {
     varying float vAlpha;
     void main() {
       vec2 pos = aData0.xy + aCorner * aData0.zw;
-      vUV = mix(aData1.xy, aData1.zw, aCorner);
-      // WebGL's V axis runs the opposite way from the WebGPU sample used
-      // for images, so flip V here to keep both backends' textures upright.
-      vUV.y = aData1.y + aData1.w - vUV.y;
+      vUV = mix(aData1.xy, aData1.zw, aCorner); // corner (0,0)=top-left samples (u0,v0)=top-left of image
       vec2 center = aData0.xy + aData0.zw * 0.5;
       pos = (pos - center) * aData2.y;
       float rad = aData2.x * 3.14159265 / 180.0;
