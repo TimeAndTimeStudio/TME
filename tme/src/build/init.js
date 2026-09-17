@@ -27,7 +27,15 @@ async function initProject(projectDir) {
   checkTSL();
 
   const files = {
-    'game.tsl': '',
+    'game.tsl': `
+function update(dt):
+  pass
+
+function draw():
+  pass
+
+fps(60)
+setGame({update: update, draw: draw})`,
     'index.html': `<!doctype html>
 <html>
 <head>
