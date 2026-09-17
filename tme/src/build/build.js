@@ -10,7 +10,7 @@ const TME_ROOT = path.resolve(__dirname, '..', '..', '..');
 const TSL_DIR = path.join(TME_ROOT, 'TSL');
 const TSL_CLI = path.join(TSL_DIR, 'src', 'cli.js');
 
-const REQUIRED_DIST_FILES = ['temf.js', 'index.html', 'style.css'];
+const REQUIRED_DIST_FILES = ['temf.js', 'index.html', 'style.css', 'temf-webgl.js', 'temf-webgpu.js'];
 
 function validateProject(projectDir) {
   projectDir = path.resolve(projectDir);
