@@ -48,7 +48,6 @@ audio.sfxVolume = 0.6   # ความดัง SFX
 audio.bgmVolume = 0.7   # ความดัง BGM
 
 # Mute
-audio.muted = true      # mute ทั้งหมด
 audio.mutedSfx = true   # mute SFX
 audio.mutedBgm = true   # mute BGM
 
