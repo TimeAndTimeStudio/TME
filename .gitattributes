@@ -1,0 +1,3 @@
+# Prevent GitHub Linguist from misclassifying .tsl (Time Script Language)
+# files as TypeScript or counting them toward the repo's language stats.
+*.tsl linguist-language=Text
