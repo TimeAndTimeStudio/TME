@@ -52,6 +52,6 @@ audio.mutedSfx = true   # Mute SFX only
 audio.mutedBgm = true   # Mute BGM only
 
 # Check status
-if audio.muted:
+if audio.mutedSfx:
   print("Audio is muted")
 ```
