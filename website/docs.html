@@ -109,11 +109,21 @@
           <section id="getting-started">
             <div class="lang-th">
               <h2>เริ่มต้นใช้งาน</h2>
-              <p>TME (Time Mini Engine) คือ game engine ขนาดเล็กสำหรับสร้างเกม 2D ใช้ WebGPU สำหรับ render และมี build system ที่เรียบง่าย</p>
+              <p>TME (Time Mini Engine) คือ game engine ขนาดเล็กสำหรับสร้างเกม 2D รองรับทั้ง WebGPU และ WebGL สำหรับ rendering</p>
 
               <h3>การติดตั้ง</h3>
-              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TME.git
+              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TSL.git
+git clone https://github.com/TimeAndTimeStudio/TME.git
 cd TME</div>
+
+              <h3>คำสั่ง TME CLI</h3>
+              <p>คำสั่งที่มีใน <code>tme/bin/tme</code>:</p>
+              <ul>
+                <li><code>tme init [project-directory]</code> — สร้างโปรเจกต์ TME ใหม่</li>
+                <li><code>tme build [project-directory]</code> — Build โปรเจกต์</li>
+                <li><code>tme --version</code> — แสดงเวอร์ชัน</li>
+                <li><code>tme --help</code> — แสดงความช่วยเหลือ</li>
+              </ul>
 
               <h3>สร้างโปรเจกต์ใหม่</h3>
               <div class="code-block">cd examples
@@ -122,18 +132,28 @@ cd my-game</div>
 
               <h3>Build</h3>
               <div class="code-block">cd /path/to/TME
-node tme/bin/tme build</div>
+node tme/bin/tme build /path/to/my-game</div>
 
               <h3>รันเกม</h3>
               <div class="code-block">เปิด index.html ในเบราว์เซอร์</div>
             </div>
             <div class="lang-en">
               <h2>Getting Started</h2>
-              <p>TME (Time Mini Engine) is a small game engine for creating 2D games. Uses WebGPU for rendering and has a simple build system.</p>
+              <p>TME (Time Mini Engine) is a small game engine for creating 2D games. Supports both WebGPU and WebGL for rendering.</p>
 
               <h3>Installation</h3>
-              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TME.git
+              <div class="code-block">git clone https://github.com/TimeAndTimeStudio/TSL.git
+git clone https://github.com/TimeAndTimeStudio/TME.git
 cd TME</div>
+
+              <h3>TME CLI Commands</h3>
+              <p>Available commands in <code>tme/bin/tme</code>:</p>
+              <ul>
+                <li><code>tme init [project-directory]</code> — Initialize a new TME project</li>
+                <li><code>tme build [project-directory]</code> — Build the project</li>
+                <li><code>tme --version</code> — Show version</li>
+                <li><code>tme --help</code> — Show help</li>
+              </ul>
 
               <h3>Create New Project</h3>
               <div class="code-block">cd examples
@@ -142,7 +162,7 @@ cd my-game</div>
 
               <h3>Build</h3>
               <div class="code-block">cd /path/to/TME
-node tme/bin/tme build</div>
+node tme/bin/tme build /path/to/my-game</div>
 
               <h3>Run Game</h3>
               <div class="code-block">Open index.html in browser</div>
