@@ -1461,6 +1461,47 @@ function hasTabSwitched() {
   return !!TEMF._tabSwitched;
 }
 
+function unload(path) {
+  if (!path || typeof path !== 'string') {
+    throw new Error('unload(): invalid path');
+  }
+
+  if (TEMF._imageElements.has(path)) {
+    if (!TEMF._textureCache.has(path)) {
+      throw new Error(`unload(): texture not found "${path}"`);
+    }
+
+    TEMF._imageElements.delete(path);
+
+    const entry = TEMF._textureCache.get(path);
+
+    if (entry && entry.texture && TEMF._gl) {
+      try {
+        TEMF._gl.deleteTexture(entry.texture);
+      } catch (e) {}
+    }
+
+    TEMF._textureCache.delete(path);
+    return;
+  }
+
+  if (TEMF._bgmPath === path) {
+    if (TEMF._bgmSource) {
+      _stopBgm();
+    }
+
+    TEMF._audioCache.delete(path);
+    TEMF._bgmPath = null;
+    return;
+  }
+
+  if (TEMF._audioCache.has(path)) {
+    throw new Error(`unload(): cannot unload SFX "${path}"`);
+  }
+
+  throw new Error(`unload(): image not found "${path}"`);
+}
+
 document.addEventListener('fullscreenchange', _handleFullscreenChange);
 document.addEventListener('webkitfullscreenchange', _handleFullscreenChange);
 document.addEventListener('msfullscreenchange', _handleFullscreenChange);
@@ -1481,6 +1522,7 @@ if (typeof window !== 'undefined') {
   window.exitFullscreen = exitFullscreen;
   window.setFullscreenCallback = setFullscreenCallback;
   window.hasTabSwitched = hasTabSwitched;
+  window.unload = unload;
   window.rect = _rect;
   window.image = _image;
   window.key = key;
