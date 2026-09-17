@@ -198,10 +198,10 @@ node tme/bin/tme build</div>
               <div class="code-block">rect(100, 100, 64, 64, "#FF5733")
 rect(200, 200, 50, 50, "#33FF57", 45, 2, 0.5)</div>
 
-              <h3>image(src, x, y, width?, height?, rotation?, scale?, alpha?)</h3>
-              <p>โหลดและวาดภาพ</p>
-              <div class="code-block">image("assets/player.png", 100, 100, 64, 64)
-image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
+              <h3>image(src, x, y, rotation?, scale?, alpha?, cropX?, cropY?, cropEndX?, cropEndY?)</h3>
+              <p>โหลดและวาดภาพ (crop ใช้จุดเริ่ม-จุดจบ)</p>
+              <div class="code-block">image("assets/player.png", 100, 100)
+image("assets/sprite.png", 200, 150, 0, 1.5, 1, 10, 10, 90, 90)</div>
 
               <h3>getCanvasSize()</h3>
               <p>ดึงขนาดปัจจุบันของ canvas (รวม DPR)</p>
@@ -221,10 +221,10 @@ image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
               <div class="code-block">rect(100, 100, 64, 64, "#FF5733")
 rect(200, 200, 50, 50, "#33FF57", 45, 2, 0.5)</div>
 
-              <h3>image(src, x, y, width?, height?, rotation?, scale?, alpha?)</h3>
-              <p>Load and draw an image.</p>
-              <div class="code-block">image("assets/player.png", 100, 100, 64, 64)
-image("assets/sprite.png", 200, 150, 90, 1.5, 0.8)</div>
+              <h3>image(src, x, y, rotation?, scale?, alpha?, cropX?, cropY?, cropEndX?, cropEndY?)</h3>
+              <p>Load and draw an image (crop uses start-end coordinates).</p>
+              <div class="code-block">image("assets/player.png", 100, 100)
+image("assets/sprite.png", 200, 150, 0, 1.5, 1, 10, 10, 90, 90)</div>
 
               <h3>getCanvasSize()</h3>
               <p>Get current canvas size (including DPR).</p>
