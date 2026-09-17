@@ -101,7 +101,7 @@
         </h2>
         <div class="lang-th">
           <ul>
-            <li>TME Engine — render (WebGPU), input (keyboard/mouse/touch), audio</li>
+            <li>TME Engine — render (WebGPU + WebGL), input (keyboard/mouse/touch), audio</li>
             <li>TEMF Runtime — game loop, start(), lifecycle, coordination</li>
             <li>Build Program — tme build, invoke TSL compiler, output static dist/</li>
             <li>TSL External — read-only compiler for game.tsl → game.js</li>
@@ -109,7 +109,7 @@
         </div>
         <div class="lang-en">
           <ul>
-            <li>TME Engine — render (WebGPU), input (keyboard/mouse/touch), audio</li>
+            <li>TME Engine — render (WebGPU + WebGL), input (keyboard/mouse/touch), audio</li>
             <li>TEMF Runtime — game loop, start(), lifecycle, coordination</li>
             <li>Build Program — tme build, invoke TSL compiler, output static dist/</li>
             <li>TSL External — read-only compiler for game.tsl → game.js</li>
@@ -143,10 +143,10 @@
             </p>
           </div>
           <div class="feature-card" style="text-align: center;">
-            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">WebGPU</div>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">WebGPU + WebGL</div>
             <p>
-              <span class="lang-th">Only Backend</span>
-              <span class="lang-en">Only Backend</span>
+              <span class="lang-th">Render Backends</span>
+              <span class="lang-en">Render Backends</span>
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@
           <span class="pipeline-arrow">→</span>
           <div class="pipeline-step">TME Engine</div>
           <span class="pipeline-arrow">→</span>
-          <div class="pipeline-step">WebGPU</div>
+          <div class="pipeline-step">WebGPU + WebGL</div>
         </div>
 
         <h2 style="font-size: 1.5rem; margin: 40px 0 16px;">
@@ -177,7 +177,6 @@
             <li>Animation framework, particle system</li>
             <li>Tilemap, scene manager, camera system</li>
             <li>Font/text renderer, UI framework</li>
-            <li>Canvas2D/WebGL fallback</li>
             <li>Plugin system, dependency injection</li>
             <li>Large asset manager, event bus</li>
           </ul>
@@ -188,7 +187,6 @@
             <li>Animation framework, particle system</li>
             <li>Tilemap, scene manager, camera system</li>
             <li>Font/text renderer, UI framework</li>
-            <li>Canvas2D/WebGL fallback</li>
             <li>Plugin system, dependency injection</li>
             <li>Large asset manager, event bus</li>
           </ul>
