@@ -1341,16 +1341,8 @@ function _setBgmVolume(val) {
 
 function _setMuted(muted) {
   TEMF._audioMuted = !!muted;
-  TEMF._audioMutedSfx = muted;
-  TEMF._audioMutedBgm = muted;
   if (TEMF._masterGain) {
     TEMF._masterGain.gain.value = TEMF._audioMuted ? 0 : TEMF._audioVolume;
-  }
-  if (TEMF._sfxGain) {
-    TEMF._sfxGain.gain.value = TEMF._audioMutedSfx ? 0 : TEMF._audioSfxVolume;
-  }
-  if (TEMF._bgmGain) {
-    TEMF._bgmGain.gain.value = TEMF._audioMutedBgm ? 0 : TEMF._audioBgmVolume;
   }
 }
 
@@ -1490,12 +1482,6 @@ const audio = {
   set bgmVolume(val) {
     _setBgmVolume(val);
   },
-  get muted() {
-    return TEMF._audioMuted;
-  },
-  set muted(val) {
-    _setMuted(val);
-  },
   get mutedSfx() {
     return TEMF._audioMutedSfx;
   },
@@ -1541,6 +1527,26 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+function _initVisibility() {
+  if (typeof document === 'undefined') return;
+
+  document.addEventListener('visibilitychange', () => {
+    _setMuted(document.hidden);
+
+    if (!document.hidden) {
+      // เคลียร์ input ค้าง เพราะ keyup/pointerup อาจไม่ยิงมาถึงตอนอยู่นอก tab
+      TEMF._keyPressed.clear();
+      for (const [, state] of TEMF._mouseButtons) {
+        state.down = false;
+      }
+      for (const slot of TEMF._touchSlots) {
+        _touchWipeSlot(slot);
+      }
+      TEMF._touchPointerToSlot.clear();
+    }
+  });
+}
+
 function _bootstrap() {
   if (TEMF._started) return;
 
@@ -1556,6 +1562,7 @@ function _bootstrap() {
     _initKeyboard();
     _initMouse();
     _initTouch();
+    _initVisibility();
     TEMF._lastTime = performance.now();
     gameLoop();
   }).catch(err => {
