@@ -82,6 +82,7 @@
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
               <li><a href="#fullscreen-api">Fullscreen API</a></li>
+              <li><a href="#visibility">Visibility</a></li>
               <li><a href="#preload">Preload</a></li>
               <li><a href="#build">Build</a></li>
             </ul>
@@ -100,6 +101,7 @@
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
               <li><a href="#fullscreen-api">Fullscreen API</a></li>
+              <li><a href="#visibility">Visibility</a></li>
               <li><a href="#preload">Preload</a></li>
               <li><a href="#build">Build</a></li>
             </ul>
@@ -576,6 +578,29 @@ setFullscreenCallback(onFullscreenExit)</div>
   print("Exited fullscreen!")
 
 setFullscreenCallback(onFullscreenExit)</div>
+            </div>
+          </section>
+
+          <section id="visibility">
+            <div class="lang-th">
+              <h2>Visibility</h2>
+              <p>ระบบตรวจสอบว่าผู้เล่นเคยสลับออกจาก tab ระหว่างเล่นเกมหรือไม่</p>
+
+              <h3>hasTabSwitched()</h3>
+              <p>คืนค่า <code>true</code> หากผู้เล่นเคยสลับออกจาก tab (หรือย่อ/สลับแอป) อย่างน้อยหนึ่งครั้งนับตั้งแต่โหลดหน้าเว็บ ค่าจะเป็น <code>true</code> ค้างตลอด ไม่รีเซ็ตกลับเป็น <code>false</code> จนกว่าจะโหลดหน้าเว็บใหม่</p>
+              <div class="code-block">function draw():
+  if hasTabSwitched():
+    print("ผู้เล่นเคยสลับ tab ไปแล้ว")</div>
+            </div>
+            <div class="lang-en">
+              <h2>Visibility</h2>
+              <p>System for checking whether the player has switched away from the tab during gameplay.</p>
+
+              <h3>hasTabSwitched()</h3>
+              <p>Returns <code>true</code> if the player has switched away from the tab (or minimized/switched apps) at least once since the page was loaded. The value stays <code>true</code> and does not reset to <code>false</code> until the page is reloaded.</p>
+              <div class="code-block">function draw():
+  if hasTabSwitched():
+    print("Player has switched tabs")</div>
             </div>
           </section>
 

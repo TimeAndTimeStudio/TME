@@ -29,3 +29,13 @@ Set the framerate (default = 60).
 fps(60)  # 60 FPS (default)
 fps(30)  # 30 FPS for better performance
 ```
+
+## `hasTabSwitched()`
+
+Returns `true` if the player has switched away from the tab (or minimized/switched apps) at least once since the page was loaded. The value stays `true` and does not reset to `false` until the page is reloaded.
+
+```javascript
+function draw():
+  if hasTabSwitched():
+    print("Player has switched tabs")
+```
