@@ -48,7 +48,6 @@ audio.sfxVolume = 0.6   # SFX volume
 audio.bgmVolume = 0.7   # BGM volume
 
 # Mute
-audio.muted = true      # Mute everything
 audio.mutedSfx = true   # Mute SFX only
 audio.mutedBgm = true   # Mute BGM only
 
