@@ -203,22 +203,41 @@
             <span class="lang-en">Jump Game</span>
           </h3>
           <div class="code-block" style="font-size: 0.85rem;">
+<span class="comment"># Jump Game — TME Example</span><br>
+<br>
+player = { x: 100, y: 400, vy: 0 }<br>
+JUMP_FORCE = 300<br>
+GRAVITY = 800<br>
+GROUND = 400<br>
+W = 1920<br>
+<br>
+<span class="keyword">function</span> handleFullscreenExit():<br>
+&nbsp;&nbsp;print("Exited fullscreen!")<br>
+<br>
+setFullscreenCallback(handleFullscreenExit)<br>
+<br>
 <span class="keyword">function</span> update(dt):<br>
 &nbsp;&nbsp;<span class="keyword">if</span> key("space") or touch.down(0):<br>
-&nbsp;&nbsp;&nbsp;&nbsp;player.vy = -300<br>
+&nbsp;&nbsp;&nbsp;&nbsp;player.vy = (0 - JUMP_FORCE)<br>
+<br>
+&nbsp;&nbsp;player.vy = (player.vy + (GRAVITY * dt))<br>
 &nbsp;&nbsp;player.y = (player.y + (player.vy * dt))<br>
-&nbsp;&nbsp;<span class="keyword">if</span> (player.y > 400):<br>
-&nbsp;&nbsp;&nbsp;&nbsp;player.y = 400<br>
+<br>
+&nbsp;&nbsp;<span class="keyword">if</span> (player.y > GROUND):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;player.y = GROUND<br>
+&nbsp;&nbsp;&nbsp;&nbsp;player.vy = 0<br>
 <br>
 <span class="keyword">function</span> draw():<br>
-&nbsp;&nbsp;rect(0, 400, 800, 50, "brown")<br>
-&nbsp;&nbsp;rect(player.x, player.y, 50, 50, "blue")
+&nbsp;&nbsp;canvasSize = getCanvasSize()<br>
+&nbsp;&nbsp;W = canvasSize.width<br>
+&nbsp;&nbsp;image("img/img1.png", 0, 0, 0, 1, 1)<br>
+&nbsp;&nbsp;rect(0, GROUND, W, 50, "#8B4513")<br>
+&nbsp;&nbsp;rect(player.x, player.y, 50, 50, "#0000FF")<br>
+<br>
+fps(60)<br>
+setGame({update: update, draw: draw})
           </div>
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <a href="https://github.com/TimeAndTimeStudio/TME/tree/main/examples/jump-game" class="btn btn-outline" target="_blank" rel="noopener">
-              <span class="lang-th">ดูโค้ด</span>
-              <span class="lang-en">View Code</span>
-            </a>
             <a href="jump-game/" class="btn btn-primary">
               <span class="lang-th">ลองเล่น</span>
               <span class="lang-en">Try it</span>
