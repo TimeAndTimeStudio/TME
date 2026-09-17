@@ -72,6 +72,7 @@ const TEMF = {
   _audioMuted: false,
   _audioMutedSfx: false,
   _audioMutedBgm: false,
+  _bgmWasPlaying: false,
   _preloadDone: true,
 };
 
@@ -1347,6 +1348,11 @@ function _initVisibility() {
   if (typeof document === 'undefined') return;
 
   document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // จำสถานะไว้ตอนออกจาก tab ว่าตอนนั้นเพลงกำลังเล่นอยู่หรือเปล่า
+      TEMF._bgmWasPlaying = !!TEMF._bgmSource && TEMF._audioContext && TEMF._audioContext.state === 'running';
+    }
+
     _setMuted(document.hidden);
 
     if (!document.hidden) {
@@ -1359,6 +1365,14 @@ function _initVisibility() {
         _touchWipeSlot(slot);
       }
       TEMF._touchPointerToSlot.clear();
+
+      // ถ้าตอนออกไปเพลงกำลังเล่นอยู่ แต่กลับมาแล้วไม่เล่นแล้ว ให้ reload หน้าเว็บ
+      if (TEMF._bgmWasPlaying) {
+        const isPlayingNow = !!TEMF._bgmSource && TEMF._audioContext && TEMF._audioContext.state === 'running';
+        if (!isPlayingNow) {
+          location.reload();
+        }
+      }
     }
   });
 }
