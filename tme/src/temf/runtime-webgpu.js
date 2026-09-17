@@ -70,6 +70,7 @@ const TEMF = {
   _audioMuted: false,
   _audioMutedSfx: false,
   _audioMutedBgm: false,
+  _preloadDone: true,
 };
 
 // ============================================================
@@ -1362,6 +1363,98 @@ function _cleanupSfxNodes() {
   }
 }
 
+const _AUDIO_EXTS = ['mp3', 'wav', 'ogg', 'weba', 'm4a', 'aac', 'flac', 'wma'];
+
+function _isAudio(path) {
+  const ext = path.split('.').pop().toLowerCase();
+  return _AUDIO_EXTS.includes(ext);
+}
+
+function _preloadOne(path) {
+  if (_isAudio(path)) {
+    return _loadAudioBuffer(path).then((buffer) => {
+      return !!buffer;
+    }).catch(() => false);
+  }
+  return _loadImage(path).then((img) => !!img).catch(() => false);
+}
+
+function preload(resources, onProgress) {
+  if (!resources) {
+    TEMF._preloadDone = true;
+    return Promise.resolve([]);
+  }
+
+  let paths = [];
+
+  if (typeof resources === 'string') {
+    paths = [resources];
+  } else if (Array.isArray(resources)) {
+    for (const item of resources) {
+      if (typeof item === 'string') {
+        paths.push(item);
+      } else if (item && typeof item === 'object') {
+        if (item.images) paths = paths.concat(item.images);
+        if (item.bgm) paths = paths.concat(item.bgm);
+        if (item.sfx) paths = paths.concat(item.sfx);
+        if (item.path) paths.push(item.path);
+      }
+    }
+  }
+
+  const total = paths.length;
+  if (total === 0) {
+    TEMF._preloadDone = true;
+    return Promise.resolve([]);
+  }
+
+  TEMF._preloadDone = false;
+  let completed = 0;
+  let failed = [];
+
+  return Promise.all(paths.map((path) => {
+    return _preloadOne(path).then((success) => {
+      completed++;
+      if (!success) {
+        failed.push(path);
+      }
+      if (onProgress && typeof onProgress === 'function') {
+        onProgress({
+          path,
+          loaded: success,
+          total,
+          completed: completed,
+          progress: completed / total,
+          failed: failed,
+        });
+      }
+      return success;
+    });
+  })).then((results) => {
+    TEMF._preloadDone = true;
+    TEMF._preloadFailed = failed;
+    return results;
+  });
+}
+
+function checkpreload() {
+  return TEMF._preloadDone !== false;
+}
+
+function preloadfailed() {
+  if (!TEMF._preloadFailed) return false;
+  return TEMF._preloadFailed.length > 0;
+}
+
+function preloadisloaded(path) {
+  if (!TEMF._preloadDone) return false;
+  if (TEMF._preloadFailed && TEMF._preloadFailed.includes(path)) return false;
+  if (path.startsWith('img/') || path.includes('.png') || path.includes('.jpg') || path.includes('.jpeg') || path.includes('.gif') || path.includes('.webp') || path.includes('.bmp')) {
+    return TEMF._images && TEMF._images[path];
+  }
+  return true;
+}
+
 const audio = {
   play(path, type, loop) {
     if (!path || !type) return;
@@ -1563,6 +1656,10 @@ if (typeof window !== 'undefined') {
   window.mouse = mouse;
   window.touch = touch;
   window.audio = audio;
+  window.preload = preload;
+  window.checkpreload = checkpreload;
+  window.preloadfailed = preloadfailed;
+  window.preloadisloaded = preloadisloaded;
 
   // Load game.js only after every window.* binding above is in place,
   // so game.js can safely call setGame()/rect()/touch.* etc. as soon as

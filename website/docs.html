@@ -82,6 +82,7 @@
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
               <li><a href="#fullscreen-api">Fullscreen API</a></li>
+              <li><a href="#preload">Preload</a></li>
               <li><a href="#build">Build</a></li>
             </ul>
           </div>
@@ -99,6 +100,7 @@
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
               <li><a href="#fullscreen-api">Fullscreen API</a></li>
+              <li><a href="#preload">Preload</a></li>
               <li><a href="#build">Build</a></li>
             </ul>
           </div>
@@ -576,6 +578,245 @@ setFullscreenCallback(onFullscreenExit)</div>
   print("Exited fullscreen!")
 
 setFullscreenCallback(onFullscreenExit)</div>
+            </div>
+          </section>
+
+          <section id="preload">
+            <div class="lang-th">
+              <h2>Preload</h2>
+              <p>ระบบโหลดทรัพยากรล่วงหน้า (รูปภาพ, เสียง BGM, SFX) พร้อมระบบตรวจสอบสถานะ</p>
+
+              <h3>preload(resources, onProgress?)</h3>
+              <p>โหลดไฟล์ที่กำหนดไว้ล่วงหน้า</p>
+              <div class="code-block"># โหลดไฟล์เดียว
+preload("img/bg.png")
+
+# โหลดหลายไฟล์ (ตรวจจับ type อัตโนมัติ)
+preload([
+  "img/bg.png",
+  "img/character.png",
+  "music/bgm.mp3",
+  "sfx/click.wav"
+])
+
+# ระบุประเภทชัดเจน
+preload({
+  images: ["img/bg.png", "img/char.png"],
+  bgm: ["music/menu.mp3"],
+  sfx: ["sfx/jump.wav"]
+})
+
+# พร้อม progress callback
+preload(["img/bg.png", "music/bgm.mp3"], function(info):
+  print(info.path + " - " + info.loaded + " (" + info.completed + "/" + info.total + ")")
+end)</div>
+
+              <h3>checkpreload()</h3>
+              <p>ตรวจสอบว่าโหลดทรัพยากรทั้งหมดเสร็จแล้วหรือยัง (คืนค่า <code>true</code> / <code>false</code>)</p>
+              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3"])
+
+while not checkpreload():
+  # แสดง loading screen
+  rect(0, 0, 800, 600, "#000000")
+  print("Loading...")
+
+print("โหลดเสร็จแล้ว!")</div>
+
+              <h3>preloadfailed()</h3>
+              <p>ตรวจสอบว่ามีไฟล์ไหนโหลดล้มเหลวหรือไม่ (คืนค่า <code>true</code> ถ้ามีล้มเหลว, <code>false</code> ถ้าสำเร็จทั้งหมด)</p>
+              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3"])
+
+while not checkpreload():
+  rect(0, 0, 800, 600, "#000000")
+
+if preloadfailed():
+  print("มีไฟล์โหลดไม่สำเร็จ!")
+  # โหลดใหม่
+  preload(["img/bg.png", "music/bgm.mp3"])
+  while not checkpreload():
+    rect(0, 0, 800, 600, "#000000")
+else:
+  print("โหลดสำเร็จทั้งหมด!")</div>
+
+              <h3>preloadisloaded(path)</h3>
+              <p>ตรวจสอบว่าไฟล์เฉพาะโหลดเสร็จแล้วหรือยัง (คืนค่า <code>true</code> / <code>false</code>)</p>
+              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3", "sfx/click.wav"])
+
+while not checkpreload():
+  rect(0, 0, 800, 600, "#000000")
+
+if preloadisloaded("img/bg.png"):
+  print("Background พร้อมใช้งาน")
+else:
+  print("Background ยังโหลดไม่เสร็จ")
+
+if preloadisloaded("music/bgm.mp3"):
+  audio.play("music/bgm.mp3", "bgm")
+else:
+  print("BGM ยังโหลดไม่พร้อม")</div>
+
+              <h3>ตัวอย่างเต็ม: Loading Screen</h3>
+              <div class="code-block">function init():
+  # โหลดทรัพยากรทั้งหมด
+  preload([
+    "img/bg.png",
+    "img/character.png",
+    "music/bgm.mp3",
+    "sfx/click.wav",
+    "sfx/explosion.wav"
+  ])
+
+function update(dt):
+  # รอให้โหลดเสร็จ
+  if not checkpreload():
+    return
+  
+  # เช็คว่าโหลดล้มเหลวไหม
+  if preloadfailed():
+    # โหลดใหม่
+    preload([
+      "img/bg.png",
+      "img/character.png",
+      "music/bgm.mp3",
+      "sfx/click.wav",
+      "sfx/explosion.wav"
+    ])
+    return
+  
+  # โหลดเสร็จ ทั้งหมดพร้อมแล้ว
+  print("Game Ready!")
+
+function draw():
+  if not checkpreload():
+    # แสดง loading screen
+    rect(0, 0, 800, 600, "#000000")
+    print("Loading...")
+    
+    # แสดง progress
+    rect(100, 300, 600, 20, "#333333")
+    rect(100, 300, 600 * progress, 20, "#FF5733")
+  else:
+    # แสดงเกม
+    rect(0, 0, 800, 600, "#87CEEB")
+    image("img/character.png", 100, 200)</div>
+            </div>
+            <div class="lang-en">
+              <h2>Preload</h2>
+              <p>Preload resources (images, BGM, SFX) with status checking system.</p>
+
+              <h3>preload(resources, onProgress?)</h3>
+              <p>Load specified resources in advance.</p>
+              <div class="code-block"># Load a single file
+preload("img/bg.png")
+
+# Load multiple files (auto-detect type)
+preload([
+  "img/bg.png",
+  "img/character.png",
+  "music/bgm.mp3",
+  "sfx/click.wav"
+])
+
+# Specify types explicitly
+preload({
+  images: ["img/bg.png", "img/char.png"],
+  bgm: ["music/menu.mp3"],
+  sfx: ["sfx/jump.wav"]
+})
+
+# With progress callback
+preload(["img/bg.png", "music/bgm.mp3"], function(info):
+  print(info.path + " - " + info.loaded + " (" + info.completed + "/" + info.total + ")")
+end)</div>
+
+              <h3>checkpreload()</h3>
+              <p>Check if all resources have finished loading (returns <code>true</code> / <code>false</code>).</p>
+              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3"])
+
+while not checkpreload():
+  # Show loading screen
+  rect(0, 0, 800, 600, "#000000")
+  print("Loading...")
+
+print("Loading complete!")</div>
+
+              <h3>preloadfailed()</h3>
+              <p>Check if any files failed to load (returns <code>true</code> if failed, <code>false</code> if all succeeded).</p>
+              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3"])
+
+while not checkpreload():
+  rect(0, 0, 800, 600, "#000000")
+
+if preloadfailed():
+  print("Some files failed to load!")
+  # Retry
+  preload(["img/bg.png", "music/bgm.mp3"])
+  while not checkpreload():
+    rect(0, 0, 800, 600, "#000000")
+else:
+  print("All files loaded successfully!")</div>
+
+              <h3>preloadisloaded(path)</h3>
+              <p>Check if a specific file has finished loading (returns <code>true</code> / <code>false</code>).</p>
+              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3", "sfx/click.wav"])
+
+while not checkpreload():
+  rect(0, 0, 800, 600, "#000000")
+
+if preloadisloaded("img/bg.png"):
+  print("Background is ready")
+else:
+  print("Background not loaded yet")
+
+if preloadisloaded("music/bgm.mp3"):
+  audio.play("music/bgm.mp3", "bgm")
+else:
+  print("BGM not ready yet")</div>
+
+              <h3>Full Example: Loading Screen</h3>
+              <div class="code-block">function init():
+  # Load all resources
+  preload([
+    "img/bg.png",
+    "img/character.png",
+    "music/bgm.mp3",
+    "sfx/click.wav",
+    "sfx/explosion.wav"
+  ])
+
+function update(dt):
+  # Wait for loading to complete
+  if not checkpreload():
+    return
+  
+  # Check if any files failed
+  if preloadfailed():
+    # Retry loading
+    preload([
+      "img/bg.png",
+      "img/character.png",
+      "music/bgm.mp3",
+      "sfx/click.wav",
+      "sfx/explosion.wav"
+    ])
+    return
+  
+  # All loaded successfully
+  print("Game Ready!")
+
+function draw():
+  if not checkpreload():
+    # Show loading screen
+    rect(0, 0, 800, 600, "#000000")
+    print("Loading...")
+    
+    # Show progress
+    rect(100, 300, 600, 20, "#333333")
+    rect(100, 300, 600 * progress, 20, "#FF5733")
+  else:
+    # Show game
+    rect(0, 0, 800, 600, "#87CEEB")
+    image("img/character.png", 100, 200)</div>
             </div>
           </section>
 
