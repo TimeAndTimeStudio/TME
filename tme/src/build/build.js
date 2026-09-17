@@ -10,7 +10,7 @@ const TME_ROOT = path.resolve(__dirname, '..', '..', '..');
 const TSL_DIR = path.join(TME_ROOT, 'TSL');
 const TSL_CLI = path.join(TSL_DIR, 'src', 'cli.js');
 
-const REQUIRED_DIST_FILES = ['game.js', 'engine.js'];
+const REQUIRED_DIST_FILES = ['temf.js', 'index.html', 'style.css'];
 
 function validateProject(projectDir) {
   projectDir = path.resolve(projectDir);
@@ -20,62 +20,127 @@ function validateProject(projectDir) {
   }
 
   const indexPath = path.join(projectDir, 'index.html');
+
   if (!fs.existsSync(indexPath)) {
     throw new Error(`Missing required file: index.html`);
   }
 
   const html = fs.readFileSync(indexPath, 'utf-8');
+
   if (!/<canvas\s+id=["']game["']\s*>/.test(html)) {
-    throw new Error(`index.html is missing the required game canvas: <canvas id="game"></canvas>`);
+    throw new Error(
+      `index.html is missing the required game canvas: <canvas id="game"></canvas>`
+    );
   }
 
-  const tslPath = path.join(projectDir, 'game.tsl');
-  if (!fs.existsSync(tslPath)) {
-    throw new Error(`Missing required file: game.tsl`);
-  }
-
-  return { projectDir, indexPath, tslPath };
+  return { projectDir, indexPath };
 }
 
 function validateTSL() {
   if (!fs.existsSync(TSL_DIR)) {
-    throw new Error('TSL repository is missing. Please clone it: git clone https://github.com/TimeAndTimeStudio/TSL.git TSL');
+    throw new Error(
+      'TSL repository is missing. Please clone it: git clone https://github.com/TimeAndTimeStudio/TSL.git TSL'
+    );
   }
+
   if (!fs.existsSync(TSL_CLI)) {
     throw new Error('TSL CLI not found at TSL/src/cli.js');
   }
 }
 
-function invokeTSL(projectDir, tslPath) {
+function findTSLFiles(projectDir) {
+  const tslFiles = [];
+
+  function scan(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+
+      if (entry.isDirectory()) {
+        if (['node_modules', '.git', 'dist'].includes(entry.name)) {
+          continue;
+        }
+
+        scan(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.tsl')) {
+        tslFiles.push(fullPath);
+      }
+    }
+  }
+
+  scan(projectDir);
+
+  return tslFiles;
+}
+
+function invokeTSL(projectDir) {
   const distDir = path.join(projectDir, 'dist');
-  const outputPath = path.resolve(path.join(distDir, 'game.js'));
 
   fs.mkdirSync(distDir, { recursive: true });
 
-  try {
-    execSync(`node "${TSL_CLI}" build "${tslPath}" -o "${outputPath}"`, {
-      stdio: 'inherit',
-      cwd: TME_ROOT
-    });
-  } catch (err) {
-    throw new Error(`TSL compilation failed: ${err.message}`);
+  const tslFiles = findTSLFiles(projectDir);
+
+  if (tslFiles.length === 0) {
+    throw new Error('No .tsl files found in project.');
   }
 
-  if (!fs.existsSync(outputPath)) {
-    throw new Error(`TSL build succeeded but output file not found: ${outputPath}`);
+  const outputFiles = [];
+
+  for (const tslPath of tslFiles) {
+    const relativePath = path.relative(projectDir, tslPath);
+
+    const relativeDir = path.dirname(relativePath);
+
+    const baseName = path.basename(tslPath, '.tsl');
+
+    const outputDir =
+      relativeDir === '.'
+        ? distDir
+        : path.join(distDir, relativeDir);
+
+    const outputPath = path.join(outputDir, `${baseName}.js`);
+
+    fs.mkdirSync(outputDir, { recursive: true });
+
+    console.log(`Building ${relativePath} -> ${path.relative(projectDir, outputPath)}`);
+
+    try {
+      execSync(
+        `node "${TSL_CLI}" build "${tslPath}" -o "${outputPath}"`,
+        {
+          stdio: 'inherit',
+          cwd: TME_ROOT
+        }
+      );
+    } catch (err) {
+      throw new Error(
+        `TSL compilation failed for ${relativePath}: ${err.message}`
+      );
+    }
+
+    if (!fs.existsSync(outputPath)) {
+      throw new Error(
+        `TSL build succeeded but output file not found: ${outputPath}`
+      );
+    }
+
+    outputFiles.push(outputPath);
   }
 
-  return outputPath;
+  return outputFiles;
 }
 
 function copyUserFiles(projectDir) {
   const distDir = path.join(projectDir, 'dist');
+
   fs.mkdirSync(distDir, { recursive: true });
 
   const userFiles = ['index.html', 'style.css'];
 
   for (const filename of userFiles) {
     const srcPath = path.join(projectDir, filename);
+
     if (fs.existsSync(srcPath)) {
       const destPath = path.join(distDir, filename);
       fs.copyFileSync(srcPath, destPath);
@@ -84,16 +149,18 @@ function copyUserFiles(projectDir) {
 
   function copyRecursive(src, dest) {
     const entries = fs.readdirSync(src, { withFileTypes: true });
+
     for (const entry of entries) {
       const srcPath = path.join(src, entry.name);
       const destPath = path.join(dest, entry.name);
 
       if (entry.isDirectory()) {
-        if (!fs.existsSync(destPath)) {
-          fs.mkdirSync(destPath, { recursive: true });
-        }
+        fs.mkdirSync(destPath, { recursive: true });
         copyRecursive(srcPath, destPath);
-      } else if (!['game.tsl', 'index.html', 'style.css'].includes(entry.name)) {
+      } else if (
+        !['index.html', 'style.css'].includes(entry.name) &&
+        !entry.name.endsWith('.tsl')
+      ) {
         fs.copyFileSync(srcPath, destPath);
       }
     }
@@ -102,13 +169,16 @@ function copyUserFiles(projectDir) {
   const excludedDirs = ['node_modules', '.git', 'dist'];
 
   const entries = fs.readdirSync(projectDir, { withFileTypes: true });
+
   for (const entry of entries) {
-    if (entry.isDirectory() && !excludedDirs.includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      !excludedDirs.includes(entry.name)
+    ) {
       const srcPath = path.join(projectDir, entry.name);
       const destPath = path.join(distDir, entry.name);
-      if (!fs.existsSync(destPath)) {
-        fs.mkdirSync(destPath, { recursive: true });
-      }
+
+      fs.mkdirSync(destPath, { recursive: true });
       copyRecursive(srcPath, destPath);
     }
   }
@@ -116,14 +186,24 @@ function copyUserFiles(projectDir) {
 
 function packageRuntime(projectDir) {
   const distDir = path.join(projectDir, 'dist');
+
   fs.mkdirSync(distDir, { recursive: true });
 
   const tmeSrcDir = path.join(TME_ROOT, 'tme', 'src');
 
   const runtimeFiles = [
-    { src: path.join(tmeSrcDir, 'temf', 'runtime.js'), dest: 'temf.js' },
-    { src: path.join(tmeSrcDir, 'temf', 'runtime-webgpu.js'), dest: 'temf-webgpu.js' },
-    { src: path.join(tmeSrcDir, 'temf', 'runtime-webgl.js'), dest: 'temf-webgl.js' }
+    {
+      src: path.join(tmeSrcDir, 'temf', 'runtime.js'),
+      dest: 'temf.js'
+    },
+    {
+      src: path.join(tmeSrcDir, 'temf', 'runtime-webgpu.js'),
+      dest: 'temf-webgpu.js'
+    },
+    {
+      src: path.join(tmeSrcDir, 'temf', 'runtime-webgl.js'),
+      dest: 'temf-webgl.js'
+    }
   ];
 
   for (const { src, dest } of runtimeFiles) {
@@ -136,19 +216,20 @@ function packageRuntime(projectDir) {
 
 function verifyBuildOutput(projectDir) {
   const distDir = path.join(projectDir, 'dist');
-
-  const required = ['game.js', 'temf.js', 'index.html', 'style.css'];
   const missing = [];
 
-  for (const filename of required) {
+  for (const filename of REQUIRED_DIST_FILES) {
     const filePath = path.join(distDir, filename);
+
     if (!fs.existsSync(filePath)) {
       missing.push(filename);
     }
   }
 
   if (missing.length > 0) {
-    throw new Error(`Build output incomplete. Missing required files: ${missing.join(', ')}`);
+    throw new Error(
+      `Build output incomplete. Missing required files: ${missing.join(', ')}`
+    );
   }
 
   return true;
@@ -160,11 +241,17 @@ async function buildProject(projectDir) {
   validateTSL();
   console.log('TSL repository validated.');
 
-  const { indexPath, tslPath } = validateProject(projectDir);
+  validateProject(projectDir);
   console.log('Project validated.');
 
+  console.log('Searching for .tsl files...');
+
+  const tslFiles = findTSLFiles(path.resolve(projectDir));
+
+  console.log(`Found ${tslFiles.length} .tsl file(s).`);
+
   console.log('Invoking TSL...');
-  invokeTSL(projectDir, tslPath);
+  invokeTSL(projectDir);
   console.log('TSL compilation successful.');
 
   console.log('Packaging runtime...');
@@ -180,4 +267,14 @@ async function buildProject(projectDir) {
   console.log('Build complete. Output: dist/');
 }
 
-module.exports = { buildProject, validateProject, validateTSL, invokeTSL, copyUserFiles, packageRuntime, verifyBuildOutput, REQUIRED_DIST_FILES };
+module.exports = {
+  buildProject,
+  validateProject,
+  validateTSL,
+  findTSLFiles,
+  invokeTSL,
+  copyUserFiles,
+  packageRuntime,
+  verifyBuildOutput,
+  REQUIRED_DIST_FILES
+};
