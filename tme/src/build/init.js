@@ -27,8 +27,7 @@ async function initProject(projectDir) {
   checkTSL();
 
   const files = {
-    'game.tsl': `
-function update(dt):
+    'game.tsl': `function update(dt):
   pass
 
 function draw():
