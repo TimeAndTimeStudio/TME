@@ -188,6 +188,10 @@ function draw():
 - **`preload(paths)`** — Load images and audio assets before gameplay
 - **`checkpreload(reset?)`** — Check if preloading is complete. Pass `false` to reset.
 
+### Unload
+
+- **`unload(path)`** — Unload loaded images or BGM to free memory (cannot unload SFX)
+
 ---
 
 ## CLI Commands

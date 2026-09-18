@@ -83,6 +83,7 @@
               <li><a href="#fullscreen-api">Fullscreen API</a></li>
               <li><a href="#visibility">Visibility</a></li>
               <li><a href="#preload">Preload</a></li>
+              <li><a href="#unload">Unload</a></li>
               <li><a href="#tsl-example">TSL Example</a></li>
             </ul>
           </div>
@@ -101,6 +102,7 @@
               <li><a href="#fullscreen-api">Fullscreen API</a></li>
               <li><a href="#visibility">Visibility</a></li>
               <li><a href="#preload">Preload</a></li>
+              <li><a href="#unload">Unload</a></li>
               <li><a href="#tsl-example">TSL Example</a></li>
             </ul>
           </div>
@@ -548,6 +550,38 @@ function draw():
   else:
     rect(0, 0, 800, 600, "#87CEEB")
     image("img/character.png", 100, 200)</div>
+
+              <h3>unload(path)</h3>
+              <p>ปลดปล่อยทรัพยากรที่โหลดไว้แล้ว (รูปภาพ, BGM) — ใช้เมื่อเปลี่ยนฉากเพื่อประหยัดหน่วยความจำ</p>
+              <div class="code-block"># ปลดปล่อยรูปภาพ
+unload("img/bg.png")
+
+# ปลดปล่อย BGM (จะหยุดเล่นด้วย)
+unload("music/bgm.mp3")
+
+# ⚠️ ไม่สามารถ unload SFX ได้
+unload("sfx/click.wav")  # ❌ Error</div>
+
+              <h3>ตัวอย่าง: เปลี่ยนฉาก</h3>
+              <div class="code-block"># ฉากที่ 1
+preload(["img/scene1_bg.png", "music/scene1.mp3"])
+
+function update(dt):
+  if not checkpreload():
+    return
+  
+  if key.pressed("space"):
+    # ปลดปล่อยทรัพยากรฉากเก่า
+    unload("img/scene1_bg.png")
+    unload("music/scene1.mp3")
+    
+    # โหลดฉากใหม่
+    preload(["img/scene2_bg.png", "music/scene2.mp3"])
+
+function draw():
+  if not checkpreload():
+    return
+  image("img/scene2_bg.png", 0, 0)</div>
             </div>
             <div class="lang-en">
               <h2>Preload</h2>
@@ -649,6 +683,38 @@ function draw():
   else:
     rect(0, 0, 800, 600, "#87CEEB")
     image("img/character.png", 100, 200)</div>
+
+              <h3>unload(path)</h3>
+              <p>Unload loaded resources (images, BGM) — use when changing scenes to save memory.</p>
+              <div class="code-block"># Unload image
+unload("img/bg.png")
+
+# Unload BGM (will stop playing)
+unload("music/bgm.mp3")
+
+# ⚠️ Cannot unload SFX
+unload("sfx/click.wav")  # ❌ Error</div>
+
+              <h3>Example: Scene Transition</h3>
+              <div class="code-block"># Scene 1
+preload(["img/scene1_bg.png", "music/scene1.mp3"])
+
+function update(dt):
+  if not checkpreload():
+    return
+  
+  if key.pressed("space"):
+    # Unload old scene resources
+    unload("img/scene1_bg.png")
+    unload("music/scene1.mp3")
+    
+    # Load new scene
+    preload(["img/scene2_bg.png", "music/scene2.mp3"])
+
+function draw():
+  if not checkpreload():
+    return
+  image("img/scene2_bg.png", 0, 0)</div>
             </div>
           </section>
 
