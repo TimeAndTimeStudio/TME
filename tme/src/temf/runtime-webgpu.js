@@ -1367,8 +1367,7 @@ function preload(resources) {
           paths.push(item);
         } else if (item && typeof item === 'object') {
           if (item.images) paths = paths.concat(item.images);
-          if (item.bgm) paths = paths.concat(item.bgm);
-          if (item.sfx) paths = paths.concat(item.sfx);
+          if (item.audio) paths = paths.concat(item.audio);
           if (item.path) paths.push(item.path);
         }
       }

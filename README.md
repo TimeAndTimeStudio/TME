@@ -185,7 +185,7 @@ function draw():
 
 ### Preload
 
-- **`preload(paths)`** — Load assets before gameplay
+- **`preload(paths)`** — Load images and audio assets before gameplay
 - **`checkpreload(reset?)`** — Check if preloading is complete. Pass `false` to reset.
 
 ---

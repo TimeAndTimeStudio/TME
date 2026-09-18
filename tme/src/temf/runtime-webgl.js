@@ -1177,7 +1177,15 @@ function preload(resources) {
   if (typeof resources === 'string') {
     paths = [resources];
   } else if (Array.isArray(resources)) {
-    paths = resources.filter((path) => typeof path === 'string');
+    for (const item of resources) {
+      if (typeof item === 'string') {
+        paths.push(item);
+      } else if (item && typeof item === 'object') {
+        if (item.images) paths = paths.concat(item.images);
+        if (item.audio) paths = paths.concat(item.audio);
+        if (item.path) paths.push(item.path);
+      }
+    }
   }
 
   TEMF._preloadDone = false;
