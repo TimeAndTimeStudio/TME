@@ -1648,7 +1648,11 @@ function _handleFullscreenChange() {
   }
 }
 
-function hasTabSwitched() {
+function hasTabSwitched(reset) {
+  if (reset === false) {
+    TEMF._tabSwitched = false;
+    return false;
+  }
   return !!TEMF._tabSwitched;
 }
 
