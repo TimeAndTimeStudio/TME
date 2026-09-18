@@ -1188,6 +1188,7 @@ function preload(resources) {
         }
       }
     }
+  }
 
   TEMF._preloadFailed = [];
 
