@@ -75,7 +75,8 @@
               <div class="search-results" id="searchResultsTh" data-role="searchResults"></div>
             </div>
             <ul id="docNav">
-              <li><a href="#render" class="active">Render</a></li>
+              <li><a href="#getting-started" class="active">Getting Started</a></li>
+              <li><a href="#render">Render</a></li>
               <li><a href="#input">Input</a></li>
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
@@ -92,7 +93,8 @@
               <div class="search-results" id="searchResultsEn" data-role="searchResults"></div>
             </div>
             <ul id="docNav">
-              <li><a href="#render" class="active">Render</a></li>
+              <li><a href="#getting-started" class="active">Getting Started</a></li>
+              <li><a href="#render">Render</a></li>
               <li><a href="#input">Input</a></li>
               <li><a href="#audio">Audio</a></li>
               <li><a href="#game-loop">Game Loop</a></li>
@@ -105,6 +107,33 @@
         </aside>
 
         <div class="docs-content">
+
+          <section id="getting-started">
+            <div class="lang-th">
+              <h2>Getting Started</h2>
+
+              <h3>ติดตั้ง TME และ TSL</h3>
+              <div class="code-block">cd ชื่อโปรเจกต์ของคุณ
+git clone https://github.com/TimeAndTimeStudio/TME.git
+cd TME
+git clone https://github.com/TimeAndTimeStudio/TSL.git TSL</div>
+
+              <h3>Build โปรเจกต์</h3>
+              <div class="code-block">node ../TME/tme/bin/tme build</div>
+            </div>
+            <div class="lang-en">
+              <h2>Getting Started</h2>
+
+              <h3>Install TME and TSL</h3>
+              <div class="code-block">cd your-project-directory
+git clone https://github.com/TimeAndTimeStudio/TME.git
+cd TME
+git clone https://github.com/TimeAndTimeStudio/TSL.git TSL</div>
+
+              <h3>Build Project</h3>
+              <div class="code-block">node ../TME/tme/bin/tme build</div>
+            </div>
+          </section>
 
           <section id="render">
             <div class="lang-th">
@@ -258,6 +287,7 @@ image("assets/sprite.png", 200, 150, 0, 1.5, 1, 10, 10, 90, 90)</div>
               <p>ระบบเสียงรองรับ SFX และ BGM</p>
 
               <h3>audio.play(path, type, loop?)</h3>
+              <p>เล่นเสียง (loop ใช้ได้เฉพาะ type "bgm" เท่านั้น)</p>
               <div class="code-block">audio.play("assets/sfx/jump.mp3", "sfx")
 audio.play("assets/music/bgm.mp3", "bgm", true)</div>
 
@@ -283,6 +313,7 @@ audio.mutedBgm = true</div>
               <p>Audio system supporting SFX and BGM playback.</p>
 
               <h3>audio.play(path, type, loop?)</h3>
+              <p>Play audio (loop only works with "bgm" type).</p>
               <div class="code-block">audio.play("assets/sfx/jump.mp3", "sfx")
 audio.play("assets/music/bgm.mp3", "bgm", true)</div>
 

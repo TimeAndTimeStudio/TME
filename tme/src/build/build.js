@@ -216,7 +216,7 @@ function copyUserFiles(projectDir, tslFiles) {
     }
   }
 
-  const excludedDirs = ['node_modules', '.git', 'dist'];
+  const excludedDirs = ['node_modules', '.git', 'dist', 'TME', 'TSL'];
 
   const entries = fs.readdirSync(projectDir, { withFileTypes: true });
 
