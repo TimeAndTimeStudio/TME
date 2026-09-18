@@ -566,15 +566,6 @@ function resizeCanvas() {
   }
 }
 
-function createResizeObserver() {
-  if (typeof ResizeObserver !== 'undefined') {
-    const observer = new ResizeObserver(() => {
-      resizeCanvas();
-    });
-    observer.observe(document.body);
-  }
-}
-
 // ============================================================
 // Rendering: draw API (rect/image) & per-frame draw calls
 // ============================================================
@@ -1588,7 +1579,7 @@ function _bootstrap() {
   TEMF._started = true;
 
   initWebGPU().then(() => {
-    createResizeObserver();
+    window.addEventListener('orientationchange', resizeCanvas);
     window.addEventListener('resize', resizeCanvas);
     _initKeyboard();
     _initMouse();
