@@ -945,6 +945,10 @@ function _initMouse() {
       }
     }
   });
+
+  canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
 }
 
 function _getMouseState(btn) {
