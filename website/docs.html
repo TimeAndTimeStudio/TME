@@ -469,15 +469,18 @@ preload({
   sfx: ["sfx/jump.wav"]
 })</div>
 
-              <h3>checkpreload()</h3>
-              <p>ตรวจสอบว่าโหลดทรัพยากรทั้งหมดเสร็จแล้วหรือยัง (คืนค่า <code>true</code> / <code>false</code>)</p>
+              <h3>checkpreload(reset?)</h3>
+              <p>ตรวจสอบว่าโหลดทรัพยากรทั้งหมดเสร็จแล้วหรือยัง (คืนค่า <code>true</code> / <code>false</code>) หากส่ง <code>false</code> จะรีเซ็ตสถานะการโหลด</p>
               <div class="code-block">preload(["img/bg.png", "music/bgm.mp3"])
 
 while not checkpreload():
   rect(0, 0, 800, 600, "#000000")
   print("Loading...")
 
-print("โหลดเสร็จแล้ว!")</div>
+print("โหลดเสร็จแล้ว!")
+
+# รีเซ็ตสถานะโหลด
+checkpreload(false)</div>
 
               <h3>preloadfailed()</h3>
               <p>ตรวจสอบว่ามีไฟล์ไหนโหลดล้มเหลวหรือไม่ (คืนค่า <code>true</code> ถ้ามีล้มเหลว, <code>false</code> ถ้าสำเร็จทั้งหมด)</p>
@@ -568,15 +571,18 @@ preload({
   sfx: ["sfx/jump.wav"]
 })</div>
 
-              <h3>checkpreload()</h3>
-              <p>Check if all resources have finished loading (returns <code>true</code> / <code>false</code>).</p>
+              <h3>checkpreload(reset?)</h3>
+              <p>Check if all resources have finished loading (returns <code>true</code> / <code>false</code>). Pass <code>false</code> to reset the preload state.</p>
               <div class="code-block">preload(["img/bg.png", "music/bgm.mp3"])
 
 while not checkpreload():
   rect(0, 0, 800, 600, "#000000")
   print("Loading...")
 
-print("Loading complete!")</div>
+print("Loading complete!")
+
+# Reset preload state
+checkpreload(false)</div>
 
               <h3>preloadfailed()</h3>
               <p>Check if any files failed to load (returns <code>true</code> if failed, <code>false</code> if all succeeded).</p>

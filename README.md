@@ -186,7 +186,7 @@ function draw():
 ### Preload
 
 - **`preload(paths)`** — Load assets before gameplay
-- **`checkpreload()`** — Check if preloading is complete
+- **`checkpreload(reset?)`** — Check if preloading is complete. Pass `false` to reset.
 
 ---
 

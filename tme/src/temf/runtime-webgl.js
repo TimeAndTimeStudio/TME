@@ -1223,7 +1223,11 @@ function preload(resources) {
   }
 }
 
-function checkpreload() {
+function checkpreload(reset) {
+  if (reset === false) {
+    TEMF._preloadDone = false;
+    return false;
+  }
   return TEMF._preloadDone !== false;
 }
 
