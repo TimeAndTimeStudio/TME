@@ -131,7 +131,48 @@ function invokeTSL(projectDir) {
   return outputFiles;
 }
 
-function copyUserFiles(projectDir) {
+function updateGameImports(projectDir, tslFiles) {
+  const distDir = path.join(projectDir, 'dist');
+  const gameJsPath = path.join(distDir, 'game.js');
+
+  if (!fs.existsSync(gameJsPath)) return;
+
+  const otherTslFiles = tslFiles.filter(f => {
+    const basename = path.basename(f, '.tsl');
+    return basename !== 'game';
+  });
+
+  if (otherTslFiles.length === 0) return;
+
+  const gameJs = fs.readFileSync(gameJsPath, 'utf-8');
+
+  let existingImports = new Set();
+  const importRegex = /import\s+['"](.+?)['"]/g;
+  let match;
+  while ((match = importRegex.exec(gameJs)) !== null) {
+    existingImports.add(match[1]);
+  }
+
+  let newImports = '';
+  for (const tslFile of otherTslFiles) {
+    const relativePath = path.relative(projectDir, tslFile);
+    const relativeDir = path.dirname(relativePath);
+    const baseName = path.basename(tslFile, '.tsl');
+    const jsPath = relativeDir === '.' ? `${baseName}.js` : `${relativeDir}/${baseName}.js`;
+
+    if (!existingImports.has(`./${jsPath}`)) {
+      newImports += `import('./${jsPath}');\n`;
+    }
+  }
+
+  if (newImports) {
+    const updatedJs = gameJs + `\n${newImports}`;
+    fs.writeFileSync(gameJsPath, updatedJs, 'utf-8');
+    console.log(`Added ${newImports.split('\n').filter(l => l).length} import(s) to game.js`);
+  }
+}
+
+function copyUserFiles(projectDir, tslFiles) {
   const distDir = path.join(projectDir, 'dist');
 
   fs.mkdirSync(distDir, { recursive: true });
@@ -146,6 +187,15 @@ function copyUserFiles(projectDir) {
       fs.copyFileSync(srcPath, destPath);
     }
   }
+
+  // Copy docs.html from website folder to dist
+  const docsSrc = path.join(__dirname, '..', '..', '..', '..', 'website', 'docs.html');
+  const docsDest = path.join(distDir, 'docs.html');
+  if (fs.existsSync(docsSrc)) {
+    fs.copyFileSync(docsSrc, docsDest);
+  }
+
+  updateGameImports(projectDir, tslFiles);
 
   function copyRecursive(src, dest) {
     const entries = fs.readdirSync(src, { withFileTypes: true });
@@ -258,7 +308,7 @@ async function buildProject(projectDir) {
   packageRuntime(projectDir);
 
   console.log('Copying user files...');
-  copyUserFiles(projectDir);
+  copyUserFiles(projectDir, tslFiles);
 
   console.log('Verifying build output...');
   verifyBuildOutput(projectDir);
