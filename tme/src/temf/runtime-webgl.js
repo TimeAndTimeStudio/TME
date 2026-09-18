@@ -1174,9 +1174,10 @@ function _isAudio(path) {
 function preload(resources) {
   let paths = [];
 
-  if (typeof resources === 'string') {
-    paths = [resources];
-  } else if (Array.isArray(resources)) {
+  if (resources) {
+    if (typeof resources === 'string') {
+      paths = [resources];
+    } else if (Array.isArray(resources)) {
     for (const item of resources) {
       if (typeof item === 'string') {
         paths.push(item);
@@ -1188,12 +1189,12 @@ function preload(resources) {
     }
   }
 
-  TEMF._preloadDone = false;
   TEMF._preloadFailed = [];
 
   if (paths.length === 0) {
     TEMF._preloadDone = true;
   } else {
+    TEMF._preloadDone = false;
     Promise.all(
       paths.map(async (path) => {
         try {
