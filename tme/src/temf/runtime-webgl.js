@@ -719,8 +719,8 @@ function _initMouse() {
 
   canvas.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse') {
-      TEMF._mouseX = e.offsetX;
-      TEMF._mouseY = e.offsetY;
+      TEMF._mouseX = e.offsetX * (canvas.width / canvas.clientWidth);
+      TEMF._mouseY = e.offsetY * (canvas.height / canvas.clientHeight);
       const btn = e.button.toString();
       if (!TEMF._mouseButtons.has(btn)) {
         TEMF._mouseButtons.set(btn, { down: false });
@@ -732,8 +732,8 @@ function _initMouse() {
 
   canvas.addEventListener('pointermove', (e) => {
     if (e.pointerType === 'mouse') {
-      TEMF._mouseX = e.offsetX;
-      TEMF._mouseY = e.offsetY;
+      TEMF._mouseX = e.offsetX * (canvas.width / canvas.clientWidth);
+      TEMF._mouseY = e.offsetY * (canvas.height / canvas.clientHeight);
     }
   });
 
