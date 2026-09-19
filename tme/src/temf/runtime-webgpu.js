@@ -132,7 +132,6 @@ async function _loadImage(path) {
   const url = base + path;
 
   const img = new Image();
-  img.crossOrigin = 'anonymous';
   img.src = url;
 
   return new Promise((resolve, reject) => {
