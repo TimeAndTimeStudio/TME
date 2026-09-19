@@ -121,7 +121,7 @@ cd TME
 git clone https://github.com/TimeAndTimeStudio/TSL.git TSL</div>
 
               <h3>Build โปรเจกต์</h3>
-              <div class="code-block">../TME/tme/bin/tme build</div>
+              <div class="code-block">./TME/tme/bin/tme build</div>
             </div>
             <div class="lang-en">
               <h2>Getting Started</h2>
@@ -133,7 +133,7 @@ cd TME
 git clone https://github.com/TimeAndTimeStudio/TSL.git TSL</div>
 
               <h3>Build Project</h3>
-              <div class="code-block">../TME/tme/bin/tme build</div>
+              <div class="code-block">./TME/tme/bin/tme build</div>
             </div>
           </section>
 
@@ -199,6 +199,30 @@ image("assets/sprite.png", 200, 150, 0, 1.5, 1, 10, 10, 90, 90)</div>
   if key(" "):
     player.jumping = true</div>
 
+              <h3>Key Map</h3>
+              <div class="code-block"># ปุ่มตัวอักษร/ตัวเลข
+key("A") key("B") ... key("Z")
+key("1") key("2") ... key("9") key("0")
+
+# ปุ่มลูกศร
+key("ArrowLeft") key("ArrowRight")
+key("ArrowUp") key("ArrowDown")
+
+# ปุ่มควบคุม
+key("Enter") key("Space") key("Escape")
+key("Backspace") key("Tab") key("Delete")
+key("Home") key("End") key("PageUp") key("PageDown")
+key("Control") key("Shift") key("Alt") key("Meta")
+
+# ปุ่มฟังก์ชัน
+key("CapsLock") key("NumLock") key("ScrollLock")
+key("PrintScreen") key("Pause")
+
+# ปุ่มตัวเลขบน Numpad
+key("Numpad0") ... key("Numpad9")
+key("NumpadAdd") key("NumpadSub") key("NumpadMul")
+key("NumpadDiv") key("NumpadDecimal") key("NumpadEnter")</div>
+
               <h3>Mouse</h3>
               <p>รองรับเมาส์ 3 ปุ่ม</p>
               <ul>
@@ -246,6 +270,30 @@ image("assets/sprite.png", 200, 150, 0, 1.5, 1, 10, 10, 90, 90)</div>
     player.x += 200 * dt
   if key(" "):
     player.jumping = true</div>
+
+              <h3>Key Map</h3>
+              <div class="code-block"># Letters/Numbers
+key("A") key("B") ... key("Z")
+key("1") key("2") ... key("9") key("0")
+
+# Arrow keys
+key("ArrowLeft") key("ArrowRight")
+key("ArrowUp") key("ArrowDown")
+
+# Control keys
+key("Enter") key("Space") key("Escape")
+key("Backspace") key("Tab") key("Delete")
+key("Home") key("End") key("PageUp") key("PageDown")
+key("Control") key("Shift") key("Alt") key("Meta")
+
+# Function keys
+key("CapsLock") key("NumLock") key("ScrollLock")
+key("PrintScreen") key("Pause")
+
+# Numpad keys
+key("Numpad0") ... key("Numpad9")
+key("NumpadAdd") key("NumpadSub") key("NumpadMul")
+key("NumpadDiv") key("NumpadDecimal") key("NumpadEnter")</div>
 
               <h3>Mouse</h3>
               <p>Supports 3 mouse buttons.</p>
