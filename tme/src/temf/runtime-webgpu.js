@@ -1431,6 +1431,7 @@ function checkpreload(reset) {
     TEMF._preloadDone = false;
     return false;
   }
+  if (TEMF._preloadDone === undefined) return false;
   return TEMF._preloadDone !== false;
 }
 
