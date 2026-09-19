@@ -71,7 +71,7 @@ const TEMF = {
   _audioMutedSfx: false,
   _audioMutedBgm: false,
   _bgmWasPlaying: false,
-  _preloadDone: true,
+  _preloadDone: false,
   _tabSwitched: false,
 };
 
@@ -1432,7 +1432,6 @@ function checkpreload(reset) {
     TEMF._preloadDone = false;
     return false;
   }
-  if (TEMF._preloadDone === undefined) return false;
   return TEMF._preloadDone !== false;
 }
 
