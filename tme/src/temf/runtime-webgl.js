@@ -465,11 +465,11 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropEndX, crop
 
   let displayW, displayH;
   if (img) {
-    displayW = texW * optScale;
-    displayH = texH * optScale;
+    displayW = texW;
+    displayH = texH;
   } else {
-    displayW = 64 * optScale;
-    displayH = 64 * optScale;
+    displayW = 64;
+    displayH = 64;
   }
 
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
