@@ -667,11 +667,11 @@ function _initKeyboard() {
   if (typeof window === 'undefined') return;
 
   window.addEventListener('keydown', (e) => {
-    TEMF._keyPressed.add(e.key);
+    TEMF._keyPressed.add(e.key.toLowerCase());
   });
 
   window.addEventListener('keyup', (e) => {
-    TEMF._keyPressed.delete(e.key);
+    TEMF._keyPressed.delete(e.key.toLowerCase());
   });
 }
 
@@ -682,7 +682,7 @@ function key(key) {
   } else if (typeof key === 'string') {
     key = key.trim().toUpperCase();
     if (key.length === 1 && /[A-Z0-9]/.test(key)) {
-      // keep as is
+      key = key.toLowerCase();
     } else {
       const map = {
         'SPACE': ' ', 'ENTER': 'Enter', 'ESC': 'Escape',
