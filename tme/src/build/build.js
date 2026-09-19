@@ -188,6 +188,23 @@ function copyUserFiles(projectDir, tslFiles) {
     }
   }
 
+  // Copy other root-level files (images, fonts, etc.)
+  const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
+  const excludedRootFiles = ['index.html', 'style.css', 'docs.html'];
+
+  for (const entry of rootEntries) {
+    if (
+      entry.isFile() &&
+      !excludedRootFiles.includes(entry.name) &&
+      !entry.name.endsWith('.tsl') &&
+      !entry.name.endsWith('.js')
+    ) {
+      const srcPath = path.join(projectDir, entry.name);
+      const destPath = path.join(distDir, entry.name);
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+
   // Copy docs.html from website folder to dist
   const docsSrc = path.join(__dirname, '..', '..', '..', '..', 'website', 'docs.html');
   const docsDest = path.join(distDir, 'docs.html');
