@@ -595,17 +595,31 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropEndX, crop
   const optCropEndY = (typeof cropEndY === 'number') ? cropEndY : 0;
 
   const img = TEMF._imageElements.get(path);
-  if (!img) return;
+  let texW = 0, texH = 0;
 
-  const texW = img.width;
-  const texH = img.height;
+  if (img) {
+    texW = img.width;
+    texH = img.height;
+  }
 
-  const endX = optCropEndX > 0 ? optCropEndX : texW;
-  const endY = optCropEndY > 0 ? optCropEndY : texH;
-  const u0 = optCropX / texW;
-  const v0 = optCropY / texH;
-  const u1 = endX / texW;
-  const v1 = endY / texH;
+  let displayW, displayH;
+  if (img) {
+    displayW = texW;
+    displayH = texH;
+  } else {
+    displayW = 64;
+    displayH = 64;
+  }
+
+  let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
+  if (img) {
+    const endX = optCropEndX > 0 ? optCropEndX : texW;
+    const endY = optCropEndY > 0 ? optCropEndY : texH;
+    u0 = optCropX / texW;
+    v0 = optCropY / texH;
+    u1 = endX / texW;
+    v1 = endY / texH;
+  }
 
   if (TEMF._drawList.length >= TEMF._rectMax) return;
 
@@ -614,8 +628,8 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropEndX, crop
     path: path,
     x: x,
     y: y,
-    width: texW,
-    height: texH,
+    width: displayW,
+    height: displayH,
     u0: u0,
     v0: v0,
     u1: u1,
