@@ -1204,6 +1204,7 @@ function preload(resources) {
       paths.map(async (path) => {
         try {
           if (_isAudio(path)) {
+            if (!TEMF._audioContext) _initAudio();
             const buffer = await _loadAudioBuffer(path);
 
             if (!buffer) {
@@ -1249,15 +1250,6 @@ function checkpreload(reset) {
 function preloadfailed() {
   if (!TEMF._preloadFailed) return false;
   return TEMF._preloadFailed.length > 0;
-}
-
-function preloadisloaded(path) {
-  if (!TEMF._preloadDone) return false;
-  if (TEMF._preloadFailed && TEMF._preloadFailed.includes(path)) return false;
-  if (path.startsWith('img/') || path.includes('.png') || path.includes('.jpg') || path.includes('.jpeg') || path.includes('.gif') || path.includes('.webp') || path.includes('.bmp')) {
-    return TEMF._images && TEMF._images[path];
-  }
-  return true;
 }
 
 const audio = {
@@ -1546,7 +1538,6 @@ if (typeof window !== 'undefined') {
   window.preload = preload;
   window.checkpreload = checkpreload;
   window.preloadfailed = preloadfailed;
-  window.preloadisloaded = preloadisloaded;
 
   // Load game.js only after every window.* binding above is in place,
   // so game.js can safely call setGame()/rect()/touch.* etc. as soon as
