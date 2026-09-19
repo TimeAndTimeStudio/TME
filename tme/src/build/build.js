@@ -190,7 +190,7 @@ function copyUserFiles(projectDir, tslFiles) {
 
   // Copy other root-level files (images, fonts, etc.)
   const rootEntries = fs.readdirSync(projectDir, { withFileTypes: true });
-  const excludedRootFiles = ['index.html', 'style.css', 'docs.html'];
+  const excludedRootFiles = ['index.html', 'style.css'];
 
   for (const entry of rootEntries) {
     if (
