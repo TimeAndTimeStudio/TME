@@ -205,13 +205,6 @@ function copyUserFiles(projectDir, tslFiles) {
     }
   }
 
-  // Copy docs.html from website folder to dist
-  const docsSrc = path.join(__dirname, '..', '..', '..', '..', 'website', 'docs.html');
-  const docsDest = path.join(distDir, 'docs.html');
-  if (fs.existsSync(docsSrc)) {
-    fs.copyFileSync(docsSrc, docsDest);
-  }
-
   updateGameImports(projectDir, tslFiles);
 
   function copyRecursive(src, dest) {
