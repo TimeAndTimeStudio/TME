@@ -456,10 +456,7 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropEndX, crop
   const optCropEndY = (typeof cropEndY === 'number') ? cropEndY : 0;
 
   const img = TEMF._imageElements.get(path);
-  if (!img) {
-    _loadImage(path).catch(() => {});
-    return;
-  }
+  if (!img) return;
 
   const texW = img.width;
   const texH = img.height;
