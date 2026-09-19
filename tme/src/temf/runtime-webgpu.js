@@ -595,24 +595,11 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropEndX, crop
   const optCropEndY = (typeof cropEndY === 'number') ? cropEndY : 0;
 
   const img = TEMF._imageElements.get(path);
-  let texW = 0, texH = 0;
-
-  if (img) {
-    texW = img.width;
-    texH = img.height;
-  }
-
-  let displayW, displayH;
-  if (img) {
-    displayW = texW;
-    displayH = texH;
-  } else {
-    displayW = 64;
-    displayH = 64;
-  }
+  const texW = img ? img.width : 0;
+  const texH = img ? img.height : 0;
 
   let u0 = 0, v0 = 0, u1 = 1, v1 = 1;
-  if (img) {
+  if (img && texW > 0 && texH > 0) {
     const endX = optCropEndX > 0 ? optCropEndX : texW;
     const endY = optCropEndY > 0 ? optCropEndY : texH;
     u0 = optCropX / texW;
@@ -628,8 +615,8 @@ function _image(path, x, y, rotation, scale, alpha, cropX, cropY, cropEndX, crop
     path: path,
     x: x,
     y: y,
-    width: displayW,
-    height: displayH,
+    width: texW,
+    height: texH,
     u0: u0,
     v0: v0,
     u1: u1,
