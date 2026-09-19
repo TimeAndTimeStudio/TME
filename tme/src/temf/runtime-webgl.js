@@ -1209,6 +1209,7 @@ function preload(resources) {
 
             if (!buffer) {
               TEMF._preloadFailed.push(path);
+              console.error('Preload failed (audio):', path);
             }
           } else {
             const img = await _loadImage(path);
@@ -1225,6 +1226,7 @@ function preload(resources) {
               });
             } else {
               TEMF._preloadFailed.push(path);
+              console.error('Preload failed (image):', path);
             }
           }
         } catch (err) {
