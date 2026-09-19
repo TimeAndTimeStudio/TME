@@ -612,23 +612,6 @@ if preloadfailed():
 else:
   print("โหลดสำเร็จทั้งหมด!")</div>
 
-              <h3>preloadisloaded(path)</h3>
-              <p>ตรวจสอบว่าไฟล์เฉพาะโหลดเสร็จแล้วหรือยัง (คืนค่า <code>true</code> / <code>false</code>)</p>
-              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3", "sfx/click.wav"])
-
-while not checkpreload():
-  rect(0, 0, 800, 600, "#000000")
-
-if preloadisloaded("img/bg.png"):
-  print("Background พร้อมใช้งาน")
-else:
-  print("Background ยังโหลดไม่เสร็จ")
-
-if preloadisloaded("music/bgm.mp3"):
-  audio.play("music/bgm.mp3", "bgm")
-else:
-  print("BGM ยังโหลดไม่พร้อม")</div>
-
               <h3>ตัวอย่างเต็ม: Loading Screen</h3>
               <div class="code-block">function init():
   preload([
@@ -744,23 +727,6 @@ if preloadfailed():
     rect(0, 0, 800, 600, "#000000")
 else:
   print("All files loaded successfully!")</div>
-
-              <h3>preloadisloaded(path)</h3>
-              <p>Check if a specific file has finished loading (returns <code>true</code> / <code>false</code>).</p>
-              <div class="code-block">preload(["img/bg.png", "music/bgm.mp3", "sfx/click.wav"])
-
-while not checkpreload():
-  rect(0, 0, 800, 600, "#000000")
-
-if preloadisloaded("img/bg.png"):
-  print("Background is ready")
-else:
-  print("Background not loaded yet")
-
-if preloadisloaded("music/bgm.mp3"):
-  audio.play("music/bgm.mp3", "bgm")
-else:
-  print("BGM not ready yet")</div>
 
               <h3>Full Example: Loading Screen</h3>
               <div class="code-block">function init():
