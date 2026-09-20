@@ -4,215 +4,245 @@
       "name": "setGame",
       "kind": "function",
       "parameters": [
-        {"name": "gameObj", "type": "object"}
+        {"name": "gameObj", "type": "object", "description": "Game object containing update(dt) and draw() functions"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Sets the game object and starts the engine. The game object must contain update(dt) and draw() functions."
     },
     {
       "name": "fps",
       "kind": "function",
       "parameters": [
-        {"name": "fpsValue", "type": "number"}
+        {"name": "fpsValue", "type": "number", "description": "Target frames per second (default: 60)"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Sets the target frame rate for the game loop."
     },
     {
       "name": "getCanvasSize",
       "kind": "function",
-      "returnType": "object"
+      "returnType": "object",
+      "description": "Returns the canvas dimensions as { width, height } in pixels (including devicePixelRatio)."
     },
     {
       "name": "requestFullscreen",
       "kind": "function",
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Requests fullscreen mode for the canvas element. Cross-browser compatible."
     },
     {
       "name": "exitFullscreen",
       "kind": "function",
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Exits fullscreen mode. Cross-browser compatible."
     },
     {
       "name": "setFullscreenCallback",
       "kind": "function",
       "parameters": [
-        {"name": "callback", "type": "function"}
+        {"name": "callback", "type": "function", "description": "Function to call when fullscreen state changes"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Sets a callback function that is invoked when the fullscreen state changes."
     },
     {
       "name": "hasTabSwitched",
       "kind": "function",
       "parameters": [
-        {"name": "reset", "type": "boolean"}
+        {"name": "reset", "type": "boolean", "description": "If false, resets the tab switch flag to false"}
       ],
-      "returnType": "boolean"
+      "returnType": "boolean",
+      "description": "Returns true if the user has switched away from the browser tab. Automatically mutes audio when tab is hidden and clears input state when returning."
     },
     {
       "name": "unload",
       "kind": "function",
       "parameters": [
-        {"name": "path", "type": "string"}
+        {"name": "path", "type": "string", "description": "Path to the image or BGM audio file to unload"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Unloads an image texture or BGM audio file from memory. Throws error if resource not found or if attempting to unload SFX."
     },
     {
       "name": "rect",
       "kind": "function",
       "parameters": [
-        {"name": "x", "type": "number"},
-        {"name": "y", "type": "number"},
-        {"name": "width", "type": "number"},
-        {"name": "height", "type": "number"},
-        {"name": "color", "type": "string"},
-        {"name": "rotation", "type": "number"},
-        {"name": "scale", "type": "number"},
-        {"name": "alpha", "type": "number"}
+        {"name": "x", "type": "number", "description": "X position"},
+        {"name": "y", "type": "number", "description": "Y position"},
+        {"name": "width", "type": "number", "description": "Rectangle width"},
+        {"name": "height", "type": "number", "description": "Rectangle height"},
+        {"name": "color", "type": "string", "description": "Color in hex format: '#rrggbb' or '#rrggbbaa'"},
+        {"name": "rotation", "type": "number", "description": "Rotation in degrees (default: 0)"},
+        {"name": "scale", "type": "number", "description": "Scale multiplier (default: 1)"},
+        {"name": "alpha", "type": "number", "description": "Alpha transparency (default: color alpha)"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Draws a colored rectangle with optional rotation, scale, and alpha. Supports '#rrggbb' or '#rrggbbaa' color format."
     },
     {
       "name": "image",
       "kind": "function",
       "parameters": [
-        {"name": "path", "type": "string"},
-        {"name": "x", "type": "number"},
-        {"name": "y", "type": "number"},
-        {"name": "rotation", "type": "number"},
-        {"name": "scale", "type": "number"},
-        {"name": "alpha", "type": "number"},
-        {"name": "cropX", "type": "number"},
-        {"name": "cropY", "type": "number"},
-        {"name": "cropEndX", "type": "number"},
-        {"name": "cropEndY", "type": "number"}
+        {"name": "path", "type": "string", "description": "Path to the image file"},
+        {"name": "x", "type": "number", "description": "X position"},
+        {"name": "y", "type": "number", "description": "Y position"},
+        {"name": "rotation", "type": "number", "description": "Rotation in degrees (default: 0)"},
+        {"name": "scale", "type": "number", "description": "Scale multiplier (default: 1)"},
+        {"name": "alpha", "type": "number", "description": "Alpha transparency (default: 1)"},
+        {"name": "cropX", "type": "number", "description": "Crop start X coordinate (default: 0)"},
+        {"name": "cropY", "type": "number", "description": "Crop start Y coordinate (default: 0)"},
+        {"name": "cropEndX", "type": "number", "description": "Crop end X coordinate (default: image width)"},
+        {"name": "cropEndY", "type": "number", "description": "Crop end Y coordinate (default: image height)"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Draws a preloaded image with optional rotation, scale, alpha, and cropping. If image is not yet loaded, it will be drawn asynchronously when ready."
     },
     {
       "name": "key",
       "kind": "function",
       "parameters": [
-        {"name": "key", "type": "string | number"}
+        {"name": "key", "type": "string | number", "description": "Key name (e.g., 'space', 'enter', 'a') or digit (0-9)"}
       ],
-      "returnType": "boolean"
+      "returnType": "boolean",
+      "description": "Returns true if the specified key is currently pressed. Supports key names like 'space', 'enter', 'esc', arrow keys, and digits 0-9."
     },
     {
       "name": "mouse",
       "kind": "object",
+      "description": "Mouse input object with position properties and button state checking.",
       "members": [
         {
           "name": "x",
           "kind": "property",
-          "type": "number"
+          "type": "number",
+          "description": "Current mouse X position in canvas coordinates"
         },
         {
           "name": "y",
           "kind": "property",
-          "type": "number"
+          "type": "number",
+          "description": "Current mouse Y position in canvas coordinates"
         },
         {
           "name": "down",
           "kind": "function",
           "parameters": [
-            {"name": "btn", "type": "number"}
+            {"name": "btn", "type": "number", "description": "Mouse button number (0=left, 1=right, 2=middle, default: 0)"}
           ],
-          "returnType": "boolean"
+          "returnType": "boolean",
+          "description": "Returns true if the specified mouse button is currently pressed"
         }
       ]
     },
     {
       "name": "touch",
       "kind": "object",
+      "description": "Touch input object supporting up to 4 simultaneous touches with finger IDs 0-3.",
       "members": [
         {
           "name": "exists",
           "kind": "function",
           "parameters": [
-            {"name": "id", "type": "number"}
+            {"name": "id", "type": "number", "description": "Finger ID (0-3)"}
           ],
-          "returnType": "boolean"
+          "returnType": "boolean",
+          "description": "Returns true if a finger is currently touching at the specified ID slot"
         },
         {
           "name": "down",
           "kind": "function",
           "parameters": [
-            {"name": "id", "type": "number"}
+            {"name": "id", "type": "number", "description": "Finger ID (0-3)"}
           ],
-          "returnType": "boolean"
+          "returnType": "boolean",
+          "description": "Returns true if a finger is currently pressed at the specified ID slot"
         },
         {
           "name": "x",
           "kind": "function",
           "parameters": [
-            {"name": "id", "type": "number"}
+            {"name": "id", "type": "number", "description": "Finger ID (0-3)"}
           ],
-          "returnType": "number"
+          "returnType": "number",
+          "description": "Returns the X position of the finger at the specified ID slot"
         },
         {
           "name": "y",
           "kind": "function",
           "parameters": [
-            {"name": "id", "type": "number"}
+            {"name": "id", "type": "number", "description": "Finger ID (0-3)"}
           ],
-          "returnType": "number"
+          "returnType": "number",
+          "description": "Returns the Y position of the finger at the specified ID slot"
         }
       ]
     },
     {
       "name": "audio",
       "kind": "object",
+      "description": "Audio control object for managing SFX and BGM playback with volume and mute controls.",
       "members": [
         {
           "name": "play",
           "kind": "function",
           "parameters": [
-            {"name": "path", "type": "string"},
-            {"name": "type", "type": "string"},
-            {"name": "loop", "type": "boolean"}
+            {"name": "path", "type": "string", "description": "Path to the audio file"},
+            {"name": "type", "type": "string", "description": "Audio type: 'sfx' or 'bgm'"},
+            {"name": "loop", "type": "boolean", "description": "Whether BGM should loop (default: true, ignored for SFX)"}
           ],
-          "returnType": "void"
+          "returnType": "void",
+          "description": "Plays an SFX sound or BGM music. SFX can be played simultaneously, BGM stops previous BGM when called."
         },
         {
           "name": "stop",
           "kind": "function",
           "parameters": [
-            {"name": "type", "type": "string"}
+            {"name": "type", "type": "string", "description": "Audio type: 'sfx', 'bgm', or omit for both"}
           ],
-          "returnType": "void"
+          "returnType": "void",
+          "description": "Stops SFX, BGM, or both. Omit type parameter to stop all audio."
         },
         {
           "name": "pause",
           "kind": "function",
-          "returnType": "void"
+          "returnType": "void",
+          "description": "Pauses BGM playback (suspends AudioContext)"
         },
         {
           "name": "resume",
           "kind": "function",
-          "returnType": "void"
+          "returnType": "void",
+          "description": "Resumes BGM playback (resumes AudioContext)"
         },
         {
           "name": "volume",
           "kind": "property",
-          "type": "number"
+          "type": "number",
+          "description": "Master volume (0.0 to 1.0)"
         },
         {
           "name": "sfxVolume",
           "kind": "property",
-          "type": "number"
+          "type": "number",
+          "description": "SFX volume (0.0 to 1.0)"
         },
         {
           "name": "bgmVolume",
           "kind": "property",
-          "type": "number"
+          "type": "number",
+          "description": "BGM volume (0.0 to 1.0)"
         },
         {
           "name": "mutedSfx",
           "kind": "property",
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether SFX is muted"
         },
         {
           "name": "mutedBgm",
           "kind": "property",
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether BGM is muted"
         }
       ]
     },
@@ -220,32 +250,37 @@
       "name": "preload",
       "kind": "function",
       "parameters": [
-        {"name": "resources", "type": "string | array"}
+        {"name": "resources", "type": "string | array", "description": "Single path string, array of paths, or array of objects with 'images', 'audio', 'path' properties"}
       ],
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Preloads images and audio files before game starts. Supports string, array of strings, or array of objects with 'images', 'audio', 'path' keys."
     },
     {
       "name": "checkpreload",
       "kind": "function",
       "parameters": [
-        {"name": "reset", "type": "boolean"}
+        {"name": "reset", "type": "boolean", "description": "If false, resets preload state to false"}
       ],
-      "returnType": "boolean"
+      "returnType": "boolean",
+      "description": "Returns true if all preloaded resources have finished loading. Pass false to reset preload state."
     },
     {
       "name": "preloadfailed",
       "kind": "function",
-      "returnType": "boolean"
+      "returnType": "boolean",
+      "description": "Returns true if any resource failed to preload during the last preload() call."
     },
     {
       "name": "TEMF.cleanupTextures",
       "kind": "function",
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Deletes all cached textures from GPU memory and clears the texture cache."
     },
     {
       "name": "TEMF.cleanupAudio",
       "kind": "function",
-      "returnType": "void"
+      "returnType": "void",
+      "description": "Stops all audio playback, clears audio cache, and closes the AudioContext."
     }
   ]
 }
