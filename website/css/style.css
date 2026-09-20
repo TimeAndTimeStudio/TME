@@ -488,6 +488,11 @@ main {
   color: var(--primary);
 }
 
+.docs-content h2,
+.docs-content section {
+  scroll-margin-top: 80px;
+}
+
 .docs-content h2 {
   font-size: 1.75rem;
   margin: 40px 0 16px;
