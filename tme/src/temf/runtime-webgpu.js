@@ -258,19 +258,6 @@ function _getOrCreateTexture(path) {
   return null;
 }
 
-function _cleanupTextures() {
-  for (const [, entry] of TEMF._textureCache) {
-    if (entry.texture) {
-      entry.texture.destroy();
-      entry.texture = null;
-    }
-  }
-  TEMF._textureCache.clear();
-  if (TEMF._imageBindGroups) {
-    TEMF._imageBindGroups.clear();
-  }
-}
-
 // ============================================================
 // Rendering: WebGPU setup & pipelines
 // ============================================================
@@ -1235,24 +1222,6 @@ function _releaseAudioIfUnused(path) {
   }
 }
 
-function _cleanupAudio() {
-  _stopAllSfx();
-  _stopBgm();
-  if (TEMF._audioCache) {
-    TEMF._audioCache.clear();
-  }
-  if (TEMF._audioUsage) {
-    TEMF._audioUsage.clear();
-  }
-  if (TEMF._audioContext) {
-    try {
-      TEMF._audioContext.close();
-    } catch (e) {}
-    TEMF._audioContext = null;
-  }
-  TEMF._audioInitialized = false;
-}
-
 function _playBgm(path, loop) {
   if (!TEMF._audioContext) return;
   _resumeAudioContext();
@@ -1713,10 +1682,6 @@ document.addEventListener('msfullscreenchange', _handleFullscreenChange);
 // ============================================================
 // Public API / global exports
 // ============================================================
-
-TEMF.cleanupTextures = _cleanupTextures;
-
-TEMF.cleanupAudio = _cleanupAudio;
 
 if (typeof window !== 'undefined') {
   window.setGame = setGame;
