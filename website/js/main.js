@@ -23,9 +23,23 @@ document.addEventListener('DOMContentLoaded', function () {
   // Docs sidebar active link
   const sidebarLinks = document.querySelectorAll('.docs-sidebar a');
   sidebarLinks.forEach(function (link) {
-    link.addEventListener('click', function () {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
       sidebarLinks.forEach(function (l) { l.classList.remove('active'); });
       link.classList.add('active');
+      
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        const targetId = href.substring(1);
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          const offsetTop = targetEl.offsetTop - 20;
+          window.scrollTo({
+            top: offsetTop,
+            behavior: 'smooth'
+          });
+        }
+      }
     });
   });
 
