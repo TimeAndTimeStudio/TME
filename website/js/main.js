@@ -23,23 +23,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // Docs sidebar active link
   const sidebarLinks = document.querySelectorAll('.docs-sidebar a');
   sidebarLinks.forEach(function (link) {
-    link.addEventListener('click', function (e) {
-      e.preventDefault();
+    link.addEventListener('click', function () {
       sidebarLinks.forEach(function (l) { l.classList.remove('active'); });
       link.classList.add('active');
-      
-      const href = link.getAttribute('href');
-      if (href && href.startsWith('#')) {
-        const targetId = href.substring(1);
-        const targetEl = document.getElementById(targetId);
-        if (targetEl) {
-          const offsetTop = targetEl.offsetTop - 100;
-          window.scrollTo({
-            top: offsetTop,
-            behavior: 'smooth'
-          });
-        }
-      }
     });
   });
 
@@ -186,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function setLang(lang) {
   document.documentElement.lang = lang;
-  localStorage.setItem('tme-lang', lang);
+  localStorage.setItem('tsl-lang', lang);
 
   // Update button states
   document.querySelectorAll('.lang-btn').forEach(function (btn) {
@@ -213,6 +199,6 @@ function setLang(lang) {
 
 // Initialize language on load
 (function initLang() {
-  const saved = localStorage.getItem('tme-lang') || 'th';
+  const saved = localStorage.getItem('tsl-lang') || 'th';
   setLang(saved);
 })();
