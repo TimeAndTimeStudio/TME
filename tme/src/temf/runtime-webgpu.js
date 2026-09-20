@@ -1145,7 +1145,7 @@ async function _loadAudioBuffer(path) {
   }
 }
 
-function _playSfx(path) {
+function _playSfx(path, loop) {
   if (!TEMF._audioContext) return null;
   _resumeAudioContext();
 
@@ -1153,21 +1153,21 @@ function _playSfx(path) {
   if (!audioBuffer) {
     return _loadAudioBuffer(path).then((buffer) => {
       if (buffer) {
-        return _playSfxInstance(buffer, path);
+        return _playSfxInstance(buffer, path, loop);
       }
       return null;
     });
   }
 
-  return _playSfxInstance(audioBuffer, path);
+  return _playSfxInstance(audioBuffer, path, loop);
 }
 
-function _playSfxInstance(buffer, path) {
+function _playSfxInstance(buffer, path, loop) {
   let source = null;
   try {
     source = TEMF._audioContext.createBufferSource();
     source.buffer = buffer;
-    source.loop = false;
+    source.loop = !!loop;
     source.connect(TEMF._sfxGain);
     source.start(0);
   } catch (e) {
@@ -1178,12 +1178,14 @@ function _playSfxInstance(buffer, path) {
   const node = { source, type: 'sfx', path };
   TEMF._sfxNodes.push(node);
 
-  source.onended = () => {
-    const idx = TEMF._sfxNodes.indexOf(node);
-    if (idx !== -1) {
-      TEMF._sfxNodes.splice(idx, 1);
-    }
-  };
+  if (!loop) {
+    source.onended = () => {
+      const idx = TEMF._sfxNodes.indexOf(node);
+      if (idx !== -1) {
+        TEMF._sfxNodes.splice(idx, 1);
+      }
+    };
+  }
 
   return node;
 }
@@ -1204,6 +1206,14 @@ function _stopSfxNode(node) {
 function _stopAllSfx() {
   for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
     _stopSfxNode(TEMF._sfxNodes[i]);
+  }
+}
+
+function _stopSfxByPath(path) {
+  for (let i = TEMF._sfxNodes.length - 1; i >= 0; i--) {
+    if (TEMF._sfxNodes[i].path === path) {
+      _stopSfxNode(TEMF._sfxNodes[i]);
+    }
   }
 }
 
@@ -1417,15 +1427,17 @@ const audio = {
 
     if (type === 'sfx') {
       if (!TEMF._audioContext) _initAudio();
-      _playSfx(path);
+      _playSfx(path, loop);
     } else if (type === 'bgm') {
       if (!TEMF._audioContext) _initAudio();
       const loopVal = (loop === false) ? false : true;
       _playBgm(path, loopVal);
     }
   },
-  stop(type) {
-    if (type === 'bgm') {
+  stop(typeOrPath) {
+    if (typeof typeOrPath === 'string') {
+      _stopSfxByPath(typeOrPath);
+    } else if (typeOrPath === 'bgm') {
       _stopBgm();
     } else {
       _stopBgm();
