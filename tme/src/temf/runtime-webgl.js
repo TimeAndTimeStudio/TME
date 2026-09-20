@@ -1000,7 +1000,6 @@ function _playSfxInstance(buffer, path) {
     if (idx !== -1) {
       TEMF._sfxNodes.splice(idx, 1);
     }
-    _releaseAudioIfUnused(path);
   };
 
   return node;
@@ -1016,9 +1015,6 @@ function _stopSfxNode(node) {
   const idx = TEMF._sfxNodes.indexOf(node);
   if (idx !== -1) {
     TEMF._sfxNodes.splice(idx, 1);
-  }
-  if (node && node.path) {
-    _releaseAudioIfUnused(node.path);
   }
 }
 
@@ -1240,13 +1236,10 @@ const audio = {
     }
   },
   stop(type) {
-    if (type === 'sfx') {
-      _stopAllSfx();
-    } else if (type === 'bgm') {
+    if (type === 'bgm') {
       _stopBgm();
     } else {
       _stopBgm();
-      _stopAllSfx();
     }
   },
   pause() {
@@ -1476,7 +1469,9 @@ function unload(path) {
   }
 
   if (TEMF._audioCache.has(path)) {
-    throw new Error(`unload(): cannot unload SFX "${path}"`);
+    TEMF._audioCache.delete(path);
+    TEMF._audioUsage.delete(path);
+    return;
   }
 
   throw new Error(`unload(): image not found "${path}"`);
