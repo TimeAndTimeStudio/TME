@@ -403,14 +403,18 @@ key("NUMPADPARENRIGHT") key("NumpadParenRight")</div>
               <p>ระบบเสียงรองรับ SFX และ BGM</p>
 
               <h3>audio.play(path, type, loop?)</h3>
-              <p>เล่นเสียง (loop ใช้ได้เฉพาะ type "bgm" เท่านั้น)</p>
+              <p>เล่นเสียง (loop ใช้ได้ทั้ง SFX และ BGM)</p>
               <div class="code-block">audio.play("assets/sfx/jump.mp3", "sfx")
+audio.play("assets/sfx/jump.mp3", "sfx", true)
 audio.play("assets/music/bgm.mp3", "bgm", true)</div>
 
-              <h3>audio.stop(type)</h3>
-              <div class="code-block">audio.stop("sfx")
+              <h3>audio.stop(typeOrPath)</h3>
+              <div class="code-block"># หยุด BGM
 audio.stop("bgm")
-audio.stop()</div>
+audio.stop()
+
+# หยุด SFX เฉพาะไฟล์
+audio.stop("assets/sfx/jump.mp3")</div>
 
               <h3>audio.pause(), audio.resume()</h3>
               <div class="code-block">audio.pause()
@@ -429,14 +433,18 @@ audio.mutedBgm = true</div>
               <p>Audio system supporting SFX and BGM playback.</p>
 
               <h3>audio.play(path, type, loop?)</h3>
-              <p>Play audio (loop only works with "bgm" type).</p>
+              <p>Play audio (loop works for both SFX and BGM).</p>
               <div class="code-block">audio.play("assets/sfx/jump.mp3", "sfx")
+audio.play("assets/sfx/jump.mp3", "sfx", true)
 audio.play("assets/music/bgm.mp3", "bgm", true)</div>
 
-              <h3>audio.stop(type)</h3>
-              <div class="code-block">audio.stop("sfx")
+              <h3>audio.stop(typeOrPath)</h3>
+              <div class="code-block"># Stop BGM
 audio.stop("bgm")
-audio.stop()</div>
+audio.stop()
+
+# Stop specific SFX
+audio.stop("assets/sfx/jump.mp3")</div>
 
               <h3>audio.pause(), audio.resume()</h3>
               <div class="code-block">audio.pause()
