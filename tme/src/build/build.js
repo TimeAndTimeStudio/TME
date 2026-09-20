@@ -77,6 +77,11 @@ function findTSLFiles(projectDir) {
 function invokeTSL(projectDir) {
   const distDir = path.join(projectDir, 'dist');
 
+  // Clean dist/ before building
+  if (fs.existsSync(distDir)) {
+    fs.rmSync(distDir, { recursive: true, force: true });
+  }
+
   fs.mkdirSync(distDir, { recursive: true });
 
   const tslFiles = findTSLFiles(projectDir);
