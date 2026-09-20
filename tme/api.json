@@ -1,0 +1,286 @@
+{
+  "items": [
+    {
+      "name": "setGame",
+      "kind": "function",
+      "parameters": [
+        {"name": "gameObj", "type": "object", "description": "Game object with update and draw methods"}
+      ],
+      "returnType": "void",
+      "description": "Set the game object and start the engine bootstrap"
+    },
+    {
+      "name": "fps",
+      "kind": "function",
+      "parameters": [
+        {"name": "fpsValue", "type": "number", "description": "Target frames per second"}
+      ],
+      "returnType": "void",
+      "description": "Set the target frame rate"
+    },
+    {
+      "name": "getCanvasSize",
+      "kind": "function",
+      "returnType": "object",
+      "description": "Get the canvas dimensions in pixels"
+    },
+    {
+      "name": "requestFullscreen",
+      "kind": "function",
+      "returnType": "void",
+      "description": "Request fullscreen mode"
+    },
+    {
+      "name": "exitFullscreen",
+      "kind": "function",
+      "returnType": "void",
+      "description": "Exit fullscreen mode"
+    },
+    {
+      "name": "setFullscreenCallback",
+      "kind": "function",
+      "parameters": [
+        {"name": "callback", "type": "function", "description": "Callback function invoked on fullscreen change"}
+      ],
+      "returnType": "void",
+      "description": "Set a callback for fullscreen state changes"
+    },
+    {
+      "name": "hasTabSwitched",
+      "kind": "function",
+      "parameters": [
+        {"name": "reset", "type": "boolean", "description": "If false, resets the tab switched state"}
+      ],
+      "returnType": "boolean",
+      "description": "Check if the browser tab was switched away. Returns true if tab was ever switched. Pass false to reset."
+    },
+    {
+      "name": "unload",
+      "kind": "function",
+      "parameters": [
+        {"name": "path", "type": "string", "description": "Path to the image or audio asset to unload"}
+      ],
+      "returnType": "void",
+      "description": "Unload an image texture or audio buffer by path"
+    },
+    {
+      "name": "rect",
+      "kind": "function",
+      "parameters": [
+        {"name": "x", "type": "number", "description": "X position"},
+        {"name": "y", "type": "number", "description": "Y position"},
+        {"name": "width", "type": "number", "description": "Rectangle width"},
+        {"name": "height", "type": "number", "description": "Rectangle height"},
+        {"name": "color", "type": "string", "description": "Color as hex string (e.g. '#rrggbb' or '#rrggbbaa')"},
+        {"name": "rotation", "type": "number", "description": "Rotation in degrees (default: 0)", "optional": true},
+        {"name": "scale", "type": "number", "description": "Scale factor (default: 1)", "optional": true},
+        {"name": "alpha", "type": "number", "description": "Alpha value (default: color alpha)", "optional": true}
+      ],
+      "returnType": "void",
+      "description": "Draw a colored rectangle with optional rotation, scale, and alpha"
+    },
+    {
+      "name": "image",
+      "kind": "function",
+      "parameters": [
+        {"name": "path", "type": "string", "description": "Path to the image asset"},
+        {"name": "x", "type": "number", "description": "X position"},
+        {"name": "y", "type": "number", "description": "Y position"},
+        {"name": "rotation", "type": "number", "description": "Rotation in degrees (default: 0)", "optional": true},
+        {"name": "scale", "type": "number", "description": "Scale factor (default: 1)", "optional": true},
+        {"name": "alpha", "type": "number", "description": "Alpha value (default: 1)", "optional": true},
+        {"name": "cropX", "type": "number", "description": "Crop start X coordinate (default: 0)", "optional": true},
+        {"name": "cropY", "type": "number", "description": "Crop start Y coordinate (default: 0)", "optional": true},
+        {"name": "cropEndX", "type": "number", "description": "Crop end X coordinate (default: image width)", "optional": true},
+        {"name": "cropEndY", "type": "number", "description": "Crop end Y coordinate (default: image height)", "optional": true}
+      ],
+      "returnType": "void",
+      "description": "Draw an image with optional rotation, scale, alpha, and cropping"
+    },
+    {
+      "name": "key",
+      "kind": "function",
+      "parameters": [
+        {"name": "key", "type": "string | number", "description": "Key name (e.g. 'a', 'ArrowUp', 'Enter') or number (0-9 maps to Digit0-Digit9)"}
+      ],
+      "returnType": "boolean",
+      "description": "Check if a key is currently pressed"
+    },
+    {
+      "name": "mouse",
+      "kind": "object",
+      "description": "Mouse input state object",
+      "members": [
+        {
+          "name": "x",
+          "kind": "property",
+          "type": "number",
+          "description": "Mouse X position in canvas coordinates"
+        },
+        {
+          "name": "y",
+          "kind": "property",
+          "type": "number",
+          "description": "Mouse Y position in canvas coordinates"
+        },
+        {
+          "name": "down",
+          "kind": "function",
+          "parameters": [
+            {"name": "btn", "type": "number", "description": "Mouse button number (0=left, 1=right, 2=middle). Default: 0 if omitted"}
+          ],
+          "returnType": "boolean",
+          "description": "Check if a mouse button is currently down"
+        }
+      ]
+    },
+    {
+      "name": "touch",
+      "kind": "object",
+      "description": "Touch input state object (up to 4 simultaneous touches)",
+      "members": [
+        {
+          "name": "exists",
+          "kind": "function",
+          "parameters": [
+            {"name": "id", "type": "number", "description": "Touch slot id (0-3). Default: 0 if omitted"}
+          ],
+          "returnType": "boolean",
+          "description": "Check if a touch slot is active (a finger is currently pressed at this slot)"
+        },
+        {
+          "name": "down",
+          "kind": "function",
+          "parameters": [
+            {"name": "id", "type": "number", "description": "Touch slot id (0-3). Default: 0 if omitted"}
+          ],
+          "returnType": "boolean",
+          "description": "Check if a touch slot is active"
+        },
+        {
+          "name": "x",
+          "kind": "function",
+          "parameters": [
+            {"name": "id", "type": "number", "description": "Touch slot id (0-3). Default: 0 if omitted"}
+          ],
+          "returnType": "number",
+          "description": "Get the X position of a touch slot"
+        },
+        {
+          "name": "y",
+          "kind": "function",
+          "parameters": [
+            {"name": "id", "type": "number", "description": "Touch slot id (0-3). Default: 0 if omitted"}
+          ],
+          "returnType": "number",
+          "description": "Get the Y position of a touch slot"
+        }
+      ]
+    },
+    {
+      "name": "audio",
+      "kind": "object",
+      "description": "Audio control object for SFX and BGM playback",
+      "members": [
+        {
+          "name": "play",
+          "kind": "function",
+          "parameters": [
+            {"name": "path", "type": "string", "description": "Path to the audio file"},
+            {"name": "type", "type": "string", "description": "Audio type: 'sfx' or 'bgm'"},
+            {"name": "loop", "type": "boolean", "description": "Whether BGM should loop (default: true for bgm, ignored for sfx)", "optional": true}
+          ],
+          "returnType": "void",
+          "description": "Play an SFX or BGM audio clip"
+        },
+        {
+          "name": "stop",
+          "kind": "function",
+          "parameters": [
+            {"name": "type", "type": "string", "description": "Audio type: 'sfx', 'bgm', or omit to stop all", "optional": true}
+          ],
+          "returnType": "void",
+          "description": "Stop SFX, BGM, or both"
+        },
+        {
+          "name": "pause",
+          "kind": "function",
+          "returnType": "void",
+          "description": "Pause the current BGM"
+        },
+        {
+          "name": "resume",
+          "kind": "function",
+          "returnType": "void",
+          "description": "Resume the paused BGM"
+        },
+        {
+          "name": "volume",
+          "kind": "property",
+          "type": "number",
+          "description": "Master volume (0-1). Read-write getter/setter"
+        },
+        {
+          "name": "sfxVolume",
+          "kind": "property",
+          "type": "number",
+          "description": "SFX volume (0-1). Read-write getter/setter"
+        },
+        {
+          "name": "bgmVolume",
+          "kind": "property",
+          "type": "number",
+          "description": "BGM volume (0-1). Read-write getter/setter"
+        },
+        {
+          "name": "mutedSfx",
+          "kind": "property",
+          "type": "boolean",
+          "description": "Mute SFX. Read-write getter/setter"
+        },
+        {
+          "name": "mutedBgm",
+          "kind": "property",
+          "type": "boolean",
+          "description": "Mute BGM. Read-write getter/setter"
+        }
+      ]
+    },
+    {
+      "name": "preload",
+      "kind": "function",
+      "parameters": [
+        {"name": "resources", "type": "string | string[] | object[]", "description": "Resources to preload. Can be a single path string, array of path strings, or array of objects with 'images', 'audio', or 'path' properties"}
+      ],
+      "returnType": "void",
+      "description": "Preload images and audio assets"
+    },
+    {
+      "name": "checkpreload",
+      "kind": "function",
+      "parameters": [
+        {"name": "reset", "type": "boolean", "description": "If false, resets the preload done state", "optional": true}
+      ],
+      "returnType": "boolean",
+      "description": "Check if preloading is complete. Pass false to reset."
+    },
+    {
+      "name": "preloadfailed",
+      "kind": "function",
+      "returnType": "boolean",
+      "description": "Check if any preload assets failed to load"
+    },
+    {
+      "name": "cleanupTextures",
+      "kind": "function",
+      "returnType": "void",
+      "description": "Delete all cached textures and clear the texture cache"
+    },
+    {
+      "name": "cleanupAudio",
+      "kind": "function",
+      "returnType": "void",
+      "description": "Stop all audio, clear audio cache, and close the audio context"
+    }
+  ]
+}
