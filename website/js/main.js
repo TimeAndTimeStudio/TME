@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const targetId = href.substring(1);
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
-          const offsetTop = targetEl.offsetTop - 20;
+          const offsetTop = targetEl.offsetTop - 100;
           window.scrollTo({
             top: offsetTop,
             behavior: 'smooth'
