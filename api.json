@@ -1,6 +1,5 @@
 {
   "name": "TME API",
-  "version": "1.0.0",
   "description": "Time Mini Engine (TEMF) runtime API reference - extracted directly from runtime source code",
   "items": [
     {
